@@ -1,7 +1,9 @@
 {
+    "type": "module",
     "scripts": {
         "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
-        "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
+        "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
+        "start:indexer": "npm i && ./indexer/brick/run.sh"
     },
     "dependencies": {
         "@metaplex-foundation/js": "^0.18.1",

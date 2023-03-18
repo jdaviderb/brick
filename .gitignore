@@ -6,3 +6,5 @@ target
 node_modules
 test-ledger
 app/brick/next.config.js
+dist
+data
