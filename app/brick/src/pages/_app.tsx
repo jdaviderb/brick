@@ -6,10 +6,10 @@ import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 
 const NavItems = [
-  { label: "Intro", url: "/", key: 1 },
-  { label: "Buy", url: "/app", key: 2 },
-  { label: "Sell", url: "/create", key: 3 },
-  { label: "My tokens", url: "/tokens", key: 5 },
+  { label: "Home", url: "/", key: 1 },
+  { label: "Sell", url: "/create", key: 2 },
+  { label: "Buy", url: "/app", key: 3 },
+  { label: "My tokens", url: "/tokens", key: 4 },
 ];
 
 export default function App({ Component, pageProps }: AppProps) {
@@ -23,11 +23,19 @@ export default function App({ Component, pageProps }: AppProps) {
       </Head>
       <ContextProvider>
         <Navbar NavItems={NavItems} />
-        <div className="container">
-            <Component {...pageProps} />
+        <div className={getPageClass(Component)}>
+          <Component {...pageProps} />
         </div>
         <Footer />
       </ContextProvider>
     </>
-  )
+  );
+}
+
+function getPageClass(component: any) {
+  if (component.name == 'Home') {
+    return ''
+  } else { 
+    return 'container' 
+  }
 }

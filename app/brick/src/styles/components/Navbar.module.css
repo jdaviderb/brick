@@ -5,6 +5,7 @@
   background: transparent;
   margin-top: -10vh;
   position: sticky;
+  z-index: 5;
 }
 
 .navbar_container {
@@ -20,6 +21,7 @@
   justify-content: space-between;
   height: 10vh;
   padding: 0 24px;
+  z-index: 5;
 }
 
 .navbar_logo {

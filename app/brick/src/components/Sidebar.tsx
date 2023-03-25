@@ -33,7 +33,7 @@ export const Sidebar = ({ NavItems, sidebar, showSidebar }: NavProps) => {
       <div className={styles.social_links}>
           <div className={styles.row}>
             <div className={styles.column}>
-              <a href="https://twitter.com/ricardocr987">
+              <a href="https://twitter.com/BrickProtocol">
                   <img
                     src="/twitter-square.svg"
                     height="50"

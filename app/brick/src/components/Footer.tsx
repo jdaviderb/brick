@@ -5,7 +5,7 @@ export const Footer = () => {
     <div className={styles.color__section}>
       <div className={styles.row}>
         <div className={styles.column}>
-          <a href="https://twitter.com/ricardocr987">
+          <a href="https://twitter.com/BrickProtocol">
               <img
                 src="/twitter-square.svg"
                 height="50"
