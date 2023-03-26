@@ -7,15 +7,15 @@ export const UseCases = () => {
                 <div className={styles.useCasesContainer}>
                     <div className={styles.useCase}>
                         <img src="/money-front-gradient.png" className={styles.useCaseImages} height="90" width="130"/>
-                        <p>Monetize your app or service</p>
+                        <p>Monetize your app or services</p>
                     </div>
                     <div className={styles.useCase}>
                         <img src="/link-front-gradient.png" className={styles.useCaseImages} height="90" width="130"/>
-                        <p>Fetch easily on-chain data with our indexer (Soon)</p>
+                        <p>Use it as a token gating protocol</p>
                     </div>
                     <div className={styles.useCase}>
                         <img src="/bag-front-gradient.png" className={styles.useCaseImages} height="90" width="130"/>
-                        <p>Brick is a configurable payment protocol</p>
+                        <p>Manage inventory and payment method</p>
                     </div>
                 </div>
             </div>
