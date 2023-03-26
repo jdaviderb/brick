@@ -6,34 +6,17 @@ export const UseCases = () => {
             <div className={styles.useCasesSection}>
                 <div className={styles.useCasesContainer}>
                     <div className={styles.useCase}>
-                        <img
-                            src="/money-front-gradient.png"
-                            height="90"
-                            width="130"
-                            alt="GitHub Icon"
-                        />
+                        <img src="/money-front-gradient.png" className={styles.useCaseImages} height="90" width="130"/>
+                        <p>Monetize your app or service</p>
                     </div>
                     <div className={styles.useCase}>
-                        <img
-                            src="/link-front-gradient.png"
-                            height="90"
-                            width="130"
-                            alt="GitHub Icon"
-                        />
+                        <img src="/link-front-gradient.png" className={styles.useCaseImages} height="90" width="130"/>
+                        <p>Fetch easily on-chain data with our indexer (Soon)</p>
                     </div>
                     <div className={styles.useCase}>
-                        <img
-                            src="/bag-front-gradient.png"
-                            height="90"
-                            width="130"
-                            alt="GitHub Icon"
-                        />
+                        <img src="/bag-front-gradient.png" className={styles.useCaseImages} height="90" width="130"/>
+                        <p>Brick is a configurable payment protocol</p>
                     </div>
-                </div>
-                <div className={styles.textUseCasesContainer}>
-                    <div className={styles.textUseCase}>Monetize your app or service</div>
-                    <div className={styles.textUseCase}>Fetch easily on-chain data with our indexer (Soon)</div>
-                    <div className={styles.textUseCase}>Brick is a configurable payment protocol</div>
                 </div>
             </div>
         </div>
