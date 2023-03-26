@@ -27,7 +27,7 @@ export const MainPage = () => {
                         </a>
                     </div>
                 </div>
-                <Image alt="on chain" src="/Wallet.png" className={styles.walletImage}/>
+                <Image height="300" width="300" alt="on chain" src="/Wallet.png" className={styles.walletImage}/>
                 <div className={styles.mainSectionCircle}/>
                 <div className={styles.mainSectionSquare}/>
                 <div className={styles.mainSectionMediumSquare}/>

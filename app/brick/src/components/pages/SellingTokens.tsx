@@ -153,7 +153,7 @@ export const SellingTokens = ({ connection, tokens }: { connection: Connection, 
                             <div className="innerContainer" key={index}>
                                 <a href={`https://solana.fm/address/${token.token.tokenMint.toString()}`}>
                                 {token.metadata.json ? (
-                                    <Image alt="uri" className="imgContainer" src={token.metadata.json.image} />
+                                    <Image alt="uri" className="imgContainer" height="100" width="100" src={token.metadata.json.image} />
                                 ) : (
                                     <Image
                                         alt="uri"
@@ -161,6 +161,7 @@ export const SellingTokens = ({ connection, tokens }: { connection: Connection, 
                                         src={
                                             "https://arweave.net/VASpc3F7nSNF9IvoVtbZfoasmutUowrYLXxNz_rsKK4"
                                         }
+                                        height="100" width="100"
                                     />
                                 )}
                                 </a>

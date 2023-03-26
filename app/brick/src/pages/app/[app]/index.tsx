@@ -126,7 +126,7 @@ const AppPage = () => {
                 <Tooltip title={<>Price: {token.token.sellerConfig.price}<br/>Token: {symbolFromMint[token.token.sellerConfig.acceptedMint.toString()]}<br/>Sold: {token.token.transactionsInfo.sold}</>} enterDelay={500} leaveDelay={200} key={token.token.tokenMint.toString()}>
                     <div className="innerContainer">
                         <a href={`https://solana.fm/address/${token.token.tokenMint.toString()}`}>
-                            { token.metadata.json ?  <Image alt="img" className="imgContainer" src={token.metadata.json.image} /> : <Image alt="uri" className="imgContainer" src={"https://arweave.net/VASpc3F7nSNF9IvoVtbZfoasmutUowrYLXxNz_rsKK4"} />}
+                            { token.metadata.json ?  <Image alt="img" className="imgContainer" src={token.metadata.json.image} height="100" width="100"/> : <Image alt="uri" className="imgContainer" src={"https://arweave.net/VASpc3F7nSNF9IvoVtbZfoasmutUowrYLXxNz_rsKK4"} height="100" width="100"/>}
                         </a>
                         <button className="tokensButton" onClick={() => sendBuyTokenTransaction(token.token.tokenMint, token.token.sellerConfig.acceptedMint, index)} disabled={buttonStates[index]?.isSending || buttonStates[index]?.isSent || !connected}>
                             {buttonStates[index]?.isSent && (
