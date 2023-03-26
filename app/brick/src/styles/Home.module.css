@@ -114,6 +114,9 @@
   .onChainImg {
     display: none;
   }
+  .bussinesImg {
+    display: none;
+  }
 }
 
 .mainSectionCircle {
@@ -406,10 +409,70 @@
 /* promo demo section */
 
 .promoDemoSection {
-  display: flex;
+  display: block;
   width: 100%;
-  min-height: 700px;
+  min-height: 870px;
   background: radial-gradient(circle, rgba(222,151,0,1) 0%, rgba(214,88,0,1) 100%);
+}
+
+.promoTitleContainer {
+  margin-top: 30px;
+  margin-left: 15%;
+  margin-right: 5%;
+  max-width: 700px;
+  color: #fff;
+  font-size: 25px;
+  font-weight: bold;
+  z-index: 3;
+}
+
+.promoTextContainer {
+  margin-top: 40px;
+  margin-left: 22%;
+  display: grid;
+  max-width: 600px;
+  height: 490px;
+  margin-right: 10%;
+}
+
+.promoInnerTextContainer {
+  height: 30px;
+  margin-right: 10px;
+  font-size: 18px;
+  z-index: 3;
+
+}
+
+.promoSubtitle {
+  color: #fff;
+  font-size: 18px;
+  z-index: 3;
+}
+
+.button {
+  cursor: pointer;
+  width: 180px;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  margin-right: 17%;
+  justify-content: center;
+  align-items: center;
+  border-radius: 10px;
+  border: 2px solid rgba(0, 0, 0, 1);
+  background: rgb(195,170,34);
+  background: radial-gradient(circle, rgba(222,151,0,1) 0%, rgba(214,88,0,1) 100%);
+  padding: 10px 20px;
+  text-transform: uppercase;
+  color: white;
+}
+
+.bussinesImg {
+  margin-top: 0px;
+  left: 750px;
+  height: 50%;
+  width: auto;
+  position: absolute;
+  z-index: 2;
 }
 
 
