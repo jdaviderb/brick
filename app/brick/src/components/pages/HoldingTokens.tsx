@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import SwiperCore, { Navigation } from "swiper";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/swiper-bundle.css";
+import Image from "next/image";
 
 SwiperCore.use([Navigation]);
 
@@ -168,13 +169,14 @@ export const HoldingTokens = ({ connection, tokens }: { connection: Connection, 
                             <div className="innerContainer">
                                 <a href={`https://solana.fm/address/${token.token.tokenMint.toString()}`}>
                                 {token.metadata.json ? (
-                                    <img className="imgContainer" src={token.metadata.json.image} />
+                                    <Image alt="uri" className="imgContainer" src={token.metadata.json.image} />
                                 ) : (
-                                    <img
-                                    className="imgContainer"
-                                    src={
-                                        "https://arweave.net/VASpc3F7nSNF9IvoVtbZfoasmutUowrYLXxNz_rsKK4"
-                                    }
+                                    <Image
+                                        alt="uri"
+                                        className="imgContainer"
+                                        src={
+                                            "https://arweave.net/VASpc3F7nSNF9IvoVtbZfoasmutUowrYLXxNz_rsKK4"
+                                        }
                                     />
                                 )}
                                 </a>

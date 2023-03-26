@@ -1,4 +1,5 @@
 import styles from "@/styles/components/Footer.module.css";
+import Image from "next/image";
 
 export const Footer = () => {
   return (
@@ -6,7 +7,8 @@ export const Footer = () => {
       <div className={styles.row}>
         <div className={styles.column}>
           <a href="https://twitter.com/BrickProtocol">
-              <img
+              <Image
+                alt="twitter logo"
                 src="/twitter-square.svg"
                 height="50"
                 width="100" />
@@ -14,7 +16,8 @@ export const Footer = () => {
         </div>
         <div className={styles.column}>
           <a href="https://github.com/ricardocr987/brick">
-              <img
+              <Image
+                  alt="github logo"
                   src="/github-square.svg"
                   height="55"
                   width="100" />

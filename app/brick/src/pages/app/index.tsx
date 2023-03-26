@@ -29,17 +29,19 @@ async function getApps(connection: Connection): Promise<AppArgs[]> {
 const MainAppsPage = () => {
     const [apps, setApps] = useState<AppArgs[]>([]);
     const connection = new Connection(process.env.RPC, "confirmed")
+
     useEffect(() => {
         const setAccountState = async () => {
             const apps = await getApps(connection)
             setApps(apps)
         }
         setAccountState()
-    }, []);
+    });
+
     return (
         <div className="apps" style={{ gap: "10px" }}>
             {apps.map(app => (
-                <Link href={`/app/${app.appName}`} >
+                <Link href={`/app/${app.appName}`} key={app.appName} >
                     <div className="innerContainer" key={app.appName} style={{ width: "150px", height: "150px" }}>
                         {app.appName}
                     </div>

@@ -10,6 +10,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/swiper-bundle.css";
 import Tooltip from '@mui/material/Tooltip';
 import { symbolFromMint } from "@/utils";
+import Image from "next/image";
 
 SwiperCore.use([Navigation]);
 export const SellingTokens = ({ connection, tokens }: { connection: Connection, tokens: TokensWithMetadata[] }) => {
@@ -152,13 +153,14 @@ export const SellingTokens = ({ connection, tokens }: { connection: Connection, 
                             <div className="innerContainer" key={index}>
                                 <a href={`https://solana.fm/address/${token.token.tokenMint.toString()}`}>
                                 {token.metadata.json ? (
-                                    <img className="imgContainer" src={token.metadata.json.image} />
+                                    <Image alt="uri" className="imgContainer" src={token.metadata.json.image} />
                                 ) : (
-                                    <img
-                                    className="imgContainer"
-                                    src={
-                                        "https://arweave.net/VASpc3F7nSNF9IvoVtbZfoasmutUowrYLXxNz_rsKK4"
-                                    }
+                                    <Image
+                                        alt="uri"
+                                        className="imgContainer"
+                                        src={
+                                            "https://arweave.net/VASpc3F7nSNF9IvoVtbZfoasmutUowrYLXxNz_rsKK4"
+                                        }
                                     />
                                 )}
                                 </a>

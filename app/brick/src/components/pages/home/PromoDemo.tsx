@@ -1,5 +1,6 @@
 import styles from '@/styles/Home.module.css'
 import Link from 'next/link'
+import Image from "next/image";
 
 export const PromoDemo = () => {
     return (
@@ -8,7 +9,7 @@ export const PromoDemo = () => {
                 <div className={styles.promoTitleContainer}>Monetize your product with Brick</div>
                 <div className={styles.promoTitleContainer}>The Solana program is already on mainnet</div>
                 <div className={styles.promoTitleContainer}>Check how the protocol works with this demo:</div>
-                <img src="/business.png" className={styles.bussinesImg}/>
+                <Image alt="business" src="/business.png" className={styles.bussinesImg}/>
                 <div className={styles.verticalLine}>
                     <div className={styles.circle}>1</div>
                     <div className={styles.circle}>2</div>
