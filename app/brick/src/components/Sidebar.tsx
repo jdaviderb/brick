@@ -39,7 +39,7 @@ export const Sidebar = ({ NavItems, sidebar, showSidebar }: NavProps) => {
                   <Image
                     alt="twitter logo"
                     src="/twitter-square.svg"
-                    height="50"
+                    height="85"
                     width="100" />
               </a>
             </div>
@@ -48,7 +48,7 @@ export const Sidebar = ({ NavItems, sidebar, showSidebar }: NavProps) => {
                 <Image
                   alt="github logo"
                   src="/github-square.svg"
-                  height="55"
+                  height="90"
                   width="100" />
               </a>
             </div>

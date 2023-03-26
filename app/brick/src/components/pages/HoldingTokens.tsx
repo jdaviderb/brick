@@ -169,16 +169,19 @@ export const HoldingTokens = ({ connection, tokens }: { connection: Connection, 
                             <div className="innerContainer">
                                 <a href={`https://solana.fm/address/${token.token.tokenMint.toString()}`}>
                                 {token.metadata.json ? (
-                                    <Image alt="uri" className="imgContainer" src={token.metadata.json.image} height="100" width="100"/>
+                                    <div className="imgContainer">
+                                        <Image alt="uri"  src={token.metadata.json.image} height="100" width="100"/>
+                                    </div>
                                 ) : (
-                                    <Image
-                                        alt="uri"
-                                        className="imgContainer"
-                                        src={
-                                            "https://arweave.net/VASpc3F7nSNF9IvoVtbZfoasmutUowrYLXxNz_rsKK4"
-                                        }
-                                        height="100" width="100"
-                                    />
+                                    <div className="imgContainer">
+                                        <Image
+                                            alt="uri"
+                                            src={
+                                                "https://arweave.net/VASpc3F7nSNF9IvoVtbZfoasmutUowrYLXxNz_rsKK4"
+                                            }
+                                            height="100" width="100"
+                                        />
+                                    </div>
                                 )}
                                 </a>
                                 <button

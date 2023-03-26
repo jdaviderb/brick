@@ -59,7 +59,7 @@ const AppPage = () => {
             setTokens(tokensData)
         }
         setAccountState()
-    }, [router.isReady, appName]);
+    }, []);
 
     useEffect(() => {
         const initButtonState = async () => {

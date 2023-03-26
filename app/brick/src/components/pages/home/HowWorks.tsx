@@ -6,7 +6,6 @@ export const HowWorks = () => {
         <div className={styles.section}>
             <div className={styles.howWorksSection}>
                 <div className={styles.howWorksTitleContainer}>How it works:</div>
-                <Image alt="on chain" src="/on_chain.png" className={styles.onChainImg} height="300" width="300"/>
                 <div className={styles.verticalLine}>
                     <div className={styles.circle}>1</div>
                     <div className={styles.circle}>2</div>
@@ -34,6 +33,9 @@ export const HowWorks = () => {
                 <div className={styles.howWorksSectionSquare}/>
                 <div className={styles.howWorksSectionMediumSquare}/>
                 <div className={styles.howWorksSectionSmallSquare}/>
+                <div className={styles.onChainImg}>
+                    <Image alt="on chain" src="/on_chain.svg" height="500" width="500"/>
+                </div>
             </div>
         </div>
     )

@@ -36,12 +36,12 @@ const MainAppsPage = () => {
             setApps(apps)
         }
         setAccountState()
-    });
+    }, []);
 
     return (
         <div className="apps" style={{ gap: "10px" }}>
             {apps.map(app => (
-                <Link href={`https://brickprotocol.xyz/app/${app.appName}`} key={app.appName} >
+                <Link href={`/app/${app.appName}`} key={app.appName} >
                     <div className="innerContainer" key={app.appName} style={{ width: "150px", height: "150px" }}>
                         {app.appName}
                     </div>

@@ -15,19 +15,21 @@ export const MainPage = () => {
                             <Image 
                                 alt="twitter logo"
                                 src="/twitter-square.svg"
-                                height="50"
+                                height="85"
                                 width="100" />
                         </a>
                         <a href="https://github.com/ricardocr987/brick" className={styles.icon}>
                             <Image
                                 alt="github logo"
                                 src="/github-square.svg"
-                                height="55"
+                                height="95"
                                 width="100" />
                         </a>
                     </div>
                 </div>
-                <Image height="300" width="300" alt="on chain" src="/Wallet.png" className={styles.walletImage}/>
+                <div className={styles.walletImage}>
+                    <Image height="500" width="500" alt="on chain" src="/Wallet.svg"/>
+                </div>
                 <div className={styles.mainSectionCircle}/>
                 <div className={styles.mainSectionSquare}/>
                 <div className={styles.mainSectionMediumSquare}/>

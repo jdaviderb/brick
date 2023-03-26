@@ -9,7 +9,9 @@ export const PromoDemo = () => {
                 <div className={styles.promoTitleContainer}>Monetize your product with Brick</div>
                 <div className={styles.promoTitleContainer}>The Solana program is already on mainnet</div>
                 <div className={styles.promoTitleContainer}>Check how the protocol works with this demo:</div>
-                <Image height="300" width="300" alt="business" src="/business.png" className={styles.bussinesImg}/>
+                <div className={styles.bussinesImg}>
+                    <Image height="500" width="500" alt="business" src="/business.svg"/>
+                </div>
                 <div className={styles.verticalLine}>
                     <div className={styles.circle}>1</div>
                     <div className={styles.circle}>2</div>
@@ -19,15 +21,15 @@ export const PromoDemo = () => {
                 <div className={styles.promoTextContainer}>
                     <div className={styles.promoInnerTextContainer}>
                         <div className={styles.promoSubtitle}>Create an application account</div>
-                        <Link href='https://brickprotocol.xyz/create' passHref><button className={styles.button}>CREATE APP</button></Link>
+                        <Link href='/create' passHref><button className={styles.button}>CREATE APP</button></Link>
                     </div>
                     <div className={styles.promoInnerTextContainer}>
                         <div className={styles.promoSubtitle}>Create a token with its respective configuration</div>
-                        <Link href='https://brickprotocol.xyz/create' passHref><button className={styles.button}>CREATE TOKEN</button></Link>
+                        <Link href='/create' passHref><button className={styles.button}>CREATE TOKEN</button></Link>
                     </div>
                     <div className={styles.promoInnerTextContainer}>
                         <div className={styles.promoSubtitle}>Find your app from the list and buy your own token</div>
-                        <Link href='https://brickprotocol.xyz/app' passHref><button className={styles.button}>FIND YOUR APP</button></Link>
+                        <Link href='/app' passHref><button className={styles.button}>FIND YOUR APP</button></Link>
                     </div>
                     <div className={styles.promoInnerTextContainer}>
                         <div className={styles.promoSubtitle}>
@@ -39,7 +41,7 @@ export const PromoDemo = () => {
                         <div className={styles.promoSubtitle}>
                             - As a buyer: request a refund and burn the token. 
                         </div>
-                        <Link href='https://brickprotocol.xyz/tokens' passHref><button className={styles.button}>MY TOKENS</button></Link>
+                        <Link href='/tokens' passHref><button className={styles.button}>MY TOKENS</button></Link>
                     </div>
                 </div>
             </div>

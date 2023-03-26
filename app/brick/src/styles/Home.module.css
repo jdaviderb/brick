@@ -98,16 +98,13 @@
 }
 
 .walletImage{
-  top: 15%;
-  right: 20%;
-  margin-left: 800px;
-  height: 50%;
-  width: auto;
+  top: 150px;
+  left: 700px;
   position: absolute;
   z-index: 2;
 }
 
-@media only screen and (max-width: 900px) {
+@media only screen and (max-width: 1200px) {
   .walletImage {
     display: none;
   }
@@ -118,7 +115,6 @@
     display: none;
   }
 }
-
 
 .mainSectionSquare {
   position: absolute;
@@ -174,19 +170,25 @@
   justify-content: center;
   width: 100%;
   font-size: 18px;
+  text-align: center;
+  align-items: center;
 }
 
 .useCase {
+  margin-left: 1px;
+  margin-right: 1px;
+  margin-top: 50px;
+  display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 30px;
+  align-content: center;
 }
 
 .useCaseImages {
   position: relative;
-  width: 65%;
-  height: auto;
+  width: 100px;
+  height: 100px;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.4);
   border-right: none;
@@ -241,17 +243,13 @@
 
 .howWorksSubtitle {
   color: #fff;
-  font-size: 15px;
+  font-size: 18px;
 }
 
 .onChainImg{
-  margin-top: 60px;
-  margin-left: 800px;
-  margin-right: 100px;
-  height: 60%;
-  width: auto;
-  position: absolute;
-  z-index: 2;
+  left: 750px;
+  top: -1350px;
+  position: relative;
 }
 
 .verticalLine {
@@ -400,12 +398,12 @@
 .promoDemoSection {
   display: block;
   width: 100%;
-  min-height: 920px;
+  min-height: 950px;
   background: radial-gradient(circle, rgba(222,151,0,1) 0%, rgba(214,88,0,1) 100%);
 }
 
 .promoTitleContainer {
-  margin-top: 30px;
+  margin-top: 15px;
   margin-left: 15%;
   margin-right: 5%;
   max-width: 700px;
@@ -429,7 +427,6 @@
   margin-right: 10px;
   font-size: 18px;
   z-index: 3;
-
 }
 
 .promoSubtitle {
@@ -458,12 +455,9 @@
 .bussinesImg {
   margin-top: 0px;
   left: 750px;
-  height: 50%;
-  width: auto;
   position: absolute;
   z-index: 2;
 }
-
 
 /* coming next section */
 
