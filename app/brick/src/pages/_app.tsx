@@ -2,9 +2,13 @@ import '@/styles/globals.css'
 import type { AppProps } from 'next/app'
 import Head from 'next/head';
 import { ContextProvider } from '@/components/contexts/ContextProvider';
-import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { Component } from 'react';
+import dynamic from 'next/dynamic'
+const Navbar = dynamic(
+  async () => (await import('@/components/Navbar')).Navbar,
+  { ssr: false }
+);
 
 const NavItems = [
   { label: "Home", url: "", key: 1 },
