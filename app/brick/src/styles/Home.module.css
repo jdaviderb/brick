@@ -17,7 +17,7 @@
 .mainSection {
   display: flex;
   width: 100%;
-  min-height: 100vh;
+  height: 100vh;
   background: radial-gradient(circle, rgba(222,151,0,1) 0%, rgba(214,88,0,1) 100%);
 }
 
@@ -48,6 +48,7 @@
   display: flex;
   z-index: 2;
   margin-top: 25%;
+  margin-bottom: 5%;
   gap: 10px;
 }
 
