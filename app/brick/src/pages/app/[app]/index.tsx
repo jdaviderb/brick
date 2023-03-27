@@ -51,7 +51,6 @@ const AppPage = () => {
     const { sendTransaction, publicKey, connected } = useWallet()
     const [buttonStates, setButtonStates] = useState([]);
     const [tokens, setTokens] = useState<TokensWithMetadata[]>([])
-    const [hydrated, setHydrated] = useState(false);
 
     useEffect(() => {
         if (!router.isReady) return
@@ -60,12 +59,7 @@ const AppPage = () => {
             setTokens(tokensData)
         }
         setAccountState()
-        setHydrated(true);
     }, []);
-
-    if (!hydrated) {
-		return null;
-	}
 
     useEffect(() => {
         const initButtonState = async () => {

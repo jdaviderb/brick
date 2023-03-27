@@ -29,7 +29,6 @@ async function getApps(connection: Connection): Promise<AppArgs[]> {
 const MainAppsPage = () => {
     const [apps, setApps] = useState<AppArgs[]>([]);
     const connection = new Connection(process.env.RPC, "confirmed")
-    const [hydrated, setHydrated] = useState(false);
 
     useEffect(() => {
         const setAccountState = async () => {
@@ -37,12 +36,7 @@ const MainAppsPage = () => {
             setApps(apps)
         }
         setAccountState()
-        setHydrated(true);
     }, []);
-
-    if (!hydrated) {
-		return null;
-	}
 
     return (
         <div className='container'>
