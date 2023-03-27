@@ -3,6 +3,7 @@ import { Connection } from "@solana/web3.js";
 import bs58 from "bs58";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 
 async function getApps(connection: Connection): Promise<AppArgs[]> {
     const apps: AppArgs[] = []
@@ -53,4 +54,4 @@ const MainAppsPage = () => {
     )
 };
 
-export default MainAppsPage;
+export default dynamic (() => Promise.resolve(MainAppsPage), {ssr: false})

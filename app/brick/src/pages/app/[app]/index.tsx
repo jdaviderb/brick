@@ -10,6 +10,7 @@ import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddres
 import BN from "bn.js";
 import Tooltip from '@mui/material/Tooltip';
 import Image from "next/image";
+import dynamic from "next/dynamic";
 
 async function getTokens(appName: string, connection: Connection): Promise<TokensWithMetadata[]> {
     const tokensData: TokensWithMetadata[] = []
@@ -149,5 +150,4 @@ const AppPage = () => {
         </div>
     )
 };
-
-export default AppPage;
+export default dynamic (() => Promise.resolve(AppPage), {ssr: false})

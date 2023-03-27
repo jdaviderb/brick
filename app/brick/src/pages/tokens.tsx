@@ -1,15 +1,16 @@
 import { HoldingTokens } from "@/components/pages/HoldingTokens";
 import { SellingTokens } from "@/components/pages/SellingTokens";
 import { ACCOUNTS_DATA_LAYOUT, AccountType, TokenMetadataArgs, BRICK_PROGRAM_ID_PK, ACCOUNT_DISCRIMINATOR, PaymentArgs, WithdrawFundsInstructionAccounts, createWithdrawFundsInstruction, AppArgs, withdrawComputeUnits } from "@/utils";
-import { getPaymentPubkey, getPaymentVaultPubkey, getTokenPubkey } from "@/utils/helpers";
+import { getPaymentVaultPubkey, getTokenPubkey } from "@/utils/helpers";
 import { TokensWithMetadata } from "@/utils/types";
 import { Metaplex, Sft } from "@metaplex-foundation/js";
 import Tooltip from "@mui/material/Tooltip";
 import { AccountLayout, getAccount, getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { ComputeBudgetProgram, Connection, PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
+import { Connection, PublicKey, Transaction } from "@solana/web3.js";
 import bs58 from "bs58";
 import { useEffect, useState } from "react";
+import dynamic from 'next/dynamic'
 
 async function getTokens(publicKey: PublicKey, connection: Connection) {
     const tokensData: TokensWithMetadata[] = []
@@ -214,4 +215,4 @@ const UserTokensPage = () => {
     )
 };
 
-export default UserTokensPage;
+export default dynamic (() => Promise.resolve(UserTokensPage), {ssr: false})

@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import styles from "@/styles/components/Navbar.module.css";
 import Link from 'next/link';
-import dynamic from 'next/dynamic'
 import Image from "next/image";
+import dynamic from 'next/dynamic'
 const WalletMultiButtonDynamic = dynamic(
   async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
   { ssr: false }

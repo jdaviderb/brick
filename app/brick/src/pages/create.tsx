@@ -1,6 +1,7 @@
 import { CreateApp } from "@/components/pages/CreateApp";
 import { CreateToken } from "@/components/pages/CreateToken";
 import { Connection } from "@solana/web3.js";
+import dynamic from "next/dynamic";
 
 const CreateTokenPage = () => {
     const connection = new Connection(process.env.RPC, "confirmed")    
@@ -18,4 +19,4 @@ const CreateTokenPage = () => {
     )
 };
 
-export default CreateTokenPage;
+export default dynamic (() => Promise.resolve(CreateTokenPage), {ssr: false})
