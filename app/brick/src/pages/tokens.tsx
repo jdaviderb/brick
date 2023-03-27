@@ -175,38 +175,40 @@ const UserTokensPage = () => {
     }
     
     return (
-        <div className="tokens">
-            <h1 style={{fontSize: "20px"}}>TOKENS LISTED BY YOU</h1>
-            {withdrawals.length > 0 && (
-                <Tooltip title={<>Availables withdrawals: {withdrawals.length}</>}>
-                    <button
-                        className="withdrawButton"
-                        onClick={() => {
-                            setSending(true)
-                            sendWithdrawalTransaction(withdrawals)
-                        }}
-                        disabled={isSending || isSent || !connected}
-                    >
-                        {isSent && (
-                            <h4 style={{ fontSize: "13px" }}>
-                            <a href={txnExplorer}>View Txn</a>
-                            </h4>
-                        )}
-                        {isSending && (
-                            <h4 style={{ fontSize: "13px" }}> Sending </h4>
-                        )}
-                        {!isSending && !isSent && (
-                            <h4 style={{ fontSize: "13px" }}> WITHDRAW </h4>
-                        )}
-                    </button>
-                </Tooltip>
-            )}
-            <div className="tokensRow">
-                <SellingTokens connection={connection} tokens={tokensOnSale}/>
-            </div>
-            <h1 style={{fontSize: "20px"}}>TOKENS BOUGHT USING BRICK</h1>
-            <div className="tokensRow">
-                <HoldingTokens connection={connection} tokens={tokens}/>
+        <div className='container'>
+            <div className="tokens">
+                <h1 style={{fontSize: "20px"}}>TOKENS LISTED BY YOU</h1>
+                {withdrawals.length > 0 && (
+                    <Tooltip title={<>Availables withdrawals: {withdrawals.length}</>}>
+                        <button
+                            className="withdrawButton"
+                            onClick={() => {
+                                setSending(true)
+                                sendWithdrawalTransaction(withdrawals)
+                            }}
+                            disabled={isSending || isSent || !connected}
+                        >
+                            {isSent && (
+                                <h4 style={{ fontSize: "13px" }}>
+                                <a href={txnExplorer}>View Txn</a>
+                                </h4>
+                            )}
+                            {isSending && (
+                                <h4 style={{ fontSize: "13px" }}> Sending </h4>
+                            )}
+                            {!isSending && !isSent && (
+                                <h4 style={{ fontSize: "13px" }}> WITHDRAW </h4>
+                            )}
+                        </button>
+                    </Tooltip>
+                )}
+                <div className="tokensRow">
+                    <SellingTokens connection={connection} tokens={tokensOnSale}/>
+                </div>
+                <h1 style={{fontSize: "20px"}}>TOKENS BOUGHT USING BRICK</h1>
+                <div className="tokensRow">
+                    <HoldingTokens connection={connection} tokens={tokens}/>
+                </div>
             </div>
         </div>
     )

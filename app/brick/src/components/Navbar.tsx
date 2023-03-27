@@ -50,9 +50,9 @@ export const Navbar = ({ NavItems }: NavProps) => {
           <div className={styles.nav_menu}>
             { NavItems.map(route => (
                 <div className={styles.nav_item} key={route.label}>
-                  <Link href={route.url} passHref>
+                  <Link href={route.url} passHref legacyBehavior>
                     <div className={styles.nav_links} key={route.key}>
-                      {route.label}
+                      <a>{route.label}</a>
                     </div>
                   </Link>
                 </div>

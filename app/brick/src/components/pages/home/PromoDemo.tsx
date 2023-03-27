@@ -21,15 +21,15 @@ export const PromoDemo = () => {
                 <div className={styles.promoTextContainer}>
                     <div className={styles.promoInnerTextContainer}>
                         <div className={styles.promoSubtitle}>Create an application account</div>
-                        <Link href='/create' passHref><button className={styles.button}>CREATE APP</button></Link>
+                        <Link href='/create' ><button className={styles.button}>CREATE APP</button></Link>
                     </div>
                     <div className={styles.promoInnerTextContainer}>
                         <div className={styles.promoSubtitle}>Create a token with its respective configuration</div>
-                        <Link href='/create' passHref><button className={styles.button}>CREATE TOKEN</button></Link>
+                        <Link href='/create' ><button className={styles.button}>CREATE TOKEN</button></Link>
                     </div>
                     <div className={styles.promoInnerTextContainer}>
                         <div className={styles.promoSubtitle}>Find your app from the list and buy your own token</div>
-                        <Link href='/app' passHref><button className={styles.button}>FIND YOUR APP</button></Link>
+                        <Link href='/app' ><button className={styles.button}>FIND YOUR APP</button></Link>
                     </div>
                     <div className={styles.promoInnerTextContainer}>
                         <div className={styles.promoSubtitle}>
@@ -41,7 +41,7 @@ export const PromoDemo = () => {
                         <div className={styles.promoSubtitle}>
                             - As a buyer: request a refund and burn the token. 
                         </div>
-                        <Link href='/tokens' passHref><button className={styles.button}>MY TOKENS</button></Link>
+                        <Link href='/tokens' ><button className={styles.button}>MY TOKENS</button></Link>
                     </div>
                 </div>
             </div>

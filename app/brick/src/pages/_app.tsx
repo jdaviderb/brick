@@ -23,19 +23,9 @@ export default function App({ Component, pageProps }: AppProps) {
       </Head>
       <ContextProvider>
         <Navbar NavItems={NavItems} />
-        <div className={getPageClass(Component)}>
-          <Component {...pageProps} />
-        </div>
+        <Component {...pageProps} />
         <Footer />
       </ContextProvider>
     </>
   );
-}
-
-function getPageClass(component: any) {
-  if (component.name == 'Home') {
-    return ''
-  } else { 
-    return 'container' 
-  }
 }
