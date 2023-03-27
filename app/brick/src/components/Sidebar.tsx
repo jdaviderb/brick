@@ -26,8 +26,8 @@ export const Sidebar = ({ NavItems, sidebar, showSidebar }: NavProps) => {
       <div className={styles.sidebar_menu}>
         { NavItems.map(route => (
           <div className={styles.sidebar_links} key={route.key}>
-            <Link href={route.url} onClick={() => showSidebar()}>
-                <a>{route.label}</a>
+            <Link href={route.url} passHref onClick={() => showSidebar()}>
+                {route.label}
             </Link>
           </div>
         ))}
@@ -39,7 +39,7 @@ export const Sidebar = ({ NavItems, sidebar, showSidebar }: NavProps) => {
                   <Image
                     alt="twitter logo"
                     src="/twitter-square.svg"
-                    height="85"
+                    height="54"
                     width="100" />
               </a>
             </div>
@@ -48,7 +48,7 @@ export const Sidebar = ({ NavItems, sidebar, showSidebar }: NavProps) => {
                 <Image
                   alt="github logo"
                   src="/github-square.svg"
-                  height="90"
+                  height="60"
                   width="100" />
               </a>
             </div>

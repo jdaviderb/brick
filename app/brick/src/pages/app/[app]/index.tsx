@@ -10,7 +10,6 @@ import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddres
 import BN from "bn.js";
 import Tooltip from '@mui/material/Tooltip';
 import Image from "next/image";
-import dynamic from "next/dynamic";
 
 async function getTokens(appName: string, connection: Connection): Promise<TokensWithMetadata[]> {
     const tokensData: TokensWithMetadata[] = []
@@ -52,7 +51,7 @@ const AppPage = () => {
     const { sendTransaction, publicKey, connected } = useWallet()
     const [buttonStates, setButtonStates] = useState([]);
     const [tokens, setTokens] = useState<TokensWithMetadata[]>([])
-
+    
     useEffect(() => {
         if (!router.isReady) return
         const setAccountState = async () => {
@@ -128,8 +127,11 @@ const AppPage = () => {
                     <Tooltip title={<>Price: {token.token.sellerConfig.price}<br/>Token: {symbolFromMint[token.token.sellerConfig.acceptedMint.toString()]}<br/>Sold: {token.token.transactionsInfo.sold}</>} enterDelay={500} leaveDelay={200} key={token.token.tokenMint.toString()}>
                         <div className="innerContainer">
                             <a href={`https://solana.fm/address/${token.token.tokenMint.toString()}`}>
-                                { token.metadata.json ?  <Image alt="img" className="imgContainer" src={token.metadata.json.image} height="100" width="100"/> : <Image alt="uri" className="imgContainer" src={"https://arweave.net/VASpc3F7nSNF9IvoVtbZfoasmutUowrYLXxNz_rsKK4"} height="100" width="100"/>}
-                            </a>
+                                {token.metadata.json ? (
+                                    <img className="imgContainer" src={token.metadata.json.image}/>
+                                ) : (
+                                    <img src={"https://arweave.net/VASpc3F7nSNF9IvoVtbZfoasmutUowrYLXxNz_rsKK4"} className="imgContainer"/>
+                                )}                            </a>
                             <button className="tokensButton" onClick={() => sendBuyTokenTransaction(token.token.tokenMint, token.token.sellerConfig.acceptedMint, index)} disabled={buttonStates[index]?.isSending || buttonStates[index]?.isSent || !connected}>
                                 {buttonStates[index]?.isSent && (
                                     <h4 style={{ fontSize: "13px" }}>
@@ -150,4 +152,5 @@ const AppPage = () => {
         </div>
     )
 };
-export default dynamic (() => Promise.resolve(AppPage), {ssr: false})
+
+export default AppPage;

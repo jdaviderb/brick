@@ -10,7 +10,6 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { Connection, PublicKey, Transaction } from "@solana/web3.js";
 import bs58 from "bs58";
 import { useEffect, useState } from "react";
-import dynamic from 'next/dynamic'
 
 async function getTokens(publicKey: PublicKey, connection: Connection) {
     const tokensData: TokensWithMetadata[] = []
@@ -215,4 +214,4 @@ const UserTokensPage = () => {
     )
 };
 
-export default dynamic (() => Promise.resolve(UserTokensPage), {ssr: false})
+export default UserTokensPage;

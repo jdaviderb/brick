@@ -10,7 +10,7 @@ export const Footer = () => {
               <Image
                 alt="twitter logo"
                 src="/twitter-square.svg"
-                height="80"
+                height="54"
                 width="100" />
           </a>
         </div>
@@ -19,7 +19,7 @@ export const Footer = () => {
               <Image
                   alt="github logo"
                   src="/github-square.svg"
-                  height="90"
+                  height="60"
                   width="100" />
           </a>
         </div>

@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import styles from "@/styles/components/Navbar.module.css";
 import Link from 'next/link';
-import Image from "next/image";
 import dynamic from 'next/dynamic'
+import Image from "next/image";
 const WalletMultiButtonDynamic = dynamic(
   async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
   { ssr: false }
@@ -50,9 +50,9 @@ export const Navbar = ({ NavItems }: NavProps) => {
           <div className={styles.nav_menu}>
             { NavItems.map(route => (
                 <div className={styles.nav_item} key={route.label}>
-                  <Link href={route.url} passHref legacyBehavior>
+                  <Link href={route.url} passHref>
                     <div className={styles.nav_links} key={route.key}>
-                      <a>{route.label}</a>
+                      {route.label}
                     </div>
                   </Link>
                 </div>

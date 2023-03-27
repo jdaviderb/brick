@@ -15,14 +15,14 @@ export const MainPage = () => {
                             <Image 
                                 alt="twitter logo"
                                 src="/twitter-square.svg"
-                                height="85"
+                                height="54"
                                 width="100" />
                         </a>
                         <a href="https://github.com/ricardocr987/brick" className={styles.icon}>
                             <Image
                                 alt="github logo"
                                 src="/github-square.svg"
-                                height="95"
+                                height="60"
                                 width="100" />
                         </a>
                     </div>
