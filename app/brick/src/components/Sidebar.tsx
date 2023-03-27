@@ -26,8 +26,8 @@ export const Sidebar = ({ NavItems, sidebar, showSidebar }: NavProps) => {
       <div className={styles.sidebar_menu}>
         { NavItems.map(route => (
           <div className={styles.sidebar_links} key={route.key}>
-            <Link href={route.url}  onClick={() => showSidebar()}>
-                {route.label}
+            <Link href={route.url} onClick={() => showSidebar()}>
+                <a>{route.label}</a>
             </Link>
           </div>
         ))}
