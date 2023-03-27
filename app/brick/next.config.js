@@ -1,7 +1,5 @@
-module.exports = {
-  reactStrictMode: true,
-  ssr: false,
-  images: {
-    domains: ['arweave.net'],
-  },
-}
+export const ssr = false;
+
+export const images = {
+  domains: ['arweave.net'],
+};
