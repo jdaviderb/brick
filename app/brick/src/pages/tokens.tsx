@@ -116,6 +116,7 @@ const UserTokensPage = () => {
     const [isSent, setSent] = useState(false);
     const [isSending, setSending] = useState(false);
     const [txnExplorer, setTxnExplorer] = useState(null);
+    const [hydrated, setHydrated] = useState(false);
 
     useEffect(() => {
         const setAccountState = async () => {
@@ -128,7 +129,12 @@ const UserTokensPage = () => {
             }
         }
         setAccountState()
+        setHydrated(true);
     }, [connected, publicKey]);
+
+    if (!hydrated) {
+		return null;
+	}
 
     const sendWithdrawalTransaction = async (paymentsAccounts: (PaymentArgs & { pubkey: PublicKey })[]) => {
         setSending(true);

@@ -57,6 +57,7 @@ async function getPaymentAccount(connection: Connection, receiver: PublicKey, to
 
 export const HoldingTokens = ({ connection, tokens }: { connection: Connection, tokens: TokensWithMetadata[] }) => {
     const { sendTransaction, publicKey, connected } = useWallet()
+    const [hydrated, setHydrated] = useState(false);
     const [buttonStates, setButtonStates] = useState([]);
 
     useEffect(() => {
@@ -71,7 +72,12 @@ export const HoldingTokens = ({ connection, tokens }: { connection: Connection, 
             setButtonStates(newButtonStates);
         };
         initButtonState()
+        setHydrated(true);
     }, [tokens, buttonStates]);
+
+    if (!hydrated) {
+		return null;
+	}
 
     const sendUseTokenTransaction = async (tokenMint: PublicKey, index: number) => {
         const newButtonStates = [...buttonStates];

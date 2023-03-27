@@ -16,6 +16,7 @@ SwiperCore.use([Navigation]);
 export const SellingTokens = ({ connection, tokens }: { connection: Connection, tokens: TokensWithMetadata[] }) => {
     const { sendTransaction, publicKey, connected } = useWallet()
     const [buttonStates, setButtonStates] = useState([]);
+    const [hydrated, setHydrated] = useState(false);
 
     useEffect(() => {
         const initButtonState = async () => {
@@ -31,9 +32,13 @@ export const SellingTokens = ({ connection, tokens }: { connection: Connection, 
             setButtonStates(newButtonStates);
         };
         initButtonState()
+        setHydrated(true);
     }, [tokens, buttonStates]);
-      
 
+    if (!hydrated) {
+		return null;
+	}
+    
     const sendShareTokenTransaction = async (tokenMint: PublicKey, index: number) => {
         const newButtonStates = [...buttonStates];
         newButtonStates[index].isSendingShare = true;
