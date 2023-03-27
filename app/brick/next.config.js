@@ -1,5 +1,6 @@
-export const ssr = false;
-
-export const images = {
-  domains: ['arweave.net'],
-};
+module.exports = {
+  ssr: false,
+  images: {
+    domains: ['arweave.net'],
+  },
+}
