@@ -6,9 +6,10 @@ export const PromoDemo = () => {
     return (
         <div className={styles.section}>
             <div className={styles.promoDemoSection}>
-                <div className={styles.promoTitleContainer}>Monetize your product with Brick</div>
-                <div className={styles.promoTitleContainer}>The Solana program is already on mainnet</div>
-                <div className={styles.promoTitleContainer}>Check how the protocol works with this demo:</div>
+                <div className={styles.promoTitleContainer}>
+                    <div className={styles.promoTitle}>The Solana program is already on mainnet</div>
+                    <div className={styles.promoTitle}>Check how the protocol works with this demo:</div>
+                </div>
                 <div className={styles.bussinesImg}>
                     <Image height="500" width="500" alt="business" src="/business.svg"/>
                 </div>

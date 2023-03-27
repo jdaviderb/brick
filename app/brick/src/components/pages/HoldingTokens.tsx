@@ -1,4 +1,4 @@
-import { ACCOUNTS_DATA_LAYOUT, AccountType, ACCOUNT_DISCRIMINATOR, BRICK_PROGRAM_ID_PK, PaymentArgs, symbolFromMint } from "@/utils";
+import { ACCOUNTS_DATA_LAYOUT, AccountType, ACCOUNT_DISCRIMINATOR, BRICK_PROGRAM_ID_PK, PaymentArgs, RESPONSIVE_SWIPER, symbolFromMint } from "@/utils";
 import { getPaymentVaultPubkey, getTokenPubkey } from "@/utils/helpers";
 import { UseTokenInstructionAccounts, createUseTokenInstruction, RefundInstructionAccounts, createRefundInstruction } from "@/utils/solita/instructions";
 import { TokensWithMetadata } from "@/utils/types";
@@ -11,8 +11,6 @@ import { useEffect, useState } from "react";
 import SwiperCore, { Navigation } from "swiper";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/swiper-bundle.css";
-import Image from "next/image";
-
 SwiperCore.use([Navigation]);
 
 type GetPaymentAccount = {
@@ -158,7 +156,7 @@ export const HoldingTokens = ({ connection, tokens }: { connection: Connection, 
         <>
             <Swiper
                 spaceBetween={20}
-                slidesPerView={5}
+                breakpoints={RESPONSIVE_SWIPER} 
                 navigation
                 pagination={false}
                 className="swiper-wrapper"

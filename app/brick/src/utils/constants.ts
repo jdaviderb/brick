@@ -26,3 +26,22 @@ export const decimalsFromPubkey: Record<string, number> = {
 }
 
 export const withdrawComputeUnits = 4645 + 4645 + 3015 // compute of the two transfers (seller + app creator) + close payment account
+
+export const RESPONSIVE_SWIPER = {
+    // when window width is <= 300px
+    400: {
+        slidesPerView: 1,
+    },
+    600: {
+        slidesPerView: 2,
+    },
+    800: {
+        slidesPerView: 3,
+    },
+    1000: {
+        slidesPerView: 4,
+    },
+    1200: {
+        slidesPerView: 5,
+    }
+}
