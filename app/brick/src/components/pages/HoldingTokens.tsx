@@ -69,7 +69,7 @@ export const HoldingTokens = ({ connection, tokens }: { connection: Connection, 
             setButtonStates(newButtonStates);
         };
         initButtonState()
-    }, [tokens, buttonStates]);
+    }, [tokens]);
 
     const sendUseTokenTransaction = async (tokenMint: PublicKey, index: number) => {
         const newButtonStates = [...buttonStates];

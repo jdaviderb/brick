@@ -119,6 +119,7 @@ a {
   display: flex;
   height: 240px;
   padding: 20px;
+  width: 100%;
   border-radius: 10px;
   margin-top: 10px;
   color: white;

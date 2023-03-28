@@ -128,7 +128,7 @@ const UserTokensPage = () => {
             }
         }
         setAccountState()
-    }, [connected, publicKey]);
+    }, [connected]);
 
     const sendWithdrawalTransaction = async (paymentsAccounts: (PaymentArgs & { pubkey: PublicKey })[]) => {
         setSending(true);
