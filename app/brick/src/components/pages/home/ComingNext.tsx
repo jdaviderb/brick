@@ -7,9 +7,6 @@ export const ComingNext = () => {
                 <div className={styles.featuresTitle}>Features coming:</div>
                 <div className={styles.features}>
                     <div className={styles.feature}>
-                        Ecosystem integration: Account compression and clockwork automation
-                    </div>
-                    <div className={styles.feature}>
                         Public indexer
                     </div>
                     <div className={styles.feature}>
