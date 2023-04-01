@@ -9,7 +9,7 @@ Use cases that might use this protocol:
 Brick is a payment protocol (or sales contract) that allows sellers to tokenize goods, services or assets by setting up a configuration (or conditions of the sales contract), giving to their token some functionalities. Here's how it works:
 
 1. Set the price of the token.
-2. Set the token you want to receive in the sale, you can even get paid in BONK.
+2. Set the token you want to receive in the sale, can be any SPL token.
 3. Choose between an unlimited or limited sale. In the case of a limited sale, define how many sales you want to make.
 4. Set the time period during which the buyer can get a refund (it can be set to 0). If the buyer burns the token, they won't be able to access the funds, and the seller will have to wait for the set time to withdraw the funds.
 5. If you are building an app that aims to create a marketplace, you have the option to set fees to the permissionless market you are creating.
@@ -18,8 +18,10 @@ Once the sale is completed, the seller is responsible for providing the buyer wi
 
 To facilitate the use of Brick in different applications, an indexer is currently being developed. The indexer will provide easy access to information about various events and accounts associated with Brick transactions, enabling any app that uses Brick to retrieve data quickly and efficiently. With this feature, developers can build more complex applications that leverage Brick's functionality without worrying about the underlying blockchain technology.
 
+Also, once the indexer is finished, the next step would be to create an npm package to create transactions and get the information from the indexer in a simpler way, and a rust crate to facilitate the composability of the solana program. This way the development of the apps that use brick will be faster.
+
 Why not doing a simple transfer?:
-- If your use case needs to be sure that some event has happened, indexing/fetching/parsing a transfer is much harder than using a program.
+- If your use case needs to be sure that some event has happened, indexing a transfer could be harder than using a specific program, using the program as an index.
 - Think in a flight ticket, the ticket represents a promise from the seller that you are going to enter to the plane when you do the check-in. In this case this ticket flight could represents the token and the check-in the use_token instruction. Basically, makes sense if what you are tokenizing something that won't be consumed at the same moment that is paid.
 - You want to give refunds in an automatic way.
 - If you creates an app that aims to create a marketplace, with his protocol a fee could be enforced.
@@ -29,5 +31,6 @@ Diagram to understand the logic of the Solana program:
 
 TO-DO:
 - Indexer (Currently building)
-- Rust crate, that facilitates composability with other programs, making it easy for specific use cases to integrate, using the core functionalities via CPI's
 - TypeScript library, with transaction/instruction handling, data fetching, and type definitions to streamline app development and improve reliability
+- Rust crate, that facilitates composability with other programs, making it easy for specific use cases to integrate, using the core functionalities via CPI's
+- Invoicing platform, we can provide to the apps that use brick all the data related with the use of the protocol for accounting, taxation, etc.
