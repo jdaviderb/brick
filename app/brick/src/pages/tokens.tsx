@@ -109,7 +109,7 @@ async function getWithdrawals(publicKey: PublicKey, connection: Connection) {
 
 const UserTokensPage = () => {
     const { publicKey, sendTransaction, connected } = useWallet()
-    const connection = new Connection(process.env.RPC, "confirmed")    
+    const connection = new Connection(process.env.NEXT_PUBLIC_RPC, "confirmed")    
     const [tokens, setTokens] = useState([]);
     const [tokensOnSale, setTokenOnSale] = useState([]);
     const [withdrawals, setWithdrawal] = useState([]);

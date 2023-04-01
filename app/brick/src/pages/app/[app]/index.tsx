@@ -47,7 +47,7 @@ async function getTokens(appName: string, connection: Connection): Promise<Token
 const AppPage = () => {
     const router = useRouter()
     const appName = router.query.app
-    const connection = new Connection(process.env.RPC, "confirmed")
+    const connection = new Connection(process.env.NEXT_PUBLIC_RPC, "confirmed")
     const { sendTransaction, publicKey, connected } = useWallet()
     const [buttonStates, setButtonStates] = useState([]);
     const [tokens, setTokens] = useState<TokensWithMetadata[]>([])

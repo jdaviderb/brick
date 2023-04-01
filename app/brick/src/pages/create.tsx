@@ -3,7 +3,7 @@ import { CreateToken } from "@/components/pages/CreateToken";
 import { Connection } from "@solana/web3.js";
 
 const CreateTokenPage = () => {
-    const connection = new Connection(process.env.RPC, "confirmed")    
+    const connection = new Connection(process.env.NEXT_PUBLIC_RPC, "confirmed")    
     return (
         <div className='container'>
             <div className="create">

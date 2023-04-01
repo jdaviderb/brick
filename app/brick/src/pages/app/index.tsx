@@ -28,7 +28,7 @@ async function getApps(connection: Connection): Promise<AppArgs[]> {
 }
 const MainAppsPage = () => {
     const [apps, setApps] = useState<AppArgs[]>([]);
-    const connection = new Connection(process.env.RPC, "confirmed")
+    const connection = new Connection(process.env.NEXT_PUBLIC_RPC, "confirmed")
 
     useEffect(() => {
         const setAccountState = async () => {
