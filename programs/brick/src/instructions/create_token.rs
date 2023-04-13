@@ -24,6 +24,7 @@ pub struct CreateToken<'info> {
     #[account(address = mpl_metadata_program, executable)]
     pub metadata_program: UncheckedAccount<'info>,
     /// CHECK: contraint added to force using actual aleph message program
+    #[account(address = aleph_solana_contract::ID, executable)]
     pub messages_program: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
