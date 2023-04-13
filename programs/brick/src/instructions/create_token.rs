@@ -9,8 +9,10 @@ use {
     anchor_lang::{
         prelude::*,
         solana_program::{
-            account_info::AccountInfo,
+            account_info::AccountInfo, 
+            instruction::Instruction
         },
+        InstructionData,
         system_program::System,
     },
 };
@@ -21,6 +23,8 @@ pub struct CreateToken<'info> {
     /// CHECK: contraint added to force using actual metaplex metadata program
     #[account(address = mpl_metadata_program, executable)]
     pub metadata_program: UncheckedAccount<'info>,
+    /// CHECK: contraint added to force using actual aleph message program
+    pub messages_program: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
     pub rent: Sysvar<'info, Rent>,
@@ -153,6 +157,25 @@ pub fn handler<'info>(
             ctx.accounts.token.to_account_info().clone(), //update_authority
         ],
         &[&seeds[..]],
+    )?;
+
+    solana_program::program::invoke(
+        &Instruction {
+            program_id: ctx.accounts.messages_program.key(),
+            accounts: vec![
+                AccountMeta::new(ctx.accounts.authority.key(), true), 
+                AccountMeta::new_readonly(ctx.accounts.messages_program.key(), false)
+            ],
+            data: aleph_solana_contract::instruction::DoMessage {
+                msgtype: "aggregate".to_string(),
+                msgcontent: format!("{{key:'brick',content:{{token:{}}},channel:'brick'}}", ctx.accounts.token.key().to_string()),
+            }
+            .data(),
+        },
+        &[
+            ctx.accounts.authority.to_account_info().clone(),
+            ctx.accounts.messages_program.to_account_info().clone(),
+        ],
     )?;
 
     Ok(())

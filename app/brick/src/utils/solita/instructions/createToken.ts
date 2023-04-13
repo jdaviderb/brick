@@ -65,6 +65,7 @@ export const createTokenStruct = new beet.FixableBeetArgsStruct<
  */
 export type CreateTokenInstructionAccounts = {
   metadataProgram: web3.PublicKey
+  messagesProgram: web3.PublicKey
   systemProgram?: web3.PublicKey
   tokenProgram?: web3.PublicKey
   rent?: web3.PublicKey
@@ -105,6 +106,11 @@ export function createCreateTokenInstruction(
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.metadataProgram,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.messagesProgram,
       isWritable: false,
       isSigner: false,
     },

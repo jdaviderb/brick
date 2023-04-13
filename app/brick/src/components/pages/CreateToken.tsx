@@ -49,6 +49,7 @@ export const CreateToken = ({ connection }: { connection: Connection }) => {
             const metadataAccount = getMetadataPubkey(tokenMint)
             const accounts: CreateTokenInstructionAccounts = {
                 metadataProgram: METADATA_PROGRAM_ID_PK,
+                messagesProgram: new PublicKey('ALepH1n9jxScbz45aZhBYVa35zxBNbKSvL6rWQpb4snc'),
                 systemProgram: SystemProgram.programId,
                 tokenProgram: TOKEN_PROGRAM_ID,
                 rent: SYSVAR_RENT_PUBKEY,

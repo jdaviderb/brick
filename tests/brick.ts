@@ -15,7 +15,7 @@ import {
 } from "@solana/spl-token";
 import { delay, initNewAccounts } from "./utils";
 import { Brick } from "../target/types/brick";
-import { Connection } from "@solana/web3.js";
+import { Connection, PublicKey } from "@solana/web3.js";
 
 describe("brick", () => {
   const provider = anchor.AnchorProvider.env();
@@ -28,6 +28,9 @@ describe("brick", () => {
   const metaplex = Metaplex.make(provider.connection)
     .use(walletAdapterIdentity(provider.wallet))
     .use(bundlrStorage());
+  const messagesProgramPublicKey = new anchor.web3.PublicKey(
+    "ALepH1n9jxScbz45aZhBYVa35zxBNbKSvL6rWQpb4snc"
+  );
 
   const tokenName = "Bonking the bonked";
   const tokenSymbol = "BONKY";
@@ -109,6 +112,7 @@ describe("brick", () => {
       )
       .accounts({
         metadataProgram: metadataProgramPublicKey,
+        messagesProgram: messagesProgramPublicKey,
         authority: sellerKeypair.publicKey,
         app: appPublicKey,
         acceptedMint: acceptedMintPublicKey,

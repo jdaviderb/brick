@@ -29,6 +29,7 @@ export type CreateTokenInstruction = {
 
 export const CreateTokenAccounts = [
   'metadataProgram',
+  'messagesProgram',
   'systemProgram',
   'tokenProgram',
   'rent',
