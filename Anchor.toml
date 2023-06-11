@@ -1,15 +1,23 @@
 [features]
 seeds = true
-
-[programs.Mainnet]
+skip-lint = false
+[programs.localnet]
 brick = "BrickarF2QeREBZsapbhgYPHJi5FYkJVnx7mZhxETCt5"
+fishnet = "5Taf6ZN851FT8yMDnE3Z5XbevRKwKBCyi4BS6Cxsy6tJ"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Mainnet"
+cluster = "localnet"
 wallet = "/Users/riki/.config/solana/id.json"
 
 [scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/fishnet/*.ts"
+
+[test.validator]
+url = "https://api.mainnet-beta.solana.com"
+
+[[test.validator.clone]]
+address = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+

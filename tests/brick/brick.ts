@@ -1,5 +1,5 @@
-import * as anchor from "@project-serum/anchor";
-import { Program, AnchorError } from "@project-serum/anchor";
+import * as anchor from "@coral-xyz/anchor";
+import { Program, AnchorError } from "@coral-xyz/anchor";
 import { assert } from "chai";
 import {
   bundlrStorage,
@@ -14,7 +14,7 @@ import {
   createMintToInstruction,
 } from "@solana/spl-token";
 import { delay, initNewAccounts } from "./utils";
-import { Brick } from "../target/types/brick";
+import { Brick } from "../../target/types/brick";
 import { Connection, PublicKey } from "@solana/web3.js";
 
 describe("brick", () => {
