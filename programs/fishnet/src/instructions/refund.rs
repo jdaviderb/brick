@@ -3,6 +3,7 @@ use {
     crate::errors::ErrorCode,
     anchor_lang::prelude::*,
     anchor_spl::{
+        associated_token::AssociatedToken,
         token_interface::{Mint, TokenInterface, TokenAccount},
         token::{close_account, transfer, Transfer, CloseAccount},
     }
@@ -10,6 +11,8 @@ use {
 
 #[derive(Accounts)]
 pub struct Refund<'info> {
+    pub system_program: Program<'info, System>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
     pub token_program: Interface<'info, TokenInterface>,
     #[account(mut)]
     pub authority: Signer<'info>,
@@ -25,6 +28,20 @@ pub struct Refund<'info> {
     #[account(
         mut,
         seeds = [
+            b"payment_account".as_ref(),
+            token_mint.key().as_ref(),
+            payment_account.buyer.as_ref(),
+            payment_account.payment_timestamp.to_le_bytes().as_ref(),
+        ],
+        bump = payment_account.bump,
+        close = authority,
+        constraint = authority.key() == payment_account.buyer 
+            @ ErrorCode::IncorrectPaymentAuthority,
+    )]
+    pub payment_account: Account<'info, Payment>,
+    #[account(
+        mut,
+        seeds = [
             b"token_mint".as_ref(),
             token_config.first_id.as_ref(),
             token_config.second_id.as_ref(),
@@ -33,23 +50,19 @@ pub struct Refund<'info> {
     )]
     pub token_mint: Box<InterfaceAccount<'info, Mint>>,
     #[account(
-        mut,
-        constraint = receiver_vault.mint == token_config.seller_config.payment_mint @ ErrorCode::IncorrectReceiverTokenAccount
+        constraint = payment_mint.key() == token_config.seller_config.payment_mint.key() 
+            @ ErrorCode::IncorrectPaymentToken
+    )]
+    pub payment_mint: Box<InterfaceAccount<'info, Mint>>,
+    #[account(
+        init_if_needed,
+        payer = authority, 
+        associated_token::mint = payment_mint, 
+        associated_token::authority = authority,
+        constraint = receiver_vault.mint == payment_mint.key()
+            @ ErrorCode::IncorrectReceiverTokenAccount
     )]
     pub receiver_vault: Box<InterfaceAccount<'info, TokenAccount>>,
-    #[account(
-        mut,
-        seeds = [
-            b"payment_account".as_ref(),
-            token_mint.key().as_ref(),
-            payment_account.buyer.as_ref(),
-            payment_account.payment_timestamp.to_le_bytes().as_ref(),
-        ],
-        bump = payment_account.bump,
-        constraint = authority.key() == payment_account.buyer @ ErrorCode::IncorrectPaymentAuthority,
-        close = authority,
-    )]
-    pub payment_account: Account<'info, Payment>,
     #[account(
         mut,
         seeds = [
@@ -60,11 +73,6 @@ pub struct Refund<'info> {
         constraint = payment_vault.owner == payment_account.key() && payment_vault.mint == token_config.seller_config.payment_mint.key() @ ErrorCode::IncorrectPaymentVault,
     )]
     pub payment_vault: Box<InterfaceAccount<'info, TokenAccount>>,
-    #[account(
-        mut,
-        constraint = buyer_token_vault.mint == token_mint.key() @ ErrorCode::IncorrectBuyerTokenAccountToStorePurchasedToken
-    )]
-    pub buyer_token_vault: Box<InterfaceAccount<'info, TokenAccount>>, // buyer token account to store the token
 }
 
 pub fn handler<'info>(ctx: Context<Refund>) -> Result<()> {

@@ -109,7 +109,7 @@ pub struct WithdrawFunds<'info> {
         payer = authority, 
         associated_token::mint = payment_mint, 
         associated_token::authority = authority,
-        constraint = app_creator_vault.mint.key() == token_config.seller_config.payment_mint 
+        constraint = receiver_vault.mint.key() == token_config.seller_config.payment_mint 
             @ ErrorCode::IncorrectReceiverTokenAccount, 
     )]
     pub receiver_vault: Box<InterfaceAccount<'info, TokenAccount>>,
