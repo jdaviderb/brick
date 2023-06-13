@@ -1,5 +1,6 @@
 pub mod create_app;
-pub mod create_product;
+pub mod create_mint;
+pub mod create_config;
 pub mod delete_product;
 pub mod edit_fees;
 pub mod edit_price;
@@ -8,7 +9,8 @@ pub mod refund;
 pub mod withdraw_funds;
 
 pub use create_app::*;
-pub use create_product::*;
+pub use create_mint::*;
+pub use create_config::*;
 pub use delete_product::*;
 pub use edit_price::*;
 pub use edit_fees::*;

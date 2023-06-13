@@ -8,12 +8,18 @@ import {
   createMintToInstruction,
   TOKEN_2022_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
+  createInitializeMintCloseAuthorityInstruction,
+  createInitializeMintInstruction,
+  ExtensionType,
+  getMintLen,
 } from "@solana/spl-token";
 import { delay, initNewAccounts } from "./utils";
-import { Connection, PublicKey, SYSVAR_RENT_PUBKEY, SystemProgram } from "@solana/web3.js";
+import { Connection, PublicKey, SYSVAR_RENT_PUBKEY, SystemProgram, Transaction, sendAndConfirmTransaction } from "@solana/web3.js";
 import { Fishnet } from "../../target/types/fishnet";
 import BN from "bn.js";
 import { ASSOCIATED_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
+import { lamports } from "@metaplex-foundation/js";
+import transaction from "@coral-xyz/anchor/dist/cjs/program/namespace/transaction";
 
 describe("fishnet", () => {
   const provider = anchor.AnchorProvider.env();
@@ -41,6 +47,7 @@ describe("fishnet", () => {
       firstId,
       secondId,
       tokenMint,
+      mintBump,
       buyerKeypair,
       buyerTokenVault,
       buyerTransferVault,
@@ -82,18 +89,36 @@ describe("fishnet", () => {
     );
     assert.equal(appAccount.feeBasisPoints, fee);
     await program.methods
-      .createProduct(
+      .createConfig(
         [...firstId],
         [...secondId],
         noRefundTime,
         tokenPrice,
         exemplars,
+        mintBump
       )
       .accounts({
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
         authority: sellerKeypair.publicKey,
+        tokenMint: tokenMint,
         app: appPublicKey,
-        paymentMint: acceptedMintPublicKey,
+        tokenConfig: tokenConfig,
+        paymentMint: acceptedMintPublicKey
+      })
+      .signers(
+        sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
+      )
+      .rpc()
+      .catch(console.error);
+
+    await program.methods
+      .createMint()
+      .accounts({
+        systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
+        rent: SYSVAR_RENT_PUBKEY,
+        authority: sellerKeypair.publicKey,
+        tokenConfig: tokenConfig,
+        tokenMint: tokenMint,
       })
       .signers(
         sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
@@ -316,6 +341,7 @@ describe("fishnet", () => {
       firstId,
       secondId,
       tokenMint,
+      mintBump,
       buyerKeypair,
       buyerTokenVault,
       buyerTransferVault,
@@ -358,18 +384,36 @@ describe("fishnet", () => {
     );
 
     await program.methods
-      .createProduct(
+      .createConfig(
         [...firstId],
         [...secondId],
         noRefundTime,
         oldTokenPrice,
         exemplars,
+        mintBump
       )
       .accounts({
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
         authority: sellerKeypair.publicKey,
+        tokenMint: tokenMint,
         app: appPublicKey,
-        paymentMint: acceptedMintPublicKey,
+        tokenConfig: tokenConfig,
+        paymentMint: acceptedMintPublicKey
+      })
+      .signers(
+        sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
+      )
+      .rpc()
+      .catch(console.error);
+
+    await program.methods
+      .createMint()
+      .accounts({
+        systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
+        rent: SYSVAR_RENT_PUBKEY,
+        authority: sellerKeypair.publicKey,
+        tokenConfig: tokenConfig,
+        tokenMint: tokenMint,
       })
       .signers(
         sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
@@ -492,7 +536,7 @@ describe("fishnet", () => {
         )
         .rpc();
     } catch (e) {
-      console.log('Intentional error'  + e.error.errorCode.code);
+      console.log('Intentional error '  + e.error.errorCode.code);
       assert.equal(e.error.errorCode.code, "TimeForRefundHasConsumed");
     }
 
@@ -587,6 +631,7 @@ describe("fishnet", () => {
       firstId,
       secondId,
       tokenMint,
+      mintBump,
       buyerKeypair,
       buyerTokenVault,
       buyerTransferVault,
@@ -616,19 +661,37 @@ describe("fishnet", () => {
       .rpc()
       .catch(console.error);
 
-    await program.methods
-      .createProduct(
+      await program.methods
+      .createConfig(
         [...firstId],
         [...secondId],
         refundTime,
         tokenPrice,
         exemplars,
+        mintBump
       )
       .accounts({
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
         authority: sellerKeypair.publicKey,
+        tokenMint: tokenMint,
         app: appPublicKey,
-        paymentMint: acceptedMintPublicKey,
+        tokenConfig: tokenConfig,
+        paymentMint: acceptedMintPublicKey
+      })
+      .signers(
+        sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
+      )
+      .rpc()
+      .catch(console.error);
+
+    await program.methods
+      .createMint()
+      .accounts({
+        systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
+        rent: SYSVAR_RENT_PUBKEY,
+        authority: sellerKeypair.publicKey,
+        tokenConfig: tokenConfig,
+        tokenMint: tokenMint,
       })
       .signers(
         sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
@@ -766,6 +829,7 @@ describe("fishnet", () => {
       firstId,
       secondId,
       tokenMint,
+      mintBump,
       buyerKeypair,
       buyerTokenVault,
       buyerTransferVault,
@@ -796,19 +860,36 @@ describe("fishnet", () => {
       .catch(console.error);
 
     await program.methods
-    await program.methods
-      .createProduct(
+      .createConfig(
         [...firstId],
         [...secondId],
         refundTime,
         tokenPrice,
         exemplars,
+        mintBump
       )
       .accounts({
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
         authority: sellerKeypair.publicKey,
+        tokenMint: tokenMint,
         app: appPublicKey,
-        paymentMint: acceptedMintPublicKey,
+        tokenConfig: tokenConfig,
+        paymentMint: acceptedMintPublicKey
+      })
+      .signers(
+        sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
+      )
+      .rpc()
+      .catch(console.error);
+
+    await program.methods
+      .createMint()
+      .accounts({
+        systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
+        rent: SYSVAR_RENT_PUBKEY,
+        authority: sellerKeypair.publicKey,
+        tokenConfig: tokenConfig,
+        tokenMint: tokenMint,
       })
       .signers(
         sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
@@ -934,5 +1015,186 @@ describe("fishnet", () => {
       Number(preTxSellerFunds.amount) + exemplars * Number(tokenPrice),
       Number(postTxSellerFunds.amount)
     );
+  });
+
+  it("Mint and token accounts should be deleted when there is no active payments", async () => {
+    const buyerBalance = 10;
+    const sellerBalance = 2;
+    const tokenPrice = new BN(2);
+    const exemplars = 1;
+    const refundTime = new anchor.BN(3); // it is introduced in seconds
+    const appName = "Building";
+    const {
+      appPublicKey,
+      appCreatorKeypair,
+      creatorTransferVault,
+      sellerKeypair,
+      acceptedMintPublicKey,
+      tokenConfig,
+      firstId,
+      secondId,
+      tokenMint,
+      mintBump,
+      buyerKeypair,
+      buyerTokenVault,
+      buyerTransferVault,
+      buyTimestamp,
+      paymentPublicKey,
+      paymentVaultPublicKey,
+      sellerTransferVault,
+    } = await initNewAccounts(
+      provider,
+      program,
+      appName,
+      buyerBalance,
+      sellerBalance,
+      creatorBalance
+    );
+
+    await program.methods
+      .createApp(appName, noFee)
+      .accounts({
+        authority: appCreatorKeypair.publicKey,
+      })
+      .signers(
+        appCreatorKeypair instanceof (anchor.Wallet as any)
+          ? []
+          : [appCreatorKeypair]
+      )
+      .rpc()
+      .catch(console.error);
+
+    await program.methods
+      .createConfig(
+        [...firstId],
+        [...secondId],
+        refundTime,
+        tokenPrice,
+        exemplars,
+        mintBump
+      )
+      .accounts({
+        authority: sellerKeypair.publicKey,
+        tokenMint: tokenMint,
+        app: appPublicKey,
+        tokenConfig: tokenConfig,
+        paymentMint: acceptedMintPublicKey
+      })
+      .signers(
+        sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
+      )
+      .rpc()
+      .catch(console.error);
+
+    await program.methods
+      .createMint()
+      .accounts({
+        systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
+        rent: SYSVAR_RENT_PUBKEY,
+        authority: sellerKeypair.publicKey,
+        tokenConfig: tokenConfig,
+        tokenMint: tokenMint,
+      })
+      .signers(
+        sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
+      )
+      .rpc()
+      .catch(console.error);
+
+    await program.methods
+      .registerBuy(buyTimestamp)
+      .accounts({
+        systemProgram: SystemProgram.programId,
+        tokenProgramV0: TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_PROGRAM_ID,
+        rent: SYSVAR_RENT_PUBKEY,
+        authority: buyerKeypair.publicKey,
+        tokenConfig: tokenConfig,
+        paymentAccount: paymentPublicKey,
+        tokenMint: tokenMint,
+        paymentMint: acceptedMintPublicKey,
+        paymentVault: paymentVaultPublicKey,
+        buyerTransferVault: buyerTransferVault,
+        buyerTokenVault: buyerTokenVault,
+      })
+      .signers(
+        buyerKeypair instanceof (anchor.Wallet as any) ? [] : [buyerKeypair]
+      )
+      .rpc()
+      .catch(console.error);
+
+    await program.methods
+      .withdrawFunds()
+      .accounts({
+        authority: sellerKeypair.publicKey,
+        tokenConfig: tokenConfig,
+        paymentAccount: paymentPublicKey,
+        app: appPublicKey,
+        tokenMint: tokenMint,
+        paymentMint: acceptedMintPublicKey,
+        buyer: buyerKeypair.publicKey,
+        appCreator: appCreatorKeypair.publicKey,
+        paymentVault: paymentVaultPublicKey,
+        appCreatorVault: creatorTransferVault,
+        receiverVault: sellerTransferVault,
+      })
+      .signers(
+        sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
+      )
+      .rpc()
+      .catch(console.error);
+
+    await program.methods
+      .deleteProduct()
+      .accounts({
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
+        authority: sellerKeypair.publicKey,
+        tokenConfig: tokenConfig,
+        tokenMint: tokenMint,
+      })
+      .signers(
+        sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
+      )
+      .rpc()
+      .catch(console.error);
+
+    try {
+      await getAccount(
+        provider.connection,
+        tokenMint
+      )
+    } catch (e) {
+      assert.isTrue(e.toString().includes("TokenAccountNotFoundError"))
+    }
+
+    try {
+      await getAccount(
+        provider.connection,
+        buyerTokenVault
+      );
+    } catch (e) {
+      assert.isTrue(e.toString().includes("TokenAccountNotFoundError"))
+    }
+
+    try {
+      await getAccount(
+        provider.connection,
+        paymentPublicKey
+      );
+    } catch (e) {
+      assert.isTrue(e.toString().includes("TokenAccountNotFoundError"))
+    }
+
+    try {
+      await getAccount(
+        provider.connection,
+        paymentVaultPublicKey
+      );
+    } catch (e) {
+      assert.isTrue(e.toString().includes("TokenAccountNotFoundError"))
+    }
+
   });
 })

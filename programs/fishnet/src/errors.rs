@@ -36,6 +36,10 @@ pub enum ErrorCode {
     IncorrectReceiverTokenAccount,
     #[msg("You are providing an incorrect mint")]
     IncorrectMint,
+    #[msg("Given nonce is invalid")]
+    IncorrectNonce,
+    #[msg("Incorrect seeds")]
+    IncorrectSeeds,
     #[msg("Failed to convert data")]
     ConversionError,
 }

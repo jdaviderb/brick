@@ -17,23 +17,28 @@ pub mod fishnet {
         create_app::handler(ctx, app_name, fee_basis_points)
     }
 
-    pub fn create_product(
-        ctx: Context<CreateProduct>,
+    pub fn create_config(
+        ctx: Context<CreateConfig>,
         first_id: [u8; 32],
         second_id: [u8; 32],
         refund_timespan: u64,
         token_price: u64,
         exemplars: i32,
+        bump: u8
     ) -> Result<()> {
-        
-        create_product::handler(
+        create_config::handler(
             ctx,
             first_id,
             second_id,
             refund_timespan,
             token_price,
             exemplars,
+            bump
         )
+    }
+
+    pub fn create_mint(ctx: Context<CreateMint>) -> Result<()> {
+        create_mint::handler(ctx)
     }    
 
     pub fn delete_product(ctx: Context<DeleteProduct>) -> Result<()> {

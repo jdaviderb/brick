@@ -27,7 +27,7 @@ pub struct RegisterBuy<'info> {
         mut,
         seeds = [
             b"token_config".as_ref(),
-            token_config.token_mint.as_ref(),
+            token_mint.key().as_ref(),
         ],
         bump = token_config.bumps.bump
     )]

@@ -41,7 +41,6 @@ pub fn handler<'info>(ctx: Context<DeleteProduct>) -> Result<()> {
     if ctx.accounts.token_config.active_payments > 0 {
         return Err(ErrorCode::CannotCloseProduct.into());
     }
-
     let seeds = &[
         b"token_config".as_ref(),
         ctx.accounts.token_config.token_mint.as_ref(),

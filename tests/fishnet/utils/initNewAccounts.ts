@@ -40,7 +40,7 @@ export async function initNewAccounts(
     [Buffer.from("app", "utf-8"), Buffer.from(appName, "utf-8")],
     program.programId
   );
-  const [tokenMint] = anchor.web3.PublicKey.findProgramAddressSync(
+  const [tokenMint, mintBump] = anchor.web3.PublicKey.findProgramAddressSync(
     [Buffer.from("token_mint", "utf-8"), firstId, secondId],
     program.programId
   );
@@ -121,6 +121,7 @@ export async function initNewAccounts(
     secondId,
     tokenConfig,
     tokenMint,
+    mintBump,
     buyerKeypair,
     buyerTokenVault,
     buyerTransferVault,
