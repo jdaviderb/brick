@@ -12,48 +12,45 @@ use {
 pub struct DeleteProduct<'info> {
     pub token_program: Interface<'info, TokenInterface>,
     #[account(mut)]
-    pub authority: Signer<'info>,
+    pub product_authority: Signer<'info>,
     #[account(
         mut,
         seeds = [
-            b"token_config".as_ref(),
-            token_config.token_mint.as_ref(),
+            b"product".as_ref(),
+            product.product_mint.as_ref(),
         ],
-        close = authority,
-        bump = token_config.bumps.bump,
-        constraint = token_config.authority == authority.key() @ ErrorCode::IncorrectTokenAuthority
+        close = product,
+        bump = product.bumps.bump,
+        has_one = product_authority @ ErrorCode::IncorrectAuthority,
     )]
-    pub token_config: Box<Account<'info, TokenConfig>>,
+    pub product: Box<Account<'info, Product>>,
     #[account(
         mut,
         seeds = [
-            b"token_mint".as_ref(),
-            token_config.first_id.as_ref(),
-            token_config.second_id.as_ref(),
+            b"product_mint".as_ref(),
+            product.first_id.as_ref(),
+            product.second_id.as_ref(),
         ],
-        bump = token_config.bumps.mint_bump,
-        constraint = token_config.token_mint == token_mint.key() @ ErrorCode::IncorrectReceiverTokenAccount
+        bump = product.bumps.mint_bump,
+        constraint = product.product_mint == product_mint.key() @ ErrorCode::IncorrectMint
     )]
-    pub token_mint: Box<InterfaceAccount<'info, Mint>>,
+    pub product_mint: Box<InterfaceAccount<'info, Mint>>,
 }
 
 pub fn handler<'info>(ctx: Context<DeleteProduct>) -> Result<()> {
-    if ctx.accounts.token_config.active_payments > 0 {
-        return Err(ErrorCode::CannotCloseProduct.into());
-    }
     let seeds = &[
-        b"token_config".as_ref(),
-        ctx.accounts.token_config.token_mint.as_ref(),
-        &[ctx.accounts.token_config.bumps.bump],
+        b"product".as_ref(),
+        ctx.accounts.product.product_mint.as_ref(),
+        &[ctx.accounts.product.bumps.bump],
     ];
 
     close_account(
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
             CloseAccount {
-                account: ctx.accounts.token_mint.to_account_info(),
-                destination: ctx.accounts.authority.to_account_info(),
-                authority: ctx.accounts.token_config.to_account_info(),
+                account: ctx.accounts.product_mint.to_account_info(),
+                destination: ctx.accounts.product_authority.to_account_info(),
+                authority: ctx.accounts.product.to_account_info(),
             },
             &[&seeds[..]],
         ),

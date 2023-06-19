@@ -2,10 +2,11 @@ use {
     crate::state::*,
     crate::errors::ErrorCode,
     anchor_lang::prelude::*,
+    anchor_spl::token_interface::Mint
 };
 
 #[derive(Accounts)]
-pub struct EditPrice<'info> {
+pub struct EditPaymentMint<'info> {
     #[account(mut)]
     pub product_authority: Signer<'info>,
     #[account(
@@ -18,10 +19,12 @@ pub struct EditPrice<'info> {
         has_one = product_authority @ ErrorCode::IncorrectAuthority
     )]
     pub product: Box<Account<'info, Product>>,
+    /// CHECK: no need to validate, seller is the unique wallet who can call this instruction
+    pub payment_mint: Box<InterfaceAccount<'info, Mint>>,
 }
 
-pub fn handler<'info>(ctx: Context<EditPrice>, product_price: u64) -> Result<()> {
-    (*ctx.accounts.product).seller_config.product_price = product_price;
+pub fn handler<'info>(ctx: Context<EditPaymentMint>) -> Result<()> {
+    (*ctx.accounts.product).seller_config.payment_mint = ctx.accounts.payment_mint.key();
 
     Ok(())
 }

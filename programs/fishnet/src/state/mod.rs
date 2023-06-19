@@ -1,7 +1,5 @@
-mod token_config;
-mod payment;
-mod app;
+mod product;
+mod governance;
 
-pub use token_config::*;
-pub use payment::*;
-pub use app::*;
+pub use product::*;
+pub use governance::*;

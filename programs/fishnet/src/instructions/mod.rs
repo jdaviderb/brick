@@ -1,19 +1,15 @@
-pub mod create_app;
-pub mod create_mint;
-pub mod create_config;
+pub mod create_governance;
+pub mod create_product;
 pub mod delete_product;
-pub mod edit_fees;
+pub mod edit_points;
+pub mod edit_payment_mint;
 pub mod edit_price;
 pub mod register_buy;
-pub mod refund;
-pub mod withdraw_funds;
 
-pub use create_app::*;
-pub use create_mint::*;
-pub use create_config::*;
+pub use create_governance::*;
+pub use create_product::*;
 pub use delete_product::*;
+pub use edit_points::*;
+pub use edit_payment_mint::*;
 pub use edit_price::*;
-pub use edit_fees::*;
 pub use register_buy::*;
-pub use refund::*;
-pub use withdraw_funds::*;
