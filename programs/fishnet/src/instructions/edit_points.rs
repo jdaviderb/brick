@@ -6,9 +6,10 @@ use {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct EditPointsParams {
-    pub fee_basis_points: u16,
-    pub promotion_basis_points: u16,
-    pub fee_reduction_basis_points: u16
+    pub fee: u16,
+    pub fee_reduction: u16,
+    pub seller_promo: u16,
+    pub buyer_promo: u16
 }
 
 #[derive(Accounts)]
@@ -33,9 +34,10 @@ pub fn handler<'info>(
 ) -> Result<()> {
     Governance::validate_basis_points(params.clone())?;
 
-    ctx.accounts.governance.fee_basis_points = params.fee_basis_points;
-    ctx.accounts.governance.fee_reduction_basis_points = params.fee_reduction_basis_points;
-    ctx.accounts.governance.promotion_basis_points = params.promotion_basis_points;
+    (*ctx.accounts.governance).fee = params.fee;
+    (*ctx.accounts.governance).fee_reduction = params.fee_reduction;
+    (*ctx.accounts.governance).seller_promo = params.seller_promo;
+    (*ctx.accounts.governance).buyer_promo = params.buyer_promo;
 
     Ok(())
 }

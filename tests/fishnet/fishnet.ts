@@ -1,1200 +1,758 @@
 import * as anchor from "@coral-xyz/anchor";
-import { Program, AnchorError } from "@coral-xyz/anchor";
+import { Program } from "@coral-xyz/anchor";
 import { assert } from "chai";
 import {
-  createAssociatedTokenAccountInstruction,
-  getAccount,
   getMint,
-  createMintToInstruction,
   TOKEN_2022_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
-  createInitializeMintCloseAuthorityInstruction,
-  createInitializeMintInstruction,
-  ExtensionType,
-  getMintLen,
+  getOrCreateAssociatedTokenAccount,
+  Account,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  getAccount,
+  getAssociatedTokenAddress,
 } from "@solana/spl-token";
-import { delay, initNewAccounts } from "./utils";
-import { Connection, PublicKey, SYSVAR_RENT_PUBKEY, SystemProgram, Transaction, sendAndConfirmTransaction } from "@solana/web3.js";
+import { createFundedAssociatedTokenAccount, createFundedWallet, createMint, delay, getSplitId } from "./utils";
+import { ConfirmOptions, SYSVAR_RENT_PUBKEY, SystemProgram } from "@solana/web3.js";
 import { Fishnet } from "../../target/types/fishnet";
 import BN from "bn.js";
-import { ASSOCIATED_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
-import { lamports } from "@metaplex-foundation/js";
-import transaction from "@coral-xyz/anchor/dist/cjs/program/namespace/transaction";
+import { v4 as uuid } from "uuid";
 
 describe("fishnet", () => {
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
   const program = anchor.workspace.Fishnet as Program<Fishnet>;
+  const confirmOptions: ConfirmOptions = { commitment: "confirmed" };
 
-  const noRefundTime = new anchor.BN(0);
-  const creatorBalance = 100000000;
-  const noFee = 0;
+  let governanceAuthorityKeypair: anchor.web3.Keypair;
+  let governanceBalance: number;
+  let productAuthorityKeypair: anchor.web3.Keypair;
+  let productAuthorityBalance: number;
+  let buyerKeypair: anchor.web3.Keypair;
+  let buyerBalance: number;
+  let exploiterKeypair: anchor.web3.Keypair;
+  let exploiterBalance: number;
 
-  it("Create an app (including a fee), an token to mint unlimited editions and buy some, checks payment data is correct, withdraw to check fee", async () => {
-    const buyerBalance = 500000000;
-    const sellerBalance = 200000000;
-    const tokenPrice = new BN(50000);
-    const exemplars = -1; // makes the token can be sold unlimited times
-    const fee = 250; // represents 5% fee for each sale
-    const appName = "Fishplace";
-    const {
-      appPublicKey,
-      appCreatorKeypair,
-      creatorTransferVault,
-      sellerKeypair,
-      acceptedMintPublicKey,
-      tokenConfig,
-      firstId,
-      secondId,
-      tokenMint,
-      mintBump,
-      buyerKeypair,
-      buyerTokenVault,
-      buyerTransferVault,
-      buyTimestamp,
-      paymentPublicKey,
-      paymentVaultPublicKey,
-      secondBuyTimestamp,
-      secondPaymentPublicKey,
-      secondPaymentVaultPublicKey,
-      sellerTransferVault,
-    } = await initNewAccounts(
-      provider,
-      program,
-      appName,
-      buyerBalance,
-      sellerBalance,
-      creatorBalance
+  let governancePubkey: anchor.web3.PublicKey;
+  let governanceMint: anchor.web3.PublicKey;
+  let governanceName: Buffer;
+  let fee: number;
+  let feeReduction: number;
+  let sellerPromo: number;
+  let buyerPromo: number;
+
+  let productMintPubkey: anchor.web3.PublicKey;
+  let productPubkey: anchor.web3.PublicKey;
+  let paymentMintPubkey: anchor.web3.PublicKey;
+  let mintBump: number;
+  let productPrice: BN;
+  let firstId: Buffer;
+  let secondId: Buffer;
+
+  let governanceTokenVault: anchor.web3.PublicKey;
+  let buyerTokenVault:anchor.web3.PublicKey;
+  let governanceTransferVault: anchor.web3.PublicKey;
+  let productAuthorityTransferVault: anchor.web3.PublicKey
+  let buyerTransferVault: anchor.web3.PublicKey;
+
+  it("Should create the fishnet governance account and check potential exploits", async () => {
+    governanceBalance = 1000;
+    governanceAuthorityKeypair = await createFundedWallet(provider, governanceBalance);
+    governanceName = Buffer.from("Fishnet",  "utf-8");
+    governanceMint = await createMint(provider);
+    [governancePubkey] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("governance", "utf-8"), governanceName],
+      program.programId
+    );
+    [governanceTokenVault] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("governance_token_vault", "utf-8"), governancePubkey.toBuffer()],
+      program.programId
     );
 
+    [fee, feeReduction, sellerPromo, buyerPromo] = [0, 0, 0, 0];
+    const createGovernanceParams = {
+      governanceName: [...governanceName],
+      fee,
+      feeReduction,
+      sellerPromo,
+      buyerPromo
+    };
+
     await program.methods
-      .createApp(appName, fee)
+      .createGovernance(createGovernanceParams)
       .accounts({
-        authority: appCreatorKeypair.publicKey,
+        tokenProgramV0: TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+        rent: SYSVAR_RENT_PUBKEY,
+        governanceAuthority: governanceAuthorityKeypair.publicKey,
+        governance: governancePubkey,
+        governanceMint: governanceMint,
+        governanceTokenVault: governanceTokenVault,
       })
       .signers(
-        appCreatorKeypair instanceof (anchor.Wallet as any)
+        governanceAuthorityKeypair instanceof (anchor.Wallet as any)
           ? []
-          : [appCreatorKeypair]
+          : [governanceAuthorityKeypair]
       )
-      .rpc()
+      .rpc(confirmOptions)
       .catch(console.error);
 
-    const appAccount = await program.account.app.fetch(appPublicKey);
-    assert.isDefined(appAccount);
-    assert.equal(appAccount.appName, appName);
-    assert.equal(
-      appAccount.authority.toString(),
-      appCreatorKeypair.publicKey.toString()
-    );
-    assert.equal(appAccount.feeBasisPoints, fee);
-    await program.methods
-      .createConfig(
-        [...firstId],
-        [...secondId],
-        noRefundTime,
-        tokenPrice,
-        exemplars,
-        mintBump
-      )
-      .accounts({
-        authority: sellerKeypair.publicKey,
-        tokenMint: tokenMint,
-        app: appPublicKey,
-        tokenConfig: tokenConfig,
-        paymentMint: acceptedMintPublicKey
-      })
-      .signers(
-        sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
-      )
-      .rpc()
-      .catch(console.error);
+    const governanceAccount = await program.account.governance.fetch(governancePubkey);
+    assert.isDefined(governanceAccount);
+    assert.equal(governanceAccount.governanceName.toString(), [...governanceName].toString());
+    assert.equal(governanceAccount.governanceAuthority.toString(), governanceAuthorityKeypair.publicKey.toString());
+    assert.equal(governanceAccount.governanceMint.toString(), governanceMint.toString());
+    assert.equal(governanceAccount.governanceTokenVault.toString(), governanceTokenVault.toString());
+    assert.equal(governanceAccount.fee, fee);
+    assert.equal(governanceAccount.feeReduction, feeReduction);
+    assert.equal(governanceAccount.sellerPromo, sellerPromo);
+    assert.equal(governanceAccount.buyerPromo, buyerPromo);
 
-    await program.methods
-      .createMint()
-      .accounts({
-        systemProgram: SystemProgram.programId,
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
-        rent: SYSVAR_RENT_PUBKEY,
-        authority: sellerKeypair.publicKey,
-        tokenConfig: tokenConfig,
-        tokenMint: tokenMint,
-      })
-      .signers(
-        sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
-      )
-      .rpc()
-      .catch(console.error);
-
-    const tokenMintAccount = await getMint(provider.connection, tokenMint, null, TOKEN_2022_PROGRAM_ID);
-    assert.equal(tokenMintAccount.supply, BigInt(0));
-
-    const preBuyTokenAccount = await program.account.tokenConfig.fetch(
-      tokenConfig
-    );
-    assert.isDefined(preBuyTokenAccount);
-    assert.equal(preBuyTokenAccount.appPubkey.toString(), appPublicKey.toString());
-    assert.equal(preBuyTokenAccount.firstId.toString(), [...firstId].toString());
-    assert.equal(
-      preBuyTokenAccount.sellerConfig.paymentMint.toString(),
-      acceptedMintPublicKey.toString()
-    );
-    assert.equal(preBuyTokenAccount.tokenMint.toString(), tokenMint.toString());
-    assert.equal(
-      preBuyTokenAccount.authority.toString(),
-      sellerKeypair.publicKey.toString()
-    );
-    assert.equal(
-      Number(preBuyTokenAccount.sellerConfig.refundTimespan),
-      Number(noRefundTime)
-    );
-    assert.equal(preBuyTokenAccount.sellerConfig.tokenPrice.toString(), tokenPrice.toString());
-    assert.equal(preBuyTokenAccount.sellerConfig.exemplars, exemplars);
-
-    await program.methods
-      .registerBuy(buyTimestamp)
-      .accounts({
-        systemProgram: SystemProgram.programId,
-        tokenProgramV0: TOKEN_PROGRAM_ID,
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_PROGRAM_ID,
-        rent: SYSVAR_RENT_PUBKEY,
-        authority: buyerKeypair.publicKey,
-        tokenConfig: tokenConfig,
-        paymentAccount: paymentPublicKey,
-        tokenMint: tokenMint,
-        paymentMint: acceptedMintPublicKey,
-        paymentVault: paymentVaultPublicKey,
-        buyerTransferVault: buyerTransferVault,
-        buyerTokenVault: buyerTokenVault,
-      })
-      .signers(
-        buyerKeypair instanceof (anchor.Wallet as any) ? [] : [buyerKeypair]
-      )
-      .rpc()
-      .catch(console.error);
-
-    await program.methods
-      .registerBuy(secondBuyTimestamp)
-      .accounts({
-        tokenProgramV0: TOKEN_PROGRAM_ID,
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
-        authority: buyerKeypair.publicKey,
-        tokenConfig: tokenConfig,
-        tokenMint: tokenMint,
-        paymentMint: acceptedMintPublicKey,
-        paymentAccount: secondPaymentPublicKey,
-        paymentVault: secondPaymentVaultPublicKey,
-        buyerTransferVault: buyerTransferVault,
-        buyerTokenVault: buyerTokenVault,
-      })
-      .signers(
-        buyerKeypair instanceof (anchor.Wallet as any) ? [] : [buyerKeypair]
-      )
-      .rpc()
-      .catch(console.error);
-
-    const paymentAccount = await program.account.payment.fetch(
-      paymentPublicKey
-    );
-    assert.equal(paymentAccount.tokenMint.toString(), tokenMint.toString());
-    assert.equal(
-      paymentAccount.seller.toString(),
-      sellerKeypair.publicKey.toString()
-    );
-    assert.equal(
-      paymentAccount.buyer.toString(),
-      buyerKeypair.publicKey.toString()
-    );
-    assert.equal(Number(paymentAccount.tokenPrice), Number(tokenPrice));
-    assert.equal(Number(paymentAccount.paymentTimestamp), Number(buyTimestamp));
-    assert.equal(Number(paymentAccount.refundConsumedAt), Number(buyTimestamp));
-
-    const secondPaymentAccount = await program.account.payment.fetch(
-      secondPaymentPublicKey
-    );
-    assert.equal(
-      secondPaymentAccount.tokenMint.toString(),
-      tokenMint.toString()
-    );
-    assert.equal(
-      secondPaymentAccount.seller.toString(),
-      sellerKeypair.publicKey.toString()
-    );
-    assert.equal(
-      secondPaymentAccount.buyer.toString(),
-      buyerKeypair.publicKey.toString()
-    );
-    assert.equal(Number(secondPaymentAccount.tokenPrice), Number(tokenPrice));
-    assert.equal(
-      Number(secondPaymentAccount.paymentTimestamp),
-      Number(secondBuyTimestamp)
-    );
-    assert.equal(
-      Number(secondPaymentAccount.refundConsumedAt),
-      Number(secondBuyTimestamp)
-    );
-
-    // postTxInfo
-    const tokenConfigData = await program.account.tokenConfig.fetch(
-      tokenConfig
-    );
-    assert.isDefined(tokenConfigData);
-    assert.equal(tokenConfigData.activePayments, 2);
-
-    // check if the buyer is able to mint more tokens from the units bought
-    // impossible, the mint authority is the token pda, only is possible calling
-    // the buy ix that first requires the transfer
+    // try to create the already created governance account
     try {
-      await provider.sendAndConfirm(
-        new anchor.web3.Transaction().add(
-          createMintToInstruction(
-            tokenMint,
-            buyerKeypair.publicKey,
-            tokenConfig,
-            1,
-            [buyerKeypair.publicKey]
-          )
+      await program.methods
+        .createGovernance(createGovernanceParams)
+        .accounts({
+          tokenProgramV0: TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+          rent: SYSVAR_RENT_PUBKEY,
+          governanceAuthority: governanceAuthorityKeypair.publicKey,
+          governance: governancePubkey,
+          governanceMint: governanceMint,
+          governanceTokenVault: governanceTokenVault,
+        })
+        .signers(
+          governanceAuthorityKeypair instanceof (anchor.Wallet as any)
+            ? []
+            : [governanceAuthorityKeypair]
         )
-      );
+        .rpc(confirmOptions);
     } catch (e) {
-        assert.equal(e, "Error: Signature verification failed");
+      const logsWithError = e.logs;
+      const isAlreadyInUse = logsWithError.some(log => log.includes("already in use"));
+      assert.isTrue(isAlreadyInUse);   
     }
 
-    await program.methods
-      .withdrawFunds()
-      .accounts({
-        authority: sellerKeypair.publicKey,
-        tokenConfig: tokenConfig,
-        paymentAccount: paymentPublicKey,
-        app: appPublicKey,
-        tokenMint: tokenMint,
-        paymentMint: acceptedMintPublicKey,
-        buyer: buyerKeypair.publicKey,
-        appCreator: appCreatorKeypair.publicKey,
-        paymentVault: paymentVaultPublicKey,
-        appCreatorVault: creatorTransferVault,
-        receiverVault: sellerTransferVault,
-      })
-      .signers(
-        sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
-      )
-      .rpc()
-      .catch(console.error);
+    // try to create a governance account with a different name (only possible to create "Fishnet" governance account)
+    const errorGovernanceName = Buffer.alloc(7);
+    Buffer.from("Brick", "utf-8").copy(errorGovernanceName);
+    const [errorGovernancePubkey] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("governance", "utf-8"), errorGovernanceName],
+      program.programId
+    );
+    const errorCreateGovernanceParams = {
+      governanceName: [...errorGovernanceName],
+      fee,
+      feeReduction,
+      sellerPromo,
+      buyerPromo
+    };
+    const [errorGovernanceTokenVault] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("governance_token_vault", "utf-8"), errorGovernancePubkey.toBuffer()],
+      program.programId
+    );
+    
+    exploiterBalance = 1000;
+    exploiterKeypair = await createFundedWallet(provider, exploiterBalance);
+    try {
+      await program.methods
+        .createGovernance(errorCreateGovernanceParams)
+        .accounts({
+          tokenProgramV0: TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+          rent: SYSVAR_RENT_PUBKEY,
+          governanceAuthority: exploiterKeypair.publicKey,
+          governance: errorGovernancePubkey,
+          governanceMint: governanceMint,
+          governanceTokenVault: errorGovernanceTokenVault,
+        })
+        .signers(
+          exploiterKeypair instanceof anchor.Wallet ? [] : [exploiterKeypair]
+        )
+        .rpc(confirmOptions);
+    } catch (e) {
+      if (e as anchor.AnchorError)
+        assert.equal(e.error.errorCode.code, "IncorrectGovernanceName");
+    }
+  });    
+
+  it("Should edit governance data and check possible exploits", async () => {
+    const [newFee, newFeeReduction, newSellerPromo, newBuyerPromo] = [100, 100, 100, 100];
+    const newEditPointParams = {
+      fee: newFee,
+      feeReduction: newFeeReduction,
+      sellerPromo: newSellerPromo,
+      buyerPromo: newBuyerPromo,
+    };
 
     await program.methods
-      .withdrawFunds()
+      .editPoints(newEditPointParams)
       .accounts({
-        authority: sellerKeypair.publicKey,
-        tokenConfig: tokenConfig,
-        paymentAccount: secondPaymentPublicKey,
-        appCreatorVault: creatorTransferVault,
-        app: appPublicKey,
-        tokenMint: tokenMint,
-        paymentMint: acceptedMintPublicKey,
-        buyer: buyerKeypair.publicKey,
-        appCreator: appCreatorKeypair.publicKey,
-        paymentVault: secondPaymentVaultPublicKey,
-        receiverVault: sellerTransferVault,
+        governanceAuthority: governanceAuthorityKeypair.publicKey,
+        governance: governancePubkey,
       })
       .signers(
-        sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
+        governanceAuthorityKeypair instanceof (anchor.Wallet as any)
+          ? []
+          : [governanceAuthorityKeypair]
       )
-      .rpc()
+      .rpc(confirmOptions)
       .catch(console.error);
 
-    const creatorTokenVaultAccount = await getAccount(
-      provider.connection,
-      creatorTransferVault
-    );
-    const totalAmount = 2 * Number(tokenPrice);
-    const creatorFee = (totalAmount * fee) / 10000;
-    const expectedCreatorAmount = Math.trunc(creatorBalance + creatorFee);
-    assert.equal(
-      Number(creatorTokenVaultAccount.amount),
-      expectedCreatorAmount
-    );
-    const sellerTokenAccount = await getAccount(
-      provider.connection,
-      sellerTransferVault
-    );
-    const expectedSellerAmount = Math.trunc(
-      sellerBalance + totalAmount - creatorFee
-    );
-    assert.equal(Number(sellerTokenAccount.amount), expectedSellerAmount);
+    const changedGovernanceAccount = await program.account.governance.fetch(governancePubkey);
+    assert.isDefined(changedGovernanceAccount);
+    assert.equal(changedGovernanceAccount.fee, newFee);
+    assert.equal(changedGovernanceAccount.feeReduction, newFeeReduction);
+    assert.equal(changedGovernanceAccount.sellerPromo, newSellerPromo);
+    assert.equal(changedGovernanceAccount.buyerPromo, newBuyerPromo);
+
+    // to be able to re-use this account and its data, the account data will be the same that was before this unit test
+    const originalEditPointParams = {
+      fee,
+      feeReduction,
+      sellerPromo,
+      buyerPromo
+    };
+
+    await program.methods
+      .editPoints(originalEditPointParams)
+      .accounts({
+        governanceAuthority: governanceAuthorityKeypair.publicKey,
+        governance: governancePubkey,
+      })
+      .signers(
+        governanceAuthorityKeypair instanceof (anchor.Wallet as any)
+          ? []
+          : [governanceAuthorityKeypair]
+      )
+      .rpc(confirmOptions)
+      .catch(console.error);
+
+    // another wallet tries to change product data
+    try {
+      await program.methods
+      .editPoints(originalEditPointParams)
+      .accounts({
+        governanceAuthority: exploiterKeypair.publicKey,
+        governance: governancePubkey,
+      })
+        .signers(
+          exploiterKeypair instanceof (anchor.Wallet as any)
+            ? []
+            : [exploiterKeypair]
+        )
+        .rpc(confirmOptions);
+    } catch (e) {
+      if (e as anchor.AnchorError)
+        assert.equal(e.error.errorCode.code, "IncorrectAuthority");
+    }
+
+    const governanceAccount = await program.account.governance.fetch(governancePubkey);
+    assert.isDefined(governanceAccount);
+    assert.equal(governanceAccount.fee, fee);
+    assert.equal(governanceAccount.feeReduction, feeReduction);
+    assert.equal(governanceAccount.sellerPromo, sellerPromo);
+    assert.equal(governanceAccount.buyerPromo, buyerPromo);
   });
 
-  it("Create an token and modify the price, an user pays the new price, seller withdraws funds and get the correct amount", async () => {
-    const buyerBalance = 10;
-    const sellerBalance = 2;
-    const oldTokenPrice = new BN(1);
-    const newTokenPrice = new BN(2);
-    const exemplars = -1; // makes the token can be sold unlimited times
-    const appName = "Solana";
-    const {
-      appPublicKey,
-      appCreatorKeypair,
-      creatorTransferVault,
-      sellerKeypair,
-      acceptedMintPublicKey,
-      tokenConfig,
-      firstId,
-      secondId,
-      tokenMint,
-      mintBump,
-      buyerKeypair,
-      buyerTokenVault,
-      buyerTransferVault,
-      buyTimestamp,
-      paymentPublicKey,
-      paymentVaultPublicKey,
-      secondBuyTimestamp,
-      secondPaymentPublicKey,
-      secondPaymentVaultPublicKey,
-      sellerTransferVault,
-    } = await initNewAccounts(
-      provider,
-      program,
-      appName,
-      buyerBalance,
-      sellerBalance,
-      creatorBalance
+  it("Should create a product", async () => {
+    [firstId, secondId] = getSplitId(uuid());
+    productAuthorityBalance = 1000;
+    productAuthorityKeypair = await createFundedWallet(provider, productAuthorityBalance);
+    [productMintPubkey, mintBump] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("product_mint", "utf-8"), firstId, secondId],
+      program.programId
     );
+    paymentMintPubkey = await createMint(provider);
+    [productPubkey] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("product", "utf-8"), productMintPubkey.toBuffer()],
+      program.programId
+    );
+    productPrice = new BN(200);
+
+    const createProductParams = {
+      firstId: [...firstId],
+      secondId: [...secondId],
+      productPrice,
+      mintBump
+    };
 
     await program.methods
-      .createApp(appName, noFee)
+      .createProduct(createProductParams)
       .accounts({
-        authority: appCreatorKeypair.publicKey,
+        systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
+        rent: SYSVAR_RENT_PUBKEY,
+        productAuthority: productAuthorityKeypair.publicKey,
+        governance: governancePubkey,
+        product: productPubkey,
+        productMint: productMintPubkey,
+        paymentMint: paymentMintPubkey
       })
       .signers(
-        appCreatorKeypair instanceof (anchor.Wallet as any)
+        productAuthorityKeypair instanceof (anchor.Wallet as any)
           ? []
-          : [appCreatorKeypair]
+          : [productAuthorityKeypair]
       )
-      .rpc()
+      .rpc(confirmOptions)
       .catch(console.error);
 
-    const preTxBuyerFunds = await getAccount(
-      provider.connection,
-      buyerTransferVault
-    );
-    const preTxSellerFunds = await getAccount(
-      provider.connection,
-      sellerTransferVault
-    );
-
-    await program.methods
-      .createConfig(
-        [...firstId],
-        [...secondId],
-        noRefundTime,
-        oldTokenPrice,
-        exemplars,
-        mintBump
-      )
-      .accounts({
-        authority: sellerKeypair.publicKey,
-        tokenMint: tokenMint,
-        app: appPublicKey,
-        tokenConfig: tokenConfig,
-        paymentMint: acceptedMintPublicKey
-      })
-      .signers(
-        sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
-      )
-      .rpc()
-      .catch(console.error);
-
-    await program.methods
-      .createMint()
-      .accounts({
-        systemProgram: SystemProgram.programId,
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
-        rent: SYSVAR_RENT_PUBKEY,
-        authority: sellerKeypair.publicKey,
-        tokenConfig: tokenConfig,
-        tokenMint: tokenMint,
-      })
-      .signers(
-        sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
-      )
-      .rpc()
-      .catch(console.error);
-
-    const prePriceChangeTokenAccount =
-      await program.account.tokenConfig.fetch(tokenConfig);
-    assert.isDefined(prePriceChangeTokenAccount);
-    assert.equal(Number(prePriceChangeTokenAccount.sellerConfig.tokenPrice), Number(oldTokenPrice));
-
-    await program.methods
-      .editPrice(newTokenPrice)
-      .accounts({
-        authority: sellerKeypair.publicKey,
-        tokenConfig: tokenConfig,
-      })
-      .signers(
-        sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
-      )
-      .rpc()
-      .catch(console.error);
-
-    const postPriceChangeTokenAccount =
-      await program.account.tokenConfig.fetch(tokenConfig);
-    assert.isDefined(postPriceChangeTokenAccount);
-    assert.equal(Number(postPriceChangeTokenAccount.sellerConfig.tokenPrice), Number(newTokenPrice));
-
-    await program.methods
-      .registerBuy(buyTimestamp)
-      .accounts({
-        systemProgram: SystemProgram.programId,
-        tokenProgramV0: TOKEN_PROGRAM_ID,
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_PROGRAM_ID,
-        rent: SYSVAR_RENT_PUBKEY,
-        authority: buyerKeypair.publicKey,
-        tokenConfig: tokenConfig,
-        paymentAccount: paymentPublicKey,
-        tokenMint: tokenMint,
-        paymentMint: acceptedMintPublicKey,
-        paymentVault: paymentVaultPublicKey,
-        buyerTransferVault: buyerTransferVault,
-        buyerTokenVault: buyerTokenVault,
-      })
-      .signers(
-        buyerKeypair instanceof (anchor.Wallet as any) ? [] : [buyerKeypair]
-      )
-      .rpc()
-      .catch(console.error);
-
-    await program.methods
-      .registerBuy(secondBuyTimestamp)
-      .accounts({
-        systemProgram: SystemProgram.programId,
-        tokenProgramV0: TOKEN_PROGRAM_ID,
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_PROGRAM_ID,
-        rent: SYSVAR_RENT_PUBKEY,
-        authority: buyerKeypair.publicKey,
-        tokenConfig: tokenConfig,
-        paymentAccount: secondPaymentPublicKey,
-        tokenMint: tokenMint,
-        paymentMint: acceptedMintPublicKey,
-        paymentVault: secondPaymentVaultPublicKey,
-        buyerTransferVault: buyerTransferVault,
-        buyerTokenVault: buyerTokenVault,
-      })
-      .signers(
-        buyerKeypair instanceof (anchor.Wallet as any) ? [] : [buyerKeypair]
-      )
-      .rpc()
-      .catch(console.error);
-
-    const paymentAccount = await program.account.payment.fetch(
-      paymentPublicKey
-    );
-    assert.isDefined(paymentAccount);
-
-    // check if the buyer can withdraw the funds when the seller is the authority
-    try {
-      await program.methods
-        .withdrawFunds()
-        .accounts({
-          authority: buyerKeypair.publicKey,
-          tokenConfig: tokenConfig,
-          paymentAccount: paymentPublicKey,
-          app: appPublicKey,
-          tokenMint: tokenMint,
-          paymentMint: acceptedMintPublicKey,
-          buyer: buyerKeypair.publicKey,
-          appCreator: appCreatorKeypair.publicKey,
-          paymentVault: paymentVaultPublicKey,
-          appCreatorVault: creatorTransferVault,
-          receiverVault: sellerTransferVault,
-        })
-        .signers(
-          buyerKeypair instanceof (anchor.Wallet as any) ? [] : [buyerKeypair]
-        )
-        .rpc();
-    } catch (e) {
-      console.log('Intentional error ' + e.error.errorCode.code);
-      assert.equal(e.error.errorCode?.code, "ConstraintTokenOwner");
-    }
-    try {
-      await program.methods
-        .refund()
-        .accounts({
-          authority: buyerKeypair.publicKey,
-          tokenConfig: tokenConfig,
-          paymentAccount: paymentPublicKey,
-          tokenMint: tokenMint,
-          paymentMint: acceptedMintPublicKey,
-          receiverVault: buyerTransferVault,
-          paymentVault: paymentVaultPublicKey,
-        })
-        .signers(
-          buyerKeypair instanceof (anchor.Wallet as any) ? [] : [buyerKeypair]
-        )
-        .rpc();
-    } catch (e) {
-      console.log('Intentional error '  + e.error.errorCode.code);
-      assert.equal(e.error.errorCode.code, "TimeForRefundHasConsumed");
-    }
-
-    await program.methods
-      .withdrawFunds()
-      .accounts({
-        authority: sellerKeypair.publicKey,
-        tokenConfig: tokenConfig,
-        paymentAccount: paymentPublicKey,
-        app: appPublicKey,
-        tokenMint: tokenMint,
-        paymentMint: acceptedMintPublicKey,
-        buyer: buyerKeypair.publicKey,
-        appCreator: appCreatorKeypair.publicKey,
-        paymentVault: paymentVaultPublicKey,
-        appCreatorVault: creatorTransferVault,
-        receiverVault: sellerTransferVault,
-      })
-      .signers(
-        sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
-      )
-      .rpc()
-      .catch(console.error);
-
-    await program.methods
-      .withdrawFunds()
-      .accounts({
-        authority: sellerKeypair.publicKey,
-        tokenConfig: tokenConfig,
-        paymentAccount: secondPaymentPublicKey,
-        app: appPublicKey,
-        tokenMint: tokenMint,
-        paymentMint: acceptedMintPublicKey,
-        buyer: buyerKeypair.publicKey,
-        appCreator: appCreatorKeypair.publicKey,
-        paymentVault: secondPaymentVaultPublicKey,
-        appCreatorVault: creatorTransferVault,
-        receiverVault: sellerTransferVault,
-      })
-      .signers(
-        sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
-      )
-      .rpc()
-      .catch(console.error);
-
-    const postTxBuyerFunds = await getAccount(
-      provider.connection,
-      buyerTransferVault
-    );
-    const postTxSellerFunds = await getAccount(
-      provider.connection,
-      sellerTransferVault
-    );
-    const tokenMintAccount = await getMint(provider.connection, tokenMint, null, TOKEN_2022_PROGRAM_ID);
-    const tokenAccount = await program.account.tokenConfig.fetch(
-      tokenConfig
-    );
-
-    // Assert buyer token account changed
-    assert.isDefined(preTxBuyerFunds);
-    assert.isDefined(postTxBuyerFunds);
-    assert.equal(
-      Number(postTxBuyerFunds.amount),
-      Number(preTxBuyerFunds.amount - BigInt(Number(tokenAccount.sellerConfig.tokenPrice) * 2))
-    );
-    // Assert seller token account changed
-    assert.isDefined(preTxSellerFunds);
-    assert.isDefined(postTxSellerFunds);
-    assert.equal(
-        Number(postTxSellerFunds.amount),
-        Number(preTxSellerFunds.amount + BigInt(Number(tokenAccount.sellerConfig.tokenPrice) * 2))
-    );
-    // Assert product token supply
-    assert.isDefined(tokenMintAccount);
-    assert.equal(tokenMintAccount.supply, BigInt(0));
+    const productAccount = await program.account.product.fetch(productPubkey);
+    assert.isDefined(productAccount);
+    assert.equal(productAccount.firstId.toString(), [...firstId].toString());
+    assert.equal(productAccount.secondId.toString(), [...secondId].toString());
+    assert.equal(productAccount.governance.toString(), governancePubkey.toString());
+    assert.equal(productAccount.productMint.toString(), productMintPubkey.toString());
+    assert.equal(productAccount.productAuthority.toString(), productAuthorityKeypair.publicKey.toString());
+    assert.equal(productAccount.sellerConfig.paymentMint.toString(), paymentMintPubkey.toString());
+    assert.equal(Number(productAccount.sellerConfig.productPrice), Number(productPrice));
   });
 
-  it("Buyer gets refund, before test if the seller can withdraw during the refund time", async () => {
-    const buyerBalance = 10;
-    const sellerBalance = 2;
-    const tokenPrice = new BN(2);
-    const exemplars = 1;
-    const appName = "Backpack";
-    const refundTime = new anchor.BN(60000);
-    const {
-      appPublicKey,
-      appCreatorKeypair,
-      creatorTransferVault,
-      sellerKeypair,
-      acceptedMintPublicKey,
-      tokenConfig,
-      firstId,
-      secondId,
-      tokenMint,
-      mintBump,
-      buyerKeypair,
-      buyerTokenVault,
-      buyerTransferVault,
-      buyTimestamp,
-      paymentPublicKey,
-      paymentVaultPublicKey,
-      sellerTransferVault,
-    } = await initNewAccounts(
-      provider,
-      program,
-      appName,
-      buyerBalance,
-      sellerBalance,
-      creatorBalance
+  it("Should create another product and delete it", async () => {
+    const [firstId, secondId] = getSplitId(uuid());
+    const productAuthorityKeypair = await createFundedWallet(provider, 1000);
+    const [productMintPubkey, mintBump] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("product_mint", "utf-8"), firstId, secondId],
+      program.programId
     );
+    const [productPubkey] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("product", "utf-8"), productMintPubkey.toBuffer()],
+      program.programId
+    );
+    const paymentMintPubkey = await createMint(provider);
+    const productPrice = new BN(200000);
+
+    const createProductParams = {
+      firstId: [...firstId],
+      secondId: [...secondId],
+      productPrice,
+      mintBump
+    };
 
     await program.methods
-      .createApp(appName, noFee)
+      .createProduct(createProductParams)
       .accounts({
-        authority: appCreatorKeypair.publicKey,
+        systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
+        rent: SYSVAR_RENT_PUBKEY,
+        productAuthority: productAuthorityKeypair.publicKey,
+        governance: governancePubkey,
+        product: productPubkey,
+        productMint: productMintPubkey,
+        paymentMint: paymentMintPubkey
       })
       .signers(
-        appCreatorKeypair instanceof (anchor.Wallet as any)
+        productAuthorityKeypair instanceof (anchor.Wallet as any)
           ? []
-          : [appCreatorKeypair]
+          : [productAuthorityKeypair]
       )
-      .rpc()
-      .catch(console.error);
-
-      await program.methods
-      .createConfig(
-        [...firstId],
-        [...secondId],
-        refundTime,
-        tokenPrice,
-        exemplars,
-        mintBump
-      )
-      .accounts({
-        authority: sellerKeypair.publicKey,
-        tokenMint: tokenMint,
-        app: appPublicKey,
-        tokenConfig: tokenConfig,
-        paymentMint: acceptedMintPublicKey
-      })
-      .signers(
-        sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
-      )
-      .rpc()
-      .catch(console.error);
-
-    await program.methods
-      .createMint()
-      .accounts({
-        systemProgram: SystemProgram.programId,
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
-        rent: SYSVAR_RENT_PUBKEY,
-        authority: sellerKeypair.publicKey,
-        tokenConfig: tokenConfig,
-        tokenMint: tokenMint,
-      })
-      .signers(
-        sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
-      )
-      .rpc()
-      .catch(console.error);
-
-    const preTxBuyerFunds = await getAccount(
-      provider.connection,
-      buyerTransferVault
-    );
-
-    await program.methods
-      .registerBuy(buyTimestamp)
-      .accounts({
-        systemProgram: SystemProgram.programId,
-        tokenProgramV0: TOKEN_PROGRAM_ID,
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_PROGRAM_ID,
-        rent: SYSVAR_RENT_PUBKEY,
-        authority: buyerKeypair.publicKey,
-        tokenConfig: tokenConfig,
-        paymentAccount: paymentPublicKey,
-        tokenMint: tokenMint,
-        paymentMint: acceptedMintPublicKey,
-        paymentVault: paymentVaultPublicKey,
-        buyerTransferVault: buyerTransferVault,
-        buyerTokenVault: buyerTokenVault,
-      })
-      .signers(
-        buyerKeypair instanceof (anchor.Wallet as any) ? [] : [buyerKeypair]
-      )
-      .rpc()
-      .catch(console.error);
-
-    const paymentVaultFunds = await getAccount(
-      provider.connection,
-      paymentVaultPublicKey
-    );
-    assert.isDefined(paymentVaultFunds);
-    const paymentAccount = await program.account.payment.fetch(
-      paymentPublicKey
-    );
-    assert.isDefined(paymentAccount);
-    assert.equal(Number(paymentVaultFunds.amount), Number(tokenPrice) * exemplars);
-
-    // check if the seller can withdraw the funds when the buyer is the authority
-    try {
-      await program.methods
-        .withdrawFunds()
-        .accounts({
-          authority: sellerKeypair.publicKey,
-          tokenConfig: tokenConfig,
-          paymentAccount: paymentPublicKey,
-          app: appPublicKey,
-          tokenMint: tokenMint,
-          paymentMint: acceptedMintPublicKey,
-          buyer: buyerKeypair.publicKey,
-          appCreator: appCreatorKeypair.publicKey,
-          paymentVault: paymentVaultPublicKey,
-          appCreatorVault: creatorTransferVault,
-          receiverVault: sellerTransferVault,
-        })
-        .signers(
-          sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
-        )
-        .rpc();
-    } catch (e) {
-      if (e as AnchorError)
-        assert.equal(e.error.errorCode.code, "CannotWithdrawYet");
-    }
-    try {
-      await program.methods
-        .refund()
-        .accounts({
-          authority: sellerKeypair.publicKey,
-          tokenConfig: tokenConfig,
-          paymentAccount: paymentPublicKey,
-          tokenMint: tokenMint,
-          paymentMint: acceptedMintPublicKey,
-          receiverVault: sellerTransferVault,
-          paymentVault: paymentVaultPublicKey,
-        })
-        .signers(
-          sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
-        )
-        .rpc();
-    } catch (e) {
-      if (e as AnchorError)
-        assert.equal(e.error.errorCode.code, "IncorrectPaymentAuthority");
-    }
-
-    await program.methods
-      .refund()
-      .accounts({
-        authority: buyerKeypair.publicKey,
-        tokenConfig: tokenConfig,
-        paymentAccount: paymentPublicKey,
-        tokenMint: tokenMint,
-        paymentMint: acceptedMintPublicKey,
-        receiverVault: buyerTransferVault,
-        paymentVault: paymentVaultPublicKey,
-      })
-      .signers(
-        buyerKeypair instanceof (anchor.Wallet as any) ? [] : [buyerKeypair]
-      )
-      .rpc()
-      .catch(console.error);
-
-    const postTxBuyerFunds = await getAccount(
-      provider.connection,
-      buyerTransferVault
-    );
-
-    // Assert buyer token account haven't changed
-    assert.isDefined(preTxBuyerFunds);
-    assert.isDefined(postTxBuyerFunds);
-    assert.equal(postTxBuyerFunds.amount, preTxBuyerFunds.amount);
-  });
-
-  it("Seller withdraws after refund time, before test if the buyer can get a refund after the refund time", async () => {
-    const buyerBalance = 10;
-    const sellerBalance = 2;
-    const tokenPrice = new BN(2);
-    const exemplars = 1;
-    const refundTime = new anchor.BN(3); // it is introduced in seconds
-    const appName = "OnePiece";
-    const {
-      appPublicKey,
-      appCreatorKeypair,
-      creatorTransferVault,
-      sellerKeypair,
-      acceptedMintPublicKey,
-      tokenConfig,
-      firstId,
-      secondId,
-      tokenMint,
-      mintBump,
-      buyerKeypair,
-      buyerTokenVault,
-      buyerTransferVault,
-      buyTimestamp,
-      paymentPublicKey,
-      paymentVaultPublicKey,
-      sellerTransferVault,
-    } = await initNewAccounts(
-      provider,
-      program,
-      appName,
-      buyerBalance,
-      sellerBalance,
-      creatorBalance
-    );
-
-    await program.methods
-      .createApp(appName, noFee)
-      .accounts({
-        authority: appCreatorKeypair.publicKey,
-      })
-      .signers(
-        appCreatorKeypair instanceof (anchor.Wallet as any)
-          ? []
-          : [appCreatorKeypair]
-      )
-      .rpc()
-      .catch(console.error);
-
-    await program.methods
-      .createConfig(
-        [...firstId],
-        [...secondId],
-        refundTime,
-        tokenPrice,
-        exemplars,
-        mintBump
-      )
-      .accounts({
-        authority: sellerKeypair.publicKey,
-        tokenMint: tokenMint,
-        app: appPublicKey,
-        tokenConfig: tokenConfig,
-        paymentMint: acceptedMintPublicKey
-      })
-      .signers(
-        sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
-      )
-      .rpc()
-      .catch(console.error);
-
-    await program.methods
-      .createMint()
-      .accounts({
-        systemProgram: SystemProgram.programId,
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
-        rent: SYSVAR_RENT_PUBKEY,
-        authority: sellerKeypair.publicKey,
-        tokenConfig: tokenConfig,
-        tokenMint: tokenMint,
-      })
-      .signers(
-        sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
-      )
-      .rpc()
-      .catch(console.error);
-
-    const preTxSellerFunds = await getAccount(
-      provider.connection,
-      sellerTransferVault
-    );
-
-    await program.methods
-      .registerBuy(buyTimestamp)
-      .accounts({
-        systemProgram: SystemProgram.programId,
-        tokenProgramV0: TOKEN_PROGRAM_ID,
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_PROGRAM_ID,
-        rent: SYSVAR_RENT_PUBKEY,
-        authority: buyerKeypair.publicKey,
-        tokenConfig: tokenConfig,
-        paymentAccount: paymentPublicKey,
-        tokenMint: tokenMint,
-        paymentMint: acceptedMintPublicKey,
-        paymentVault: paymentVaultPublicKey,
-        buyerTransferVault: buyerTransferVault,
-        buyerTokenVault: buyerTokenVault,
-      })
-      .signers(
-        buyerKeypair instanceof (anchor.Wallet as any) ? [] : [buyerKeypair]
-      )
-      .rpc()
-      .catch(console.error);
-
-    const paymentVaultFunds = await getAccount(
-      provider.connection,
-      paymentVaultPublicKey
-    );
-    assert.isDefined(paymentVaultFunds);
-    const paymentAccount = await program.account.payment.fetch(
-      paymentPublicKey
-    );
-    assert.isDefined(paymentAccount);
-    assert.equal(Number(paymentVaultFunds.amount), Number(tokenPrice) * exemplars);
-
-    await delay(5000); // i've created 3s refund time, it waits 5s
-
-    // check if the buyer can withdraw the funds when the seller is the authority
-    try {
-      await program.methods
-        .withdrawFunds()
-        .accounts({
-          authority: buyerKeypair.publicKey,
-          tokenConfig: tokenConfig,
-          paymentAccount: paymentPublicKey,
-          app: appPublicKey,
-          tokenMint: tokenMint,
-          paymentMint: acceptedMintPublicKey,
-          buyer: buyerKeypair.publicKey,
-          appCreator: appCreatorKeypair.publicKey,
-          paymentVault: paymentVaultPublicKey,
-          appCreatorVault: creatorTransferVault,
-          receiverVault: buyerTransferVault,
-        })
-        .signers(
-          buyerKeypair instanceof (anchor.Wallet as any) ? [] : [buyerKeypair]
-        )
-        .rpc();
-    } catch (e) {
-      if (e as AnchorError)
-        assert.equal(e.error.errorCode.code, "IncorrectPaymentAuthority");
-    }
-    try {
-      await program.methods
-        .refund()
-        .accounts({
-          authority: buyerKeypair.publicKey,
-          tokenConfig: tokenConfig,
-          paymentAccount: paymentPublicKey,
-          tokenMint: tokenMint,
-          paymentMint: acceptedMintPublicKey,
-          receiverVault: buyerTransferVault,
-          paymentVault: paymentVaultPublicKey,
-        })
-        .signers(
-          buyerKeypair instanceof (anchor.Wallet as any) ? [] : [buyerKeypair]
-        )
-        .rpc();
-    } catch (e) {
-      if (e as AnchorError)
-        assert.equal(e.error.errorCode.code, "TimeForRefundHasConsumed");
-    }
-
-    await program.methods
-      .withdrawFunds()
-      .accounts({
-        authority: sellerKeypair.publicKey,
-        tokenConfig: tokenConfig,
-        paymentAccount: paymentPublicKey,
-        app: appPublicKey,
-        tokenMint: tokenMint,
-        paymentMint: acceptedMintPublicKey,
-        buyer: buyerKeypair.publicKey,
-        appCreator: appCreatorKeypair.publicKey,
-        paymentVault: paymentVaultPublicKey,
-        appCreatorVault: creatorTransferVault,
-        receiverVault: sellerTransferVault,
-      })
-      .signers(
-        sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
-      )
-      .rpc();
-
-    const postTxSellerFunds = await getAccount(
-      provider.connection,
-      sellerTransferVault
-    );
-
-    // Assert buyer token account haven't changed
-    assert.isDefined(preTxSellerFunds);
-    assert.equal(
-      Number(preTxSellerFunds.amount) + exemplars * Number(tokenPrice),
-      Number(postTxSellerFunds.amount)
-    );
-  });
-
-  it("Mint and token accounts should be deleted when there is no active payments", async () => {
-    const buyerBalance = 10;
-    const sellerBalance = 2;
-    const tokenPrice = new BN(2);
-    const exemplars = 1;
-    const refundTime = new anchor.BN(3); // it is introduced in seconds
-    const appName = "Building";
-    const {
-      appPublicKey,
-      appCreatorKeypair,
-      creatorTransferVault,
-      sellerKeypair,
-      acceptedMintPublicKey,
-      tokenConfig,
-      firstId,
-      secondId,
-      tokenMint,
-      mintBump,
-      buyerKeypair,
-      buyerTokenVault,
-      buyerTransferVault,
-      buyTimestamp,
-      paymentPublicKey,
-      paymentVaultPublicKey,
-      sellerTransferVault,
-    } = await initNewAccounts(
-      provider,
-      program,
-      appName,
-      buyerBalance,
-      sellerBalance,
-      creatorBalance
-    );
-
-    await program.methods
-      .createApp(appName, noFee)
-      .accounts({
-        authority: appCreatorKeypair.publicKey,
-      })
-      .signers(
-        appCreatorKeypair instanceof (anchor.Wallet as any)
-          ? []
-          : [appCreatorKeypair]
-      )
-      .rpc()
-      .catch(console.error);
-
-    await program.methods
-      .createConfig(
-        [...firstId],
-        [...secondId],
-        refundTime,
-        tokenPrice,
-        exemplars,
-        mintBump
-      )
-      .accounts({
-        authority: sellerKeypair.publicKey,
-        tokenMint: tokenMint,
-        app: appPublicKey,
-        tokenConfig: tokenConfig,
-        paymentMint: acceptedMintPublicKey
-      })
-      .signers(
-        sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
-      )
-      .rpc()
-      .catch(console.error);
-
-    await program.methods
-      .createMint()
-      .accounts({
-        systemProgram: SystemProgram.programId,
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
-        rent: SYSVAR_RENT_PUBKEY,
-        authority: sellerKeypair.publicKey,
-        tokenConfig: tokenConfig,
-        tokenMint: tokenMint,
-      })
-      .signers(
-        sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
-      )
-      .rpc()
-      .catch(console.error);
-
-    await program.methods
-      .registerBuy(buyTimestamp)
-      .accounts({
-        systemProgram: SystemProgram.programId,
-        tokenProgramV0: TOKEN_PROGRAM_ID,
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_PROGRAM_ID,
-        rent: SYSVAR_RENT_PUBKEY,
-        authority: buyerKeypair.publicKey,
-        tokenConfig: tokenConfig,
-        paymentAccount: paymentPublicKey,
-        tokenMint: tokenMint,
-        paymentMint: acceptedMintPublicKey,
-        paymentVault: paymentVaultPublicKey,
-        buyerTransferVault: buyerTransferVault,
-        buyerTokenVault: buyerTokenVault,
-      })
-      .signers(
-        buyerKeypair instanceof (anchor.Wallet as any) ? [] : [buyerKeypair]
-      )
-      .rpc()
-      .catch(console.error);
-
-    await program.methods
-      .withdrawFunds()
-      .accounts({
-        authority: sellerKeypair.publicKey,
-        tokenConfig: tokenConfig,
-        paymentAccount: paymentPublicKey,
-        app: appPublicKey,
-        tokenMint: tokenMint,
-        paymentMint: acceptedMintPublicKey,
-        buyer: buyerKeypair.publicKey,
-        appCreator: appCreatorKeypair.publicKey,
-        paymentVault: paymentVaultPublicKey,
-        appCreatorVault: creatorTransferVault,
-        receiverVault: sellerTransferVault,
-      })
-      .signers(
-        sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
-      )
-      .rpc()
+      .rpc(confirmOptions)
       .catch(console.error);
 
     await program.methods
       .deleteProduct()
       .accounts({
         tokenProgram: TOKEN_2022_PROGRAM_ID,
-        authority: sellerKeypair.publicKey,
-        tokenConfig: tokenConfig,
-        tokenMint: tokenMint,
+        productAuthority: productAuthorityKeypair.publicKey,
+        productMint: productMintPubkey,
+        product: productPubkey,
       })
       .signers(
-        sellerKeypair instanceof (anchor.Wallet as any) ? [] : [sellerKeypair]
+        productAuthorityKeypair instanceof (anchor.Wallet as any)
+          ? []
+          : [productAuthorityKeypair]
+      )
+      .rpc(confirmOptions)
+      .catch(console.error);
+
+    try {
+      await program.account.product.fetch(productPubkey);
+    } catch (e) {
+      assert.isTrue(e.toString().includes("Account does not exist or has no data"))
+    }
+    try {
+      await getMint(provider.connection, productMintPubkey, null, TOKEN_2022_PROGRAM_ID);
+    } catch (e) {
+      assert.isTrue(e.toString().includes("TokenAccountNotFoundError"))
+    }
+  });
+
+  it("Should edit product data and check possible exploits", async () => {
+    const newPaymentMintPubkey = await createMint(provider);
+    const newPrice = new BN(88);
+
+    await program.methods
+      .editPaymentMint()
+      .accounts({
+        productAuthority: productAuthorityKeypair.publicKey,
+        product: productPubkey,
+        paymentMint: newPaymentMintPubkey
+      })
+      .signers(
+        productAuthorityKeypair instanceof (anchor.Wallet as any)
+          ? []
+          : [productAuthorityKeypair]
       )
       .rpc()
       .catch(console.error);
 
-    try {
-      await getAccount(
-        provider.connection,
-        tokenMint
+    await program.methods
+      .editPrice(newPrice)
+      .accounts({
+        productAuthority: productAuthorityKeypair.publicKey,
+        product: productPubkey,
+      })
+      .signers(
+        productAuthorityKeypair instanceof (anchor.Wallet as any)
+          ? []
+          : [productAuthorityKeypair]
       )
+      .rpc()
+      .catch(console.error);
+
+    const changedProductAccount = await program.account.product.fetch(productPubkey);
+    assert.isDefined(changedProductAccount);
+    assert.equal(changedProductAccount.sellerConfig.paymentMint.toString(), newPaymentMintPubkey.toString());
+    assert.equal(Number(changedProductAccount.sellerConfig.productPrice), Number(newPrice));
+
+    // to be able to re-use this account and its data, the account data will be the same that was before this unit test
+    await program.methods
+      .editPaymentMint()
+      .accounts({
+        productAuthority: productAuthorityKeypair.publicKey,
+        product: productPubkey,
+        paymentMint: paymentMintPubkey
+      })
+      .signers(
+        productAuthorityKeypair instanceof (anchor.Wallet as any)
+          ? []
+          : [productAuthorityKeypair]
+      )
+      .rpc()
+      .catch(console.error);
+
+    await program.methods
+      .editPrice(productPrice)
+      .accounts({
+        productAuthority: productAuthorityKeypair.publicKey,
+        product: productPubkey,
+      })
+      .signers(
+        productAuthorityKeypair instanceof (anchor.Wallet as any)
+          ? []
+          : [productAuthorityKeypair]
+      )
+      .rpc()
+      .catch(console.error);
+
+    // another wallet tries to change product data
+    try {
+      await program.methods
+        .editPaymentMint()
+        .accounts({
+          productAuthority: exploiterKeypair.publicKey,
+          product: productPubkey,
+          paymentMint: newPaymentMintPubkey
+        })
+        .signers(
+          exploiterKeypair instanceof (anchor.Wallet as any)
+            ? []
+            : [exploiterKeypair]
+        )
+        .rpc();
     } catch (e) {
-      assert.isTrue(e.toString().includes("TokenAccountNotFoundError"))
+      if (e as anchor.AnchorError)
+        assert.equal(e.error.errorCode.code, "IncorrectAuthority");
     }
 
     try {
-      await getAccount(
-        provider.connection,
-        buyerTokenVault
-      );
+      await program.methods
+        .editPrice(newPrice)
+        .accounts({
+          productAuthority: exploiterKeypair.publicKey,
+          product: productPubkey,
+        })
+        .signers(
+          exploiterKeypair instanceof (anchor.Wallet as any)
+            ? []
+            : [exploiterKeypair]
+        )
+        .rpc();
     } catch (e) {
-      assert.isTrue(e.toString().includes("TokenAccountNotFoundError"))
+      if (e as anchor.AnchorError)
+        assert.equal(e.error.errorCode.code, "IncorrectAuthority");
     }
 
-    try {
-      await getAccount(
-        provider.connection,
-        paymentPublicKey
-      );
-    } catch (e) {
-      assert.isTrue(e.toString().includes("TokenAccountNotFoundError"))
-    }
+    const productAccount = await program.account.product.fetch(productPubkey);
+    assert.isDefined(productAccount);
+    assert.equal(productAccount.sellerConfig.paymentMint.toString(), paymentMintPubkey.toString());
+    assert.equal(Number(productAccount.sellerConfig.productPrice), Number(productPrice));
+  });
 
-    try {
-      await getAccount(
-        provider.connection,
-        paymentVaultPublicKey
-      );
-    } catch (e) {
-      assert.isTrue(e.toString().includes("TokenAccountNotFoundError"))
-    }
+  it("Should register a buy (no fees)", async () => {
+    buyerBalance = 1000;
+    buyerKeypair = await createFundedWallet(provider, buyerBalance);
+    buyerTokenVault = await getAssociatedTokenAddress(
+      productMintPubkey,
+      buyerKeypair.publicKey,
+      true,
+      TOKEN_2022_PROGRAM_ID
+    );
+    governanceTransferVault =  await createFundedAssociatedTokenAccount(
+      provider,
+      paymentMintPubkey,
+      governanceBalance,
+      governanceAuthorityKeypair
+    );
+    buyerTransferVault = await createFundedAssociatedTokenAccount(
+      provider,
+      paymentMintPubkey,
+      buyerBalance,
+      buyerKeypair
+    );
+    productAuthorityTransferVault = await createFundedAssociatedTokenAccount(
+      provider,
+      paymentMintPubkey,
+      productAuthorityBalance,
+      productAuthorityKeypair
+    );
 
+    await program.methods
+      .registerBuy()
+      .accounts({
+        systemProgram: SystemProgram.programId,
+        tokenProgramV0: TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        rent: SYSVAR_RENT_PUBKEY,
+        governanceAuthority: governanceAuthorityKeypair.publicKey,
+        productAuthority: productAuthorityKeypair.publicKey,
+        signer: buyerKeypair.publicKey,
+        governance: governancePubkey,
+        product: productPubkey,
+        productMint: productMintPubkey,
+        paymentMint: paymentMintPubkey,
+        buyerTokenVault: buyerTokenVault,
+        buyerTransferVault: buyerTransferVault,
+        productAuthorityTransferVault: productAuthorityTransferVault,
+        governanceTransferVault: governanceTransferVault,
+        governanceTokenVault: governanceTokenVault,
+      })
+      .signers(
+        buyerKeypair instanceof (anchor.Wallet as any)
+          ? []
+          : [buyerKeypair]
+      )
+      .rpc(confirmOptions)
+      .catch(console.error);
+    
+    const buyerTransferVaultAccount = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      buyerKeypair as anchor.web3.Signer,
+      paymentMintPubkey,
+      buyerKeypair.publicKey,
+      false,
+      "confirmed",
+      confirmOptions,
+      TOKEN_PROGRAM_ID,
+    );
+    buyerBalance = buyerBalance - Number(productPrice);
+    assert.equal(Number(buyerTransferVaultAccount.amount), buyerBalance);
+    
+    const productAuthorityTransferVaultAccount = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      productAuthorityKeypair as anchor.web3.Signer,
+      paymentMintPubkey,
+      productAuthorityKeypair.publicKey,
+      false,
+      "confirmed",
+      confirmOptions,
+      TOKEN_PROGRAM_ID,
+    );
+    productAuthorityBalance = productAuthorityBalance + Number(productPrice);
+    assert.equal(Number(productAuthorityTransferVaultAccount.amount), productAuthorityBalance);
+  });
+
+  it("Should register a buy (with fees)", async () => {
+    [fee, feeReduction, sellerPromo, buyerPromo] = [100, 0, 0, 0];
+    
+    await program.methods
+      .editPoints({
+        fee,
+        feeReduction,
+        sellerPromo,
+        buyerPromo,
+      })
+      .accounts({
+        governanceAuthority: governanceAuthorityKeypair.publicKey,
+        governance: governancePubkey,
+      })
+      .signers(
+        governanceAuthorityKeypair instanceof (anchor.Wallet as any)
+          ? []
+          : [governanceAuthorityKeypair]
+      )
+      .rpc(confirmOptions)
+      .catch(console.error);
+
+    await program.methods
+      .registerBuy()
+      .accounts({
+        systemProgram: SystemProgram.programId,
+        tokenProgramV0: TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        rent: SYSVAR_RENT_PUBKEY,
+        governanceAuthority: governanceAuthorityKeypair.publicKey,
+        productAuthority: productAuthorityKeypair.publicKey,
+        signer: buyerKeypair.publicKey,
+        governance: governancePubkey,
+        product: productPubkey,
+        productMint: productMintPubkey,
+        paymentMint: paymentMintPubkey,
+        buyerTokenVault: buyerTokenVault,
+        buyerTransferVault: buyerTransferVault,
+        productAuthorityTransferVault: productAuthorityTransferVault,
+        governanceTransferVault: governanceTransferVault,
+        governanceTokenVault: governanceTokenVault,
+      })
+      .signers(
+        buyerKeypair instanceof (anchor.Wallet as any)
+          ? []
+          : [buyerKeypair]
+      )
+      .rpc(confirmOptions)
+      .catch(console.error);
+    
+    const buyerTransferVaultAccount = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      buyerKeypair as anchor.web3.Signer,
+      paymentMintPubkey,
+      buyerKeypair.publicKey,
+      false,
+      "confirmed",
+      confirmOptions,
+      TOKEN_PROGRAM_ID,
+    );
+    buyerBalance = buyerBalance - Number(productPrice);
+    assert.equal(Number(buyerTransferVaultAccount.amount), buyerBalance);
+    
+    const productAuthorityTransferVaultAccount = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      productAuthorityKeypair as anchor.web3.Signer,
+      paymentMintPubkey,
+      productAuthorityKeypair.publicKey,
+      false,
+      "confirmed",
+      confirmOptions,
+      TOKEN_PROGRAM_ID,
+    );
+    const governanceFee = (Number(productPrice) * fee) / 10000;
+    productAuthorityBalance = productAuthorityBalance + Number(productPrice) - governanceFee;
+    assert.equal(Number(productAuthorityTransferVaultAccount.amount), productAuthorityBalance);
+
+    const governanceAuthorityTransferVaultAccount = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      governanceAuthorityKeypair as anchor.web3.Signer,
+      paymentMintPubkey,
+      governanceAuthorityKeypair.publicKey,
+      false,
+      "confirmed",
+      confirmOptions,
+      TOKEN_PROGRAM_ID,
+    );
+    governanceBalance = governanceBalance + governanceFee;
+    assert.equal(Number(governanceAuthorityTransferVaultAccount.amount), governanceBalance);
+  });
+
+  it("Should register a buy (with fees and governance mint as a payment, ie: fee reduction)", async () => {
+    [fee, feeReduction, sellerPromo, buyerPromo] = [100, 0, 0, 0];
+    
+    await program.methods
+      .editPoints({
+        fee,
+        feeReduction,
+        sellerPromo,
+        buyerPromo,
+      })
+      .accounts({
+        governanceAuthority: governanceAuthorityKeypair.publicKey,
+        governance: governancePubkey,
+      })
+      .signers(
+        governanceAuthorityKeypair instanceof (anchor.Wallet as any)
+          ? []
+          : [governanceAuthorityKeypair]
+      )
+      .rpc(confirmOptions)
+      .catch(console.error);
+
+    await program.methods
+      .registerBuy()
+      .accounts({
+        systemProgram: SystemProgram.programId,
+        tokenProgramV0: TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        rent: SYSVAR_RENT_PUBKEY,
+        governanceAuthority: governanceAuthorityKeypair.publicKey,
+        productAuthority: productAuthorityKeypair.publicKey,
+        signer: buyerKeypair.publicKey,
+        governance: governancePubkey,
+        product: productPubkey,
+        productMint: productMintPubkey,
+        paymentMint: paymentMintPubkey,
+        buyerTokenVault: buyerTokenVault,
+        buyerTransferVault: buyerTransferVault,
+        productAuthorityTransferVault: productAuthorityTransferVault,
+        governanceTransferVault: governanceTransferVault,
+        governanceTokenVault: governanceTokenVault,
+      })
+      .signers(
+        buyerKeypair instanceof (anchor.Wallet as any)
+          ? []
+          : [buyerKeypair]
+      )
+      .rpc(confirmOptions)
+      .catch(console.error);
+    
+    const buyerTransferVaultAccount = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      buyerKeypair as anchor.web3.Signer,
+      paymentMintPubkey,
+      buyerKeypair.publicKey,
+      false,
+      "confirmed",
+      confirmOptions,
+      TOKEN_PROGRAM_ID,
+    );
+    buyerBalance = buyerBalance - Number(productPrice);
+    assert.equal(Number(buyerTransferVaultAccount.amount), buyerBalance);
+    
+    const productAuthorityTransferVaultAccount = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      productAuthorityKeypair as anchor.web3.Signer,
+      paymentMintPubkey,
+      productAuthorityKeypair.publicKey,
+      false,
+      "confirmed",
+      confirmOptions,
+      TOKEN_PROGRAM_ID,
+    );
+    const governanceFee = (Number(productPrice) * fee) / 10000;
+    productAuthorityBalance = productAuthorityBalance + Number(productPrice) - governanceFee;
+    assert.equal(Number(productAuthorityTransferVaultAccount.amount), productAuthorityBalance);
+
+    const governanceAuthorityTransferVaultAccount = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      governanceAuthorityKeypair as anchor.web3.Signer,
+      paymentMintPubkey,
+      governanceAuthorityKeypair.publicKey,
+      false,
+      "confirmed",
+      confirmOptions,
+      TOKEN_PROGRAM_ID,
+    );
+    governanceBalance = governanceBalance + governanceFee;
+    assert.equal(Number(governanceAuthorityTransferVaultAccount.amount), governanceBalance);
   });
 })

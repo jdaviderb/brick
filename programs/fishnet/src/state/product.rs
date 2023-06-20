@@ -25,8 +25,6 @@ pub struct SellerConfig {
     pub payment_mint: Pubkey,
     // token amount
     pub product_price: u64,
-    // usdc token amount equivalent
-    pub usdc_price: u64,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Clone)]
@@ -45,7 +43,6 @@ impl Product {
         // SellerConfig
         + 32 // payment_mint
         + 8  // token_price
-        + 8  // usdc_price
         // Bumps
         + 1  // bump
         + 1; // mint_bump

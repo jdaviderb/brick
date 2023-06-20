@@ -27,7 +27,6 @@ pub struct CreateProductParams {
     pub first_id: [u8; 32],
     pub second_id: [u8; 32],
     pub product_price: u64,
-    pub usdc_price: u64,
     pub mint_bump: u8
 }
 
@@ -40,17 +39,6 @@ pub struct CreateProduct<'info> {
     pub rent: Sysvar<'info, Rent>,
     #[account(mut)]
     pub product_authority: Signer<'info>,
-    /// CHECK: will be created in the ix logic
-    #[account(
-        mut,
-        seeds = [
-            b"product_mint".as_ref(),
-            params.first_id.as_ref(),
-            params.second_id.as_ref(),
-        ],
-        bump = params.mint_bump,
-    )]    
-    pub product_mint: AccountInfo<'info>,
     #[account(
         seeds = [
             b"governance".as_ref(),
@@ -70,6 +58,17 @@ pub struct CreateProduct<'info> {
         bump,
     )]
     pub product: Box<Account<'info, Product>>,
+    /// CHECK: will be created in the ix logic
+    #[account(
+        mut,
+        seeds = [
+            b"product_mint".as_ref(),
+            params.first_id.as_ref(),
+            params.second_id.as_ref(),
+        ],
+        bump = params.mint_bump,
+    )]    
+    pub product_mint: AccountInfo<'info>,
     pub payment_mint: Box<InterfaceAccount<'info, Mint>>,
 }
 
@@ -82,7 +81,6 @@ pub fn handler<'info>(ctx: Context<CreateProduct>, params: CreateProductParams) 
     (*ctx.accounts.product).seller_config = SellerConfig {
         payment_mint: ctx.accounts.payment_mint.key(),
         product_price: params.product_price,
-        usdc_price: params.usdc_price
     };
     (*ctx.accounts.product).bumps = Bumps {
         bump: *ctx.bumps.get("product").unwrap(),
@@ -124,7 +122,7 @@ pub fn handler<'info>(ctx: Context<CreateProduct>, params: CreateProductParams) 
         CpiContext::new_with_signer(
             ctx.accounts.system_program.to_account_info(),
             CreateAccount { 
-                from: ctx.accounts.product.to_account_info(), 
+                from: ctx.accounts.product_authority.to_account_info(), 
                 to: ctx.accounts.product_mint.to_account_info()
             },
             &[&signer_mint_seeds[..]],

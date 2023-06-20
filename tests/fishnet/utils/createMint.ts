@@ -11,9 +11,7 @@ export const createMint = async (
 ): Promise<web3.PublicKey> => {
   const tokenMint = new web3.Keypair();
   const lamportsForMint =
-    await provider.connection.getMinimumBalanceForRentExemption(
-      MintLayout.span
-    );
+    await provider.connection.getMinimumBalanceForRentExemption(MintLayout.span);
 
   // Allocate mint and wallet account
   await provider.sendAndConfirm(

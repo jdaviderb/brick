@@ -19,7 +19,7 @@ pub struct DeleteProduct<'info> {
             b"product".as_ref(),
             product.product_mint.as_ref(),
         ],
-        close = product,
+        close = product_authority,
         bump = product.bumps.bump,
         has_one = product_authority @ ErrorCode::IncorrectAuthority,
     )]
