@@ -40,4 +40,8 @@ pub enum ErrorCode {
     BurnError,
     #[msg("Error during the close account CPI")]
     CloseAccountError,
+    #[msg("Currently we do not offer any promotion")]
+    ClosedPromotion,
+    #[msg("Currently you can not withdraw the bonus because the promotion has not finished")]
+    OpenPromotion,
 }

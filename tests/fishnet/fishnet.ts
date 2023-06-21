@@ -49,10 +49,23 @@ describe("fishnet", () => {
   let secondId: Buffer;
 
   let governanceTokenVault: anchor.web3.PublicKey;
+
+  let governanceGovernanceVault: anchor.web3.PublicKey;
+  let governanceGovernanceBalance: number;
+  let governanceBuyerTransferVault: anchor.web3.PublicKey;
+  let governanceBuyerBalance: number;
+  let governanceProductAuthorityTransferVault: anchor.web3.PublicKey;
+  let governanceProductAuthorityBalance: number;
+
   let buyerTokenVault:anchor.web3.PublicKey;
   let governanceTransferVault: anchor.web3.PublicKey;
   let productAuthorityTransferVault: anchor.web3.PublicKey
   let buyerTransferVault: anchor.web3.PublicKey;
+
+  let productAuthorityBonus: anchor.web3.PublicKey;
+  let productAuthorityBonusVault: anchor.web3.PublicKey;
+  let buyerBonus: anchor.web3.PublicKey;
+  let buyerBonusVault: anchor.web3.PublicKey;
 
   it("Should create the fishnet governance account and check potential exploits", async () => {
     governanceBalance = 1000;
@@ -535,7 +548,6 @@ describe("fishnet", () => {
         buyerTransferVault: buyerTransferVault,
         productAuthorityTransferVault: productAuthorityTransferVault,
         governanceTransferVault: governanceTransferVault,
-        governanceTokenVault: governanceTokenVault,
       })
       .signers(
         buyerKeypair instanceof (anchor.Wallet as any)
@@ -613,7 +625,6 @@ describe("fishnet", () => {
         buyerTransferVault: buyerTransferVault,
         productAuthorityTransferVault: productAuthorityTransferVault,
         governanceTransferVault: governanceTransferVault,
-        governanceTokenVault: governanceTokenVault,
       })
       .signers(
         buyerKeypair instanceof (anchor.Wallet as any)
@@ -646,7 +657,7 @@ describe("fishnet", () => {
       confirmOptions,
       TOKEN_PROGRAM_ID,
     );
-    const governanceFee = (Number(productPrice) * fee) / 10000;
+    const governanceFee = Math.floor((Number(productPrice) * (fee - feeReduction)) / 10000);
     productAuthorityBalance = productAuthorityBalance + Number(productPrice) - governanceFee;
     assert.equal(Number(productAuthorityTransferVaultAccount.amount), productAuthorityBalance);
 
@@ -665,8 +676,8 @@ describe("fishnet", () => {
   });
 
   it("Should register a buy (with fees and governance mint as a payment, ie: fee reduction)", async () => {
-    [fee, feeReduction, sellerPromo, buyerPromo] = [100, 0, 0, 0];
-    
+    [fee, feeReduction, sellerPromo, buyerPromo] = [100, 20, 0, 0];
+
     await program.methods
       .editPoints({
         fee,
@@ -687,6 +698,44 @@ describe("fishnet", () => {
       .catch(console.error);
 
     await program.methods
+      .editPaymentMint()
+      .accounts({
+        productAuthority: productAuthorityKeypair.publicKey,
+        product: productPubkey,
+        paymentMint: governanceMint
+      })
+      .signers(
+        productAuthorityKeypair instanceof (anchor.Wallet as any)
+          ? []
+          : [productAuthorityKeypair]
+      )
+      .rpc(confirmOptions)
+      .catch(console.error);
+
+    delay(5000);
+    governanceGovernanceBalance = 1000;
+    governanceGovernanceVault = await createFundedAssociatedTokenAccount(
+      provider,
+      governanceMint,
+      governanceGovernanceBalance,
+      governanceAuthorityKeypair
+    );
+    governanceBuyerBalance = 1000;
+    governanceBuyerTransferVault = await createFundedAssociatedTokenAccount(
+      provider,
+      governanceMint,
+      governanceBuyerBalance,
+      buyerKeypair
+    );
+    governanceProductAuthorityBalance = 1000;
+    governanceProductAuthorityTransferVault = await createFundedAssociatedTokenAccount(
+      provider,
+      governanceMint,
+      governanceProductAuthorityBalance,
+      productAuthorityKeypair
+    );
+
+    await program.methods
       .registerBuy()
       .accounts({
         systemProgram: SystemProgram.programId,
@@ -700,12 +749,12 @@ describe("fishnet", () => {
         governance: governancePubkey,
         product: productPubkey,
         productMint: productMintPubkey,
-        paymentMint: paymentMintPubkey,
+        paymentMint: governanceMint,
+        governanceMint: governanceMint,
         buyerTokenVault: buyerTokenVault,
-        buyerTransferVault: buyerTransferVault,
-        productAuthorityTransferVault: productAuthorityTransferVault,
-        governanceTransferVault: governanceTransferVault,
-        governanceTokenVault: governanceTokenVault,
+        buyerTransferVault: governanceBuyerTransferVault,
+        productAuthorityTransferVault: governanceProductAuthorityTransferVault,
+        governanceTransferVault: governanceGovernanceVault,
       })
       .signers(
         buyerKeypair instanceof (anchor.Wallet as any)
@@ -715,44 +764,217 @@ describe("fishnet", () => {
       .rpc(confirmOptions)
       .catch(console.error);
     
-    const buyerTransferVaultAccount = await getOrCreateAssociatedTokenAccount(
+    const governanceGovernanceVaultAccount = await getOrCreateAssociatedTokenAccount(
       provider.connection,
       buyerKeypair as anchor.web3.Signer,
-      paymentMintPubkey,
+      governanceMint,
       buyerKeypair.publicKey,
       false,
       "confirmed",
       confirmOptions,
       TOKEN_PROGRAM_ID,
     );
-    buyerBalance = buyerBalance - Number(productPrice);
-    assert.equal(Number(buyerTransferVaultAccount.amount), buyerBalance);
+    governanceGovernanceBalance = governanceGovernanceBalance - Number(productPrice);
+    assert.equal(Number(governanceGovernanceVaultAccount.amount), governanceGovernanceBalance);
     
-    const productAuthorityTransferVaultAccount = await getOrCreateAssociatedTokenAccount(
+    const governanceBuyerTransferVaultAccount = await getOrCreateAssociatedTokenAccount(
       provider.connection,
       productAuthorityKeypair as anchor.web3.Signer,
-      paymentMintPubkey,
+      governanceMint,
       productAuthorityKeypair.publicKey,
       false,
       "confirmed",
       confirmOptions,
       TOKEN_PROGRAM_ID,
     );
-    const governanceFee = (Number(productPrice) * fee) / 10000;
-    productAuthorityBalance = productAuthorityBalance + Number(productPrice) - governanceFee;
-    assert.equal(Number(productAuthorityTransferVaultAccount.amount), productAuthorityBalance);
+    const governanceFee = Math.floor((Number(productPrice) * (fee - feeReduction)) / 10000);
+    governanceBuyerBalance = governanceBuyerBalance + Number(productPrice) - governanceFee;
+    assert.equal(Number(governanceBuyerTransferVaultAccount.amount), governanceBuyerBalance);    
 
-    const governanceAuthorityTransferVaultAccount = await getOrCreateAssociatedTokenAccount(
+    const governanceProductAuthorityTransferVaultAccount = await getOrCreateAssociatedTokenAccount(
       provider.connection,
       governanceAuthorityKeypair as anchor.web3.Signer,
-      paymentMintPubkey,
+      governanceMint,
       governanceAuthorityKeypair.publicKey,
       false,
       "confirmed",
       confirmOptions,
       TOKEN_PROGRAM_ID,
     );
-    governanceBalance = governanceBalance + governanceFee;
-    assert.equal(Number(governanceAuthorityTransferVaultAccount.amount), governanceBalance);
+    governanceProductAuthorityBalance = Math.floor(governanceProductAuthorityBalance + governanceFee);
+    assert.equal(Number(governanceProductAuthorityTransferVaultAccount.amount), governanceProductAuthorityBalance);
+  });
+
+  it("Should register a buy during promo time, users can withdraw when that promo is finished", async () => {
+    [fee, feeReduction, sellerPromo, buyerPromo] = [100, 20, 20, 20];
+
+    await program.methods
+      .editPoints({
+        fee,
+        feeReduction,
+        sellerPromo,
+        buyerPromo,
+      })
+      .accounts({
+        governanceAuthority: governanceAuthorityKeypair.publicKey,
+        governance: governancePubkey,
+      })
+      .signers(
+        governanceAuthorityKeypair instanceof (anchor.Wallet as any)
+          ? []
+          : [governanceAuthorityKeypair]
+      )
+      .rpc(confirmOptions)
+      .catch(console.error);
+
+    [productAuthorityBonus] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("bonus", "utf-8"), productAuthorityKeypair.publicKey.toBuffer()],
+      program.programId
+    );
+    [productAuthorityBonusVault] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("bonus_vault", "utf-8"), productAuthorityKeypair.publicKey.toBuffer()],
+      program.programId
+    );
+
+    await program.methods
+      .initBonus()
+      .accounts({
+        systemProgram: SystemProgram.programId,
+        tokenProgramV0: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        rent: SYSVAR_RENT_PUBKEY,
+        signer: productAuthorityKeypair.publicKey,
+        governance: governancePubkey,
+        bonus: productAuthorityBonus,
+        bonusVault: productAuthorityBonusVault,
+        governanceMint: governanceMint
+      })
+      .signers(
+        productAuthorityKeypair instanceof (anchor.Wallet as any)
+          ? []
+          : [productAuthorityKeypair]
+      )
+      .rpc(confirmOptions)
+      .catch(console.error);
+
+    const bonusAccount = await program.account.bonus.fetch(productAuthorityBonus);
+    assert.isDefined(bonusAccount);
+    assert.equal(bonusAccount.authority.toString(), productAuthorityKeypair.publicKey.toString());
+    assert.equal(Number(bonusAccount.amount), 0);
+
+    [buyerBonus] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("bonus", "utf-8"), buyerKeypair.publicKey.toBuffer()],
+      program.programId
+    );
+    [buyerBonusVault] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("bonus_vault", "utf-8"), buyerKeypair.publicKey.toBuffer()],
+      program.programId
+    );
+
+    await program.methods
+      .initBonus()
+      .accounts({
+        systemProgram: SystemProgram.programId,
+        tokenProgramV0: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        rent: SYSVAR_RENT_PUBKEY,
+        signer: buyerKeypair.publicKey,
+        governance: governancePubkey,
+        bonus: buyerBonus,
+        bonusVault: buyerBonusVault,
+        governanceMint: governanceMint
+      })
+      .signers(
+        buyerKeypair instanceof (anchor.Wallet as any)
+          ? []
+          : [buyerKeypair]
+      )
+      .rpc(confirmOptions)
+      .catch(console.error);
+
+    await program.methods
+      .registerPromoBuy()
+      .accounts({
+        systemProgram: SystemProgram.programId,
+        tokenProgramV0: TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        rent: SYSVAR_RENT_PUBKEY,
+        governanceAuthority: governanceAuthorityKeypair.publicKey,
+        productAuthority: productAuthorityKeypair.publicKey,
+        signer: buyerKeypair.publicKey,
+        governance: governancePubkey,
+        product: productPubkey,
+        productMint: productMintPubkey,
+        governanceMint: governanceMint,
+        buyerTokenVault: buyerTokenVault,
+        buyerTransferVault: governanceBuyerTransferVault,
+        productAuthorityTransferVault: governanceProductAuthorityTransferVault,
+        governanceTokenVault: governanceTokenVault,
+        productAuthorityBonus: productAuthorityBonus,
+        productAuthorityBonusVault: productAuthorityBonusVault,
+        buyerBonus: buyerBonus,
+        buyerBonusVault: buyerBonusVault,
+      })
+      .signers(
+        buyerKeypair instanceof (anchor.Wallet as any)
+          ? []
+          : [buyerKeypair]
+      )
+      .rpc(confirmOptions)
+      .catch(console.error);
+
+    await delay(3000);
+    const productAuthorityBonusAccount = await program.account.bonus.fetch(productAuthorityBonus);
+    assert.isDefined(productAuthorityBonusAccount);
+    assert.equal(productAuthorityBonusAccount.authority.toString(), productAuthorityKeypair.publicKey.toString());
+    assert.equal(Number(productAuthorityBonusAccount.amount), Math.floor(Number(productPrice) * sellerPromo / 10000));
+
+    [fee, feeReduction, sellerPromo, buyerPromo] = [100, 20, 0, 0];
+
+    await program.methods
+      .editPoints({
+        fee,
+        feeReduction,
+        sellerPromo,
+        buyerPromo,
+      })
+      .accounts({
+        governanceAuthority: governanceAuthorityKeypair.publicKey,
+        governance: governancePubkey,
+      })
+      .signers(
+        governanceAuthorityKeypair instanceof (anchor.Wallet as any)
+          ? []
+          : [governanceAuthorityKeypair]
+      )
+      .rpc(confirmOptions)
+      .catch(console.error);
+
+    await program.methods
+      .withdrawBonus()
+      .accounts({
+        tokenProgramV0: TOKEN_PROGRAM_ID,
+        signer: buyerKeypair.publicKey,
+        governance: governancePubkey,
+        bonus: buyerBonus,
+        governanceMint: governanceMint,
+        receiverVault: governanceBuyerTransferVault,
+        bonusVault: buyerBonusVault,
+      })
+      .signers(
+        buyerKeypair instanceof (anchor.Wallet as any)
+          ? []
+          : [buyerKeypair]
+      )
+      .rpc(confirmOptions)
+      .catch(console.error);
+
+    await delay(3000);
+    try {
+      await program.account.bonus.fetch(buyerBonus);
+    } catch (e) {
+      assert.isTrue(e.toString().includes("Account does not exist or has no data"))
+    }
   });
 })

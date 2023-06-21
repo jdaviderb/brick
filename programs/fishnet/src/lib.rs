@@ -35,8 +35,20 @@ pub mod fishnet {
     pub fn edit_price(ctx: Context<EditPrice>, product_price: u64) -> Result<()> {
         edit_price::handler(ctx, product_price)
     }
+
+    pub fn init_bonus(ctx: Context<InitBonus>) -> Result<()> {
+        init_bonus::handler(ctx)
+    }
     
     pub fn register_buy(ctx: Context<RegisterBuy>) -> Result<()> {
         register_buy::handler(ctx)
+    }
+
+    pub fn register_promo_buy(ctx: Context<RegisterPromoBuy>) -> Result<()> {
+        register_promo_buy::handler(ctx)
+    }
+
+    pub fn withdraw_bonus(ctx: Context<WithdrawBonus>) -> Result<()> {
+        withdraw_bonus::handler(ctx)
     }
 }

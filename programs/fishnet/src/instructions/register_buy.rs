@@ -37,7 +37,7 @@ pub struct RegisterBuy<'info> {
         ],
         bump = governance.bump,
         has_one = governance_authority @ ErrorCode::IncorrectAuthority,
-        has_one = governance_token_vault @ ErrorCode::IncorrectATA,
+        has_one = governance_mint @ ErrorCode::IncorrectMint,
     )]
     pub governance: Account<'info, Governance>,
     #[account(
@@ -63,9 +63,11 @@ pub struct RegisterBuy<'info> {
     #[account(
         mut,
         constraint = payment_mint.key() == product.seller_config.payment_mint
-            @ ErrorCode::IncorrectAuthority,
+            @ ErrorCode::IncorrectMint,
     )]
     pub payment_mint: Box<InterfaceAccount<'info, Mint>>,
+    /// CHECK: validated in the governance account contraints
+    pub governance_mint: Box<InterfaceAccount<'info, Mint>>,
     #[account(
         init,
         payer = signer,
@@ -99,51 +101,53 @@ pub struct RegisterBuy<'info> {
             @ ErrorCode::IncorrectATA,
     )]
     pub governance_transfer_vault: Box<InterfaceAccount<'info, TokenAccount>>,
-    // ATA that holds the governance tokens
-    #[account(
-        mut,
-        seeds = [
-            b"governance_token_vault".as_ref(),
-            governance.key().as_ref(),
-        ],
-        bump = governance.vault_bump,
-        constraint = governance_token_vault.owner == governance.key() @ ErrorCode::IncorrectATA,
-        constraint = governance_token_vault.mint == governance.governance_mint.key() @ ErrorCode::IncorrectAuthority,
-    )]
-    pub governance_token_vault: Box<InterfaceAccount<'info, TokenAccount>>,
 }
 
 pub fn handler<'info>(ctx: Context<RegisterBuy>) -> Result<()> {
-    let product = &mut ctx.accounts.product;
-
-    if Governance::is_active_promo(
-        &ctx.accounts.governance, 
-        &product.seller_config.payment_mint
-    ) {        
-        apply_promo_distribution(
-            &ctx.accounts.token_program.to_account_info(),
-            &ctx.accounts.signer.to_account_info(),
-            &ctx.accounts.governance_transfer_vault.to_account_info(), 
-            &ctx.accounts.product_authority_transfer_vault.to_account_info(), 
-            &ctx.accounts.buyer_transfer_vault.to_account_info(),
-            &ctx.accounts.governance,
-            product.seller_config.product_price,
-        )?;
-    } else {
-        apply_normal_distribution(
-            &ctx.accounts.token_program.to_account_info(),
-            &ctx.accounts.signer.to_account_info(),
-            &ctx.accounts.governance_transfer_vault.to_account_info(), 
-            &ctx.accounts.product_authority_transfer_vault.to_account_info(), 
-            &ctx.accounts.buyer_transfer_vault.to_account_info(),
-            ctx.accounts.governance.governance_mint,
-            product.seller_config.payment_mint,
-            product.seller_config.product_price,
+    if ctx.accounts.governance.fee > 0 {
+        let (total_fee, seller_amount) = calculate_transfer_distribution(
             ctx.accounts.governance.fee,
             ctx.accounts.governance.fee_reduction,
+            ctx.accounts.governance.governance_mint,
+            ctx.accounts.product.seller_config.payment_mint,
+            ctx.accounts.product.seller_config.product_price,
         )?;
-    }
+        transfer(
+            CpiContext::new(
+                ctx.accounts.token_program.to_account_info(), 
+                Transfer {
+                    from: ctx.accounts.buyer_transfer_vault.to_account_info(),
+                    to: ctx.accounts.governance_transfer_vault.to_account_info(),
+                    authority: ctx.accounts.signer.to_account_info(),
+                },
+            ),
+            total_fee,
+        ).map_err(|_| ErrorCode::TransferError)?;
 
+        transfer(
+            CpiContext::new(
+                ctx.accounts.token_program.to_account_info(), 
+                Transfer {
+                    from: ctx.accounts.buyer_transfer_vault.to_account_info(),
+                    to: ctx.accounts.product_authority_transfer_vault.to_account_info(),
+                    authority: ctx.accounts.signer.to_account_info(),
+                },
+            ),
+            seller_amount,
+        ).map_err(|_| ErrorCode::TransferError)?;
+    } else {
+        transfer(
+            CpiContext::new(
+                ctx.accounts.token_program.to_account_info(), 
+                Transfer {
+                    from: ctx.accounts.buyer_transfer_vault.to_account_info(),
+                    to: ctx.accounts.product_authority_transfer_vault.to_account_info(),
+                    authority: ctx.accounts.signer.to_account_info(),
+                },
+            ),
+            ctx.accounts.product.seller_config.product_price,
+        ).map_err(|_| ErrorCode::TransferError)?;
+    }
 
     mint_and_burn(
         ctx.accounts.token_program.to_account_info(),
@@ -154,170 +158,6 @@ pub fn handler<'info>(ctx: Context<RegisterBuy>) -> Result<()> {
         ctx.accounts.product.bumps.bump
     )?;
 
-    Ok(())
-}
-
-/// This function applies a promotional distribution of tokens in the instruction.
-/// 
-/// # Arguments
-/// 
-/// * `token_program` - The program of the token.
-/// * `signer` - The signer of the transaction.
-/// * `governance_transfer_vault` - The vault of the governance transfer.
-/// * `product_authority_transfer_vault` - The vault of the seller's transfer.
-/// * `buyer_transfer_vault` - The vault of the buyer's transfer.
-/// * `product_price` - The price of the product.
-/// * `seller_promo` - The promo for the seller.
-/// * `buyer_promo` - The promo for the buyer.
-/// 
-/// # Returns
-/// 
-/// A Result indicating success or an ErrorCode.
-fn apply_promo_distribution<'info>(
-    token_program: &AccountInfo<'info>,
-    signer: &AccountInfo<'info>,
-    governance_transfer_vault: &AccountInfo<'info>,
-    product_authority_transfer_vault: &AccountInfo<'info>,
-    buyer_transfer_vault: &AccountInfo<'info>,
-    governance: &Governance,
-    product_price: u64,
-) -> std::result::Result<(), ErrorCode> {
-    // buyer payment to the seller
-    transfer(
-        CpiContext::new(
-            token_program.clone(), 
-            Transfer {
-                from: buyer_transfer_vault.clone(),
-                to: product_authority_transfer_vault.clone(),
-                authority: signer.clone(),
-            },
-        ),
-        product_price,
-    ).map_err(|_| ErrorCode::TransferError)?;
-
-    // seller bonus transfer
-    let seller_bonus = (governance.seller_promo as u128)
-        .checked_mul(product_price as u128)
-        .ok_or(ErrorCode::NumericalOverflow)?
-        .checked_div(10000)
-        .ok_or(ErrorCode::NumericalOverflow)? as u64;
-
-    let governance_seeds = &[
-        b"governance".as_ref(),
-        governance.governance_name.as_ref(),
-        &[governance.bump],
-    ];
-
-    transfer(
-        CpiContext::new_with_signer(
-            token_program.clone(), 
-            Transfer {
-                from: governance_transfer_vault.clone(),
-                to: product_authority_transfer_vault.clone(),
-                authority: signer.clone(),
-            },
-            &[&governance_seeds[..]],
-        ),
-        seller_bonus,
-    ).map_err(|_| ErrorCode::TransferError)?;
-
-    // buyer bonus transfer
-    let buyer_bonus = (governance.buyer_promo as u128)
-        .checked_mul(product_price as u128)
-        .ok_or(ErrorCode::NumericalOverflow)?
-        .checked_div(10000)
-        .ok_or(ErrorCode::NumericalOverflow)? as u64;
-
-    transfer(
-        CpiContext::new_with_signer(
-            token_program.clone(), 
-            Transfer {
-                from: governance_transfer_vault.clone(),
-                to: buyer_transfer_vault.clone(),
-                authority: signer.clone(),
-            },
-            &[&governance_seeds[..]],
-        ),
-        buyer_bonus,
-    ).map_err(|_| ErrorCode::TransferError)?;
-
-    Ok(())
-}
-
-/// This function applies a normal distribution of tokens in the instruction.
-/// 
-/// # Arguments
-/// 
-/// * `token_program` - The program of the token.
-/// * `signer` - The signer of the transaction.
-/// * `governance_transfer_vault` - The vault of the governance transfer.
-/// * `product_authority_transfer_vault` - The vault of the seller's transfer.
-/// * `buyer_transfer_vault` - The vault of the buyer's transfer.
-/// * `governance_mint` - The mint of the governance.
-/// * `payment_mint` - The mint of the payment.
-/// * `product_price` - The price of the product.
-/// * `fee` - The fee for the transaction.
-/// * `fee_reduction` - The reduction to apply to the fee.
-/// 
-/// # Returns
-/// 
-/// A Result indicating success or an ErrorCode.
-fn apply_normal_distribution<'info>(
-    token_program: &AccountInfo<'info>,
-    signer: &AccountInfo<'info>,
-    governance_transfer_vault: &AccountInfo<'info>,
-    product_authority_transfer_vault: &AccountInfo<'info>,
-    buyer_transfer_vault: &AccountInfo<'info>,
-    governance_mint: Pubkey,
-    payment_mint: Pubkey,
-    product_price: u64,
-    fee: u16,
-    fee_reduction: u16,
-) -> std::result::Result<(), ErrorCode> {
-    if fee > 0 {
-        let (total_fee, seller_amount) = calculate_transfer_distribution(
-            fee,
-            fee_reduction,
-            governance_mint,
-            payment_mint,
-            product_price,
-        )?;
-        transfer(
-            CpiContext::new(
-                token_program.clone(), 
-                Transfer {
-                    from: buyer_transfer_vault.clone(),
-                    to: governance_transfer_vault.clone(),
-                    authority: signer.clone(),
-                },
-            ),
-            total_fee,
-        ).map_err(|_| ErrorCode::TransferError)?;
-
-        transfer(
-            CpiContext::new(
-                token_program.clone(), 
-                Transfer {
-                    from: buyer_transfer_vault.clone(),
-                    to: product_authority_transfer_vault.clone(),
-                    authority: signer.clone(),
-                },
-            ),
-            seller_amount,
-        ).map_err(|_| ErrorCode::TransferError)?;
-    } else {
-        transfer(
-            CpiContext::new(
-                token_program.clone(), 
-                Transfer {
-                    from: buyer_transfer_vault.clone(),
-                    to: product_authority_transfer_vault.clone(),
-                    authority: signer.clone(),
-                },
-            ),
-            product_price,
-        ).map_err(|_| ErrorCode::TransferError)?;
-    }
     Ok(())
 }
 

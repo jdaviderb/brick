@@ -4,7 +4,10 @@ pub mod delete_product;
 pub mod edit_points;
 pub mod edit_payment_mint;
 pub mod edit_price;
+pub mod init_bonus;
 pub mod register_buy;
+pub mod register_promo_buy;
+pub mod withdraw_bonus;
 
 pub use create_governance::*;
 pub use create_product::*;
@@ -12,4 +15,7 @@ pub use delete_product::*;
 pub use edit_points::*;
 pub use edit_payment_mint::*;
 pub use edit_price::*;
+pub use init_bonus::*;
 pub use register_buy::*;
+pub use register_promo_buy::*;
+pub use withdraw_bonus::*;
