@@ -42,7 +42,7 @@ pub struct CreateGovernance<'info> {
         init,
         payer = governance_authority,
         seeds = [
-            b"governance_token_vault".as_ref(),
+            b"governance_bonus_vault".as_ref(),
             governance.key().as_ref(),
         ],
         bump,
@@ -50,7 +50,7 @@ pub struct CreateGovernance<'info> {
         token::authority = governance,
         token::token_program = token_program_v0,
     )]
-    pub governance_token_vault: Box<InterfaceAccount<'info, TokenAccount>>,
+    pub governance_bonus_vault: Box<InterfaceAccount<'info, TokenAccount>>,
 }
 
 pub fn handler<'info>(ctx: Context<CreateGovernance>, params: CreateGovernanceParams) -> Result<()> {
@@ -60,13 +60,13 @@ pub fn handler<'info>(ctx: Context<CreateGovernance>, params: CreateGovernancePa
     (*ctx.accounts.governance).governance_name = params.governance_name;
     (*ctx.accounts.governance).governance_authority = ctx.accounts.governance_authority.key();
     (*ctx.accounts.governance).governance_mint = ctx.accounts.governance_mint.key();
-    (*ctx.accounts.governance).governance_token_vault = ctx.accounts.governance_token_vault.key();
+    (*ctx.accounts.governance).governance_bonus_vault = ctx.accounts.governance_bonus_vault.key();
     (*ctx.accounts.governance).fee = params.fee;
     (*ctx.accounts.governance).fee_reduction = params.fee_reduction;
     (*ctx.accounts.governance).seller_promo = params.seller_promo;
     (*ctx.accounts.governance).buyer_promo = params.buyer_promo;
     (*ctx.accounts.governance).bump = *ctx.bumps.get("governance").unwrap();
-    (*ctx.accounts.governance).vault_bump = *ctx.bumps.get("governance_token_vault").unwrap();
+    (*ctx.accounts.governance).vault_bump = *ctx.bumps.get("governance_bonus_vault").unwrap();
 
     Ok(())
 }

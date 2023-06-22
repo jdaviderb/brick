@@ -9,14 +9,10 @@ pub struct Product {
     /// the way we discriminate between our mints and others, is creating the mint as a pda
     pub first_id: [u8; 32], 
     pub second_id: [u8; 32],
-    // app account created by this program, is useful to store to perform validations and use its data securely
-    pub governance: Pubkey,
-    // mint that represents a dataset
-    pub product_mint: Pubkey,
-    // seller that owns the dataset
+    // seller that owns the product
     pub product_authority: Pubkey,
     pub seller_config: SellerConfig,
-    pub bumps: Bumps,
+    pub bump: u8,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Clone)]
@@ -27,22 +23,14 @@ pub struct SellerConfig {
     pub product_price: u64,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Default, Clone)]
-pub struct Bumps {
-    pub bump: u8,
-    pub mint_bump: u8,
-}
-
 impl Product {
     pub const SIZE: usize = 8 // discriminator
         + 32 // first_id
         + 32 // second_id
-        + 32 // app_pubkey
-        + 32 // token_mint
-        + 32 // authority
+        + 32 // product_authority
         // SellerConfig
         + 32 // payment_mint
-        + 8  // token_price
+        + 8  // product_price
         // Bumps
         + 1  // bump
         + 1; // mint_bump

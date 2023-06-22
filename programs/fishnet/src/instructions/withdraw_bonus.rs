@@ -3,16 +3,16 @@ use {
     crate::errors::ErrorCode,
     anchor_lang::prelude::*,
     anchor_spl::{
-        token::{close_account, transfer, Transfer, CloseAccount},
+        token::{close_account, transfer, CloseAccount, Transfer},
         token_interface::{Mint, TokenInterface, TokenAccount},
-        token::ID as TokenProgramV0,
+        token::ID,
     }
 };
 
 #[derive(Accounts)]
 pub struct WithdrawBonus<'info> {
-    #[account(address = TokenProgramV0 @ ErrorCode::IncorrectTokenProgram)]
-    pub token_program_v0: Interface<'info, TokenInterface>,    
+    #[account(address = ID @ ErrorCode::IncorrectTokenProgram)]
+    pub token_program: Interface<'info, TokenInterface>,    
     #[account(mut)]
     pub signer: Signer<'info>,
     #[account(
@@ -22,6 +22,7 @@ pub struct WithdrawBonus<'info> {
         ],
         bump = governance.bump,
         has_one = governance_mint @ ErrorCode::IncorrectMint,
+        has_one = governance_bonus_vault @ ErrorCode::IncorrectATA,
     )]
     pub governance: Account<'info, Governance>,
     #[account(
@@ -37,6 +38,17 @@ pub struct WithdrawBonus<'info> {
     pub bonus: Account<'info, Bonus>,
     /// CHECK: validated in the governance account contraints
     pub governance_mint: Box<InterfaceAccount<'info, Mint>>,
+    #[account(
+        mut,
+        seeds = [
+            b"governance_bonus_vault".as_ref(),
+            governance.key().as_ref(),
+        ],
+        bump = governance.vault_bump,
+        constraint = governance_bonus_vault.owner == governance.key() @ ErrorCode::IncorrectAuthority,
+        constraint = governance_bonus_vault.mint == governance_mint.key() @ ErrorCode::IncorrectMint,    
+    )]
+    pub governance_bonus_vault: Box<InterfaceAccount<'info, TokenAccount>>,
     #[account(
         mut,
         constraint = receiver_vault.owner == bonus.authority @ ErrorCode::IncorrectAuthority,
@@ -60,39 +72,52 @@ pub fn handler<'info>(ctx: Context<WithdrawBonus>) -> Result<()> {
 
     if ctx.accounts.governance.buyer_promo > 0 && ctx.accounts.governance.seller_promo > 0 {
         return Err(ErrorCode::OpenPromotion.into());
-    } else {
-        let seeds = &[
-            b"bonus".as_ref(),
-            ctx.accounts.bonus.authority.as_ref(),
-            &[ctx.accounts.bonus.bump],
-        ];
-        
-        transfer(
-            CpiContext::new_with_signer(
-                ctx.accounts.token_program_v0.to_account_info(),
-                Transfer {
-                    from: ctx.accounts.bonus_vault.to_account_info(),
-                    to: ctx.accounts.receiver_vault.to_account_info(),
-                    authority: ctx.accounts.bonus.to_account_info(),
-                },
-                &[&seeds[..]],
-            ),
-            ctx.accounts.bonus.amount,
-        )?;
-    
-    
-        close_account(
-            CpiContext::new_with_signer(
-                ctx.accounts.token_program_v0.to_account_info(), 
-                CloseAccount {
-                    account: ctx.accounts.bonus_vault.to_account_info(),
-                    destination: ctx.accounts.signer.to_account_info(),
-                    authority: ctx.accounts.bonus.to_account_info(),
-                }, 
-                &[&seeds[..]],
-            )
-        )?;
-    }
+    } 
 
+    let seeds = &[
+        b"bonus".as_ref(),
+        ctx.accounts.bonus.authority.as_ref(),
+        &[ctx.accounts.bonus.bump],
+    ];
+    
+    msg!(
+        "{:?} {:?} {:?}" ,
+        ctx.accounts.bonus.amount,
+        ctx.accounts.governance_bonus_vault.amount,
+        ctx.accounts.receiver_vault.amount,
+    );
+
+    transfer(
+        CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            Transfer {
+                from: ctx.accounts.bonus_vault.to_account_info(),
+                to: ctx.accounts.receiver_vault.to_account_info(),
+                authority: ctx.accounts.bonus.to_account_info(),
+            },
+            &[&seeds[..]],
+        ),
+        ctx.accounts.bonus.amount,
+    ).map_err(|_| ErrorCode::TransferError)?;
+
+    msg!(
+        "{:?} {:?} {:?}" ,
+        ctx.accounts.bonus.amount,
+        ctx.accounts.governance_bonus_vault.amount,
+        ctx.accounts.receiver_vault.amount,
+    );
+
+    close_account(
+        CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(), 
+            CloseAccount {
+                account: ctx.accounts.bonus_vault.to_account_info(),
+                destination: ctx.accounts.signer.to_account_info(),
+                authority: ctx.accounts.bonus.to_account_info(),
+            }, 
+            &[&seeds[..]],
+        )
+    )?;
+    
     Ok(())
 }

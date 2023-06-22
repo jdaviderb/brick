@@ -13,9 +13,10 @@ pub struct EditPaymentMint<'info> {
         mut,
         seeds = [
             b"product".as_ref(),
-            product.product_mint.as_ref()
-        ], 
-        bump = product.bumps.bump,
+            product.first_id.as_ref(),
+            product.second_id.as_ref(),
+        ],
+        bump = product.bump,
         has_one = product_authority @ ErrorCode::IncorrectAuthority
     )]
     pub product: Box<Account<'info, Product>>,

@@ -7,9 +7,9 @@ use {
     },
     anchor_spl::{
         associated_token::AssociatedToken,
-        token_interface::{Mint, TokenInterface, TokenAccount, MintTo, Burn, CloseAccount},
+        token_interface::{Mint, TokenInterface, TokenAccount},
         token::{transfer, Transfer},
-        token_2022::{mint_to, burn, close_account, ID as TokenProgram2022},
+        token_2022::ID as TokenProgram2022,
         token::ID as TokenProgramV0,
     }
 };
@@ -37,40 +37,22 @@ pub struct RegisterPromoBuy<'info> {
         ],
         bump = governance.bump,
         has_one = governance_authority @ ErrorCode::IncorrectAuthority,
-        has_one = governance_token_vault @ ErrorCode::IncorrectATA,
+        has_one = governance_bonus_vault @ ErrorCode::IncorrectATA,
         has_one = governance_mint @ ErrorCode::IncorrectMint,
     )]
     pub governance: Account<'info, Governance>,
     #[account(
         seeds = [
             b"product".as_ref(),
-            product_mint.key().as_ref(),
-        ],
-        bump = product.bumps.bump,
-        has_one = product_mint @ ErrorCode::IncorrectMint,
-        has_one = product_authority @ ErrorCode::IncorrectAuthority,
-    )]
-    pub product: Box<Account<'info, Product>>,
-    #[account(
-        mut,
-        seeds = [
-            b"product_mint".as_ref(),
             product.first_id.as_ref(),
             product.second_id.as_ref(),
         ],
-        bump = product.bumps.mint_bump,
+        bump = product.bump,
+        has_one = product_authority @ ErrorCode::IncorrectAuthority,
     )]
-    pub product_mint: Box<InterfaceAccount<'info, Mint>>,
+    pub product: Box<Account<'info, Product>>,
     /// CHECK: validated in the governance account contraints
     pub governance_mint: Box<InterfaceAccount<'info, Mint>>,
-    #[account(
-        init,
-        payer = signer,
-        associated_token::mint = product_mint,
-        associated_token::authority = signer,
-        token::token_program = token_program
-    )]
-    pub buyer_token_vault: Box<InterfaceAccount<'info, TokenAccount>>,
     #[account(
         mut,
         constraint = buyer_transfer_vault.owner == signer.key()
@@ -87,18 +69,26 @@ pub struct RegisterPromoBuy<'info> {
             @ ErrorCode::IncorrectATA,
     )]
     pub product_authority_transfer_vault: Box<InterfaceAccount<'info, TokenAccount>>,
+    #[account(
+        mut,
+        constraint = governance_transfer_vault.owner == governance.governance_authority
+            @ ErrorCode::IncorrectAuthority,
+        constraint = governance_transfer_vault.mint == governance.governance_mint
+            @ ErrorCode::IncorrectATA,
+    )]
+    pub governance_transfer_vault: Box<InterfaceAccount<'info, TokenAccount>>,
     // this account holds the bonus governance tokens, is controlled by the program and allows to withdraw when promo is finished
     #[account(
         mut,
         seeds = [
-            b"governance_token_vault".as_ref(),
+            b"governance_bonus_vault".as_ref(),
             governance.key().as_ref(),
         ],
         bump = governance.vault_bump,
-        constraint = governance_token_vault.owner == governance.key() @ ErrorCode::IncorrectAuthority,
-        constraint = governance_token_vault.mint == governance.governance_mint @ ErrorCode::IncorrectMint,
+        constraint = governance_bonus_vault.owner == governance.key() @ ErrorCode::IncorrectAuthority,
+        constraint = governance_bonus_vault.mint == governance.governance_mint @ ErrorCode::IncorrectMint,
     )]
-    pub governance_token_vault: Box<InterfaceAccount<'info, TokenAccount>>,
+    pub governance_bonus_vault: Box<InterfaceAccount<'info, TokenAccount>>,
     #[account(
         mut,
         seeds = [
@@ -152,7 +142,8 @@ pub fn handler<'info>(ctx: Context<RegisterPromoBuy>) -> Result<()> {
         let (seller_bonus, buyer_bonus) = apply_promo_distribution(
             &ctx.accounts.token_program.to_account_info(),
             &ctx.accounts.signer.to_account_info(),
-            &ctx.accounts.governance_token_vault.to_account_info(), 
+            &ctx.accounts.governance_transfer_vault.to_account_info(),
+            &ctx.accounts.governance_bonus_vault.to_account_info(), 
             &ctx.accounts.product_authority_transfer_vault.to_account_info(), 
             &ctx.accounts.buyer_transfer_vault.to_account_info(),
             &ctx.accounts.buyer_bonus_vault.to_account_info(), 
@@ -166,15 +157,6 @@ pub fn handler<'info>(ctx: Context<RegisterPromoBuy>) -> Result<()> {
     } else {
         return Err(ErrorCode::ClosedPromotion.into());
     }
-
-    mint_and_burn(
-        ctx.accounts.token_program.to_account_info(),
-        ctx.accounts.signer.to_account_info(),
-        ctx.accounts.product.to_account_info(),
-        ctx.accounts.product_mint.to_account_info(),
-        ctx.accounts.buyer_token_vault.to_account_info(),
-        ctx.accounts.product.bumps.bump
-    )?;
 
     Ok(())
 }
@@ -199,6 +181,7 @@ fn apply_promo_distribution<'info>(
     token_program: &AccountInfo<'info>,
     signer: &AccountInfo<'info>,
     governance_transfer_vault: &AccountInfo<'info>,
+    governance_bonus_vault: &AccountInfo<'info>,
     product_authority_transfer_vault: &AccountInfo<'info>,
     buyer_transfer_vault: &AccountInfo<'info>,
     buyer_bonus_vault: &AccountInfo<'info>,
@@ -207,6 +190,14 @@ fn apply_promo_distribution<'info>(
     governance: &Governance,
     product_price: u64,
 ) -> std::result::Result<(u64, u64), ErrorCode> {
+    let (total_fee, seller_amount) = Governance::calculate_transfer_distribution(
+        governance.fee,
+        governance.fee_reduction,
+        governance.governance_mint,
+        governance.governance_mint,
+        product_price,
+    )?;
+
     // buyer payment to the seller
     transfer(
         CpiContext::new(
@@ -217,7 +208,20 @@ fn apply_promo_distribution<'info>(
                 authority: signer.clone(),
             },
         ),
-        product_price,
+        seller_amount,
+    ).map_err(|_| ErrorCode::TransferError)?;
+
+    // fees transfer
+    transfer(
+        CpiContext::new(
+            token_program.clone(), 
+            Transfer {
+                from: buyer_transfer_vault.clone(),
+                to: governance_transfer_vault.clone(),
+                authority: signer.clone(),
+            },
+        ),
+        total_fee,
     ).map_err(|_| ErrorCode::TransferError)?;
 
     // seller bonus transfer
@@ -237,7 +241,7 @@ fn apply_promo_distribution<'info>(
         CpiContext::new_with_signer(
             token_program.clone(), 
             Transfer {
-                from: governance_transfer_vault.clone(),
+                from: governance_bonus_vault.clone(),
                 to: product_authority_bonus_vault.clone(),
                 authority: governance_info.clone(),
             },
@@ -257,7 +261,7 @@ fn apply_promo_distribution<'info>(
         CpiContext::new_with_signer(
             token_program.clone(), 
             Transfer {
-                from: governance_transfer_vault.clone(),
+                from: governance_bonus_vault.clone(),
                 to: buyer_bonus_vault.clone(),
                 authority: governance_info.clone()
             },
@@ -267,58 +271,4 @@ fn apply_promo_distribution<'info>(
     ).map_err(|_| ErrorCode::TransferError)?;
 
     Ok((seller_bonus, buyer_bonus))
-}
-
-fn mint_and_burn<'info>(
-    token_program: AccountInfo<'info>,
-    signer: AccountInfo<'info>,
-    token_config: AccountInfo<'info>,
-    token_mint: AccountInfo<'info>,
-    buyer_token_vault: AccountInfo<'info>,
-    token_config_bump: u8
-) -> std::result::Result<(), ErrorCode> {
-    let token_mint_key = token_mint.key().clone();
-    let seeds = &[
-        b"product".as_ref(),
-        token_mint_key.as_ref(),
-        &[token_config_bump],
-    ];
-
-    mint_to(
-        CpiContext::new_with_signer(
-            token_program.clone(),
-            MintTo {
-                mint: token_mint.clone(),
-                to: buyer_token_vault.clone(),
-                authority: token_config.clone(),
-            },
-            &[&seeds[..]],
-        ),
-        1
-    ).map_err(|_| ErrorCode::MintToError)?;
-
-    burn(
-        CpiContext::new(
-            token_program.clone(),
-            Burn {
-                mint: token_mint.clone(),
-                from: buyer_token_vault.clone(),
-                authority: signer.clone(),
-            },
-        ),
-        1,
-    ).map_err(|_| ErrorCode::BurnError)?;
-
-    close_account(
-        CpiContext::new(
-            token_program.clone(),
-            CloseAccount {
-                account: buyer_token_vault.clone(),
-                destination: signer.clone(),
-                authority: signer.clone(),
-            },
-        ),
-    ).map_err(|_| ErrorCode::CloseAccountError)?;
-
-    Ok(())
 }
