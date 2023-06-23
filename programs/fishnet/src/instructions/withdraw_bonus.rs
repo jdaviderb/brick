@@ -79,13 +79,6 @@ pub fn handler<'info>(ctx: Context<WithdrawBonus>) -> Result<()> {
         ctx.accounts.bonus.authority.as_ref(),
         &[ctx.accounts.bonus.bump],
     ];
-    
-    msg!(
-        "{:?} {:?} {:?}" ,
-        ctx.accounts.bonus.amount,
-        ctx.accounts.governance_bonus_vault.amount,
-        ctx.accounts.receiver_vault.amount,
-    );
 
     transfer(
         CpiContext::new_with_signer(
@@ -99,13 +92,6 @@ pub fn handler<'info>(ctx: Context<WithdrawBonus>) -> Result<()> {
         ),
         ctx.accounts.bonus.amount,
     ).map_err(|_| ErrorCode::TransferError)?;
-
-    msg!(
-        "{:?} {:?} {:?}" ,
-        ctx.accounts.bonus.amount,
-        ctx.accounts.governance_bonus_vault.amount,
-        ctx.accounts.receiver_vault.amount,
-    );
 
     close_account(
         CpiContext::new_with_signer(

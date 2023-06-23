@@ -13,7 +13,7 @@ use {
 pub struct InitBonus<'info> {
     pub system_program: Program<'info, System>,
     #[account(address = TokenProgramV0 @ ErrorCode::IncorrectTokenProgram)]
-    pub token_program_v0: Interface<'info, TokenInterface>,
+    pub token_program: Interface<'info, TokenInterface>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub rent: Sysvar<'info, Rent>,
     #[account(mut)]
@@ -48,7 +48,6 @@ pub struct InitBonus<'info> {
         bump,
         token::mint = governance_mint,
         token::authority = bonus,
-        token::token_program = token_program_v0
     )]
     pub bonus_vault: Box<InterfaceAccount<'info, TokenAccount>>,
     /// CHECK: validated in the governance account contraints

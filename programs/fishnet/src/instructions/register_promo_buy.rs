@@ -6,22 +6,16 @@ use {
         system_program::System,
     },
     anchor_spl::{
-        associated_token::AssociatedToken,
         token_interface::{Mint, TokenInterface, TokenAccount},
-        token::{transfer, Transfer},
-        token_2022::ID as TokenProgram2022,
-        token::ID as TokenProgramV0,
+        token::{transfer, Transfer, ID},
     }
 };
 
 #[derive(Accounts)]
 pub struct RegisterPromoBuy<'info> {
     pub system_program: Program<'info, System>,
-    #[account(address = TokenProgramV0 @ ErrorCode::IncorrectTokenProgram)]
-    pub token_program_v0: Interface<'info, TokenInterface>,
-    #[account(address = TokenProgram2022 @ ErrorCode::IncorrectTokenProgram)]
+    #[account(address = ID @ ErrorCode::IncorrectTokenProgram)]
     pub token_program: Interface<'info, TokenInterface>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
     pub rent: Sysvar<'info, Rent>,
     /// CHECK: validated in the governance account contraints
     /// WHEN DEPLOYED ADD #[account(address =  @ ErrorCode::)]

@@ -22,7 +22,7 @@ pub struct CreateGovernanceParams {
 pub struct CreateGovernance<'info> {
     pub system_program: Program<'info, System>,
     #[account(address = TokenProgramV0 @ ErrorCode::IncorrectTokenProgram)]
-    pub token_program_v0: Interface<'info, TokenInterface>,
+    pub token_program: Interface<'info, TokenInterface>,
     pub rent: Sysvar<'info, Rent>,
     #[account(mut)]
     pub governance_authority: Signer<'info>,
@@ -48,7 +48,6 @@ pub struct CreateGovernance<'info> {
         bump,
         token::mint = governance_mint,
         token::authority = governance,
-        token::token_program = token_program_v0,
     )]
     pub governance_bonus_vault: Box<InterfaceAccount<'info, TokenAccount>>,
 }

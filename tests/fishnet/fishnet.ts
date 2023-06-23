@@ -92,7 +92,7 @@ describe("fishnet", () => {
     await program.methods
       .createGovernance(createGovernanceParams)
       .accounts({
-        tokenProgramV0: TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
         rent: SYSVAR_RENT_PUBKEY,
         governanceAuthority: governanceAuthorityKeypair.publicKey,
@@ -124,7 +124,7 @@ describe("fishnet", () => {
       await program.methods
         .createGovernance(createGovernanceParams)
         .accounts({
-          tokenProgramV0: TOKEN_PROGRAM_ID,
+          tokenProgram: TOKEN_PROGRAM_ID,
           systemProgram: SystemProgram.programId,
           rent: SYSVAR_RENT_PUBKEY,
           governanceAuthority: governanceAuthorityKeypair.publicKey,
@@ -169,7 +169,7 @@ describe("fishnet", () => {
       await program.methods
         .createGovernance(errorCreateGovernanceParams)
         .accounts({
-          tokenProgramV0: TOKEN_PROGRAM_ID,
+          tokenProgram: TOKEN_PROGRAM_ID,
           systemProgram: SystemProgram.programId,
           rent: SYSVAR_RENT_PUBKEY,
           governanceAuthority: exploiterKeypair.publicKey,
@@ -288,7 +288,6 @@ describe("fishnet", () => {
       .createProduct(createProductParams)
       .accounts({
         systemProgram: SystemProgram.programId,
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
         rent: SYSVAR_RENT_PUBKEY,
         productAuthority: productAuthorityKeypair.publicKey,
         governance: governancePubkey,
@@ -332,7 +331,6 @@ describe("fishnet", () => {
       .createProduct(createProductParams)
       .accounts({
         systemProgram: SystemProgram.programId,
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
         rent: SYSVAR_RENT_PUBKEY,
         productAuthority: productAuthorityKeypair.publicKey,
         governance: governancePubkey,
@@ -420,7 +418,7 @@ describe("fishnet", () => {
           ? []
           : [productAuthorityKeypair]
       )
-      .rpc(confirmOptions)
+      .rpc()
       .catch(console.error);
 
     await program.methods
@@ -434,7 +432,7 @@ describe("fishnet", () => {
           ? []
           : [productAuthorityKeypair]
       )
-      .rpc(confirmOptions)
+      .rpc()
       .catch(console.error);
 
     // another wallet tries to change product data
@@ -507,9 +505,7 @@ describe("fishnet", () => {
       .registerBuy()
       .accounts({
         systemProgram: SystemProgram.programId,
-        tokenProgramV0: TOKEN_PROGRAM_ID,
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID,
         rent: SYSVAR_RENT_PUBKEY,
         governanceAuthority: governanceAuthorityKeypair.publicKey,
         productAuthority: productAuthorityKeypair.publicKey,
@@ -582,9 +578,7 @@ describe("fishnet", () => {
       .registerBuy()
       .accounts({
         systemProgram: SystemProgram.programId,
-        tokenProgramV0: TOKEN_PROGRAM_ID,
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID,
         rent: SYSVAR_RENT_PUBKEY,
         governanceAuthority: governanceAuthorityKeypair.publicKey,
         productAuthority: productAuthorityKeypair.publicKey,
@@ -728,9 +722,7 @@ describe("fishnet", () => {
       .registerBuy()
       .accounts({
         systemProgram: SystemProgram.programId,
-        tokenProgramV0: TOKEN_PROGRAM_ID,
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID,
         rent: SYSVAR_RENT_PUBKEY,
         governanceAuthority: governanceAuthorityKeypair.publicKey,
         productAuthority: productAuthorityKeypair.publicKey,
@@ -827,8 +819,7 @@ describe("fishnet", () => {
       .initBonus()
       .accounts({
         systemProgram: SystemProgram.programId,
-        tokenProgramV0: TOKEN_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID,
         rent: SYSVAR_RENT_PUBKEY,
         signer: productAuthorityKeypair.publicKey,
         governance: governancePubkey,
@@ -862,8 +853,7 @@ describe("fishnet", () => {
       .initBonus()
       .accounts({
         systemProgram: SystemProgram.programId,
-        tokenProgramV0: TOKEN_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID,
         rent: SYSVAR_RENT_PUBKEY,
         signer: buyerKeypair.publicKey,
         governance: governancePubkey,
@@ -883,9 +873,7 @@ describe("fishnet", () => {
       .registerPromoBuy()
       .accounts({
         systemProgram: SystemProgram.programId,
-        tokenProgramV0: TOKEN_PROGRAM_ID,
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID,
         rent: SYSVAR_RENT_PUBKEY,
         governanceAuthority: governanceAuthorityKeypair.publicKey,
         productAuthority: productAuthorityKeypair.publicKey,
@@ -915,9 +903,7 @@ describe("fishnet", () => {
       .registerPromoBuy()
       .accounts({
         systemProgram: SystemProgram.programId,
-        tokenProgramV0: TOKEN_PROGRAM_ID,
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID,
         rent: SYSVAR_RENT_PUBKEY,
         governanceAuthority: governanceAuthorityKeypair.publicKey,
         productAuthority: productAuthorityKeypair.publicKey,

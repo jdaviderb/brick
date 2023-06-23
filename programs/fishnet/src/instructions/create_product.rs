@@ -1,17 +1,10 @@
 use {
     crate::state::*,
-    crate::errors::ErrorCode,
     anchor_lang::{
         prelude::*,
         system_program::System,
     },
-    anchor_spl::{
-        token_interface::{
-            TokenInterface,
-            Mint, 
-        },
-        token_2022::ID as TokenProgram2022
-    }
+    anchor_spl::token_interface:: Mint,
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
@@ -25,8 +18,6 @@ pub struct CreateProductParams {
 #[instruction(params: CreateProductParams)]
 pub struct CreateProduct<'info> {
     pub system_program: Program<'info, System>,
-    #[account(address = TokenProgram2022 @ ErrorCode::IncorrectTokenProgram)]
-    pub token_program: Interface<'info, TokenInterface>,
     pub rent: Sysvar<'info, Rent>,
     #[account(mut)]
     pub product_authority: Signer<'info>,
