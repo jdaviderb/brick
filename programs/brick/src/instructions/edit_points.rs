@@ -18,10 +18,7 @@ pub struct EditPoints<'info> {
     pub governance_authority: Signer<'info>,
     #[account(
         mut,
-        seeds = [
-            b"governance".as_ref(),
-            governance.governance_name.as_ref(),
-        ],
+        seeds = ["governance".as_ref()],
         bump = governance.bump,
         has_one = governance_authority @ ErrorCode::IncorrectAuthority,
     )]
@@ -32,8 +29,10 @@ pub fn handler<'info>(
     ctx: Context<EditPoints>, 
     params: EditPointsParams,
 ) -> Result<()> {
-    Governance::validate_basis_points(params.clone())?;
-
+    if params.fee_reduction > 10000 || params.fee > 10000 || params.seller_promo > 10000 || params.buyer_promo > 10000 {
+        return Err(ErrorCode::IncorrectFee.into());
+    }
+    
     (*ctx.accounts.governance).fee = params.fee;
     (*ctx.accounts.governance).fee_reduction = params.fee_reduction;
     (*ctx.accounts.governance).seller_promo = params.seller_promo;

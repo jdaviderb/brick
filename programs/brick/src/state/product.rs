@@ -5,8 +5,8 @@ use {
 
 #[account]
 pub struct Product {
-    /// cant use 64 bytes seed, it is splitted to include the whole id in the mint pda, 
-    /// the way we discriminate between our mints and others, is creating the mint as a pda
+    /// cant use 64 bytes seed component, it is splitted to include 
+    /// the whole id in the product pda seed 
     pub first_id: [u8; 32], 
     pub second_id: [u8; 32],
     // seller that owns the product

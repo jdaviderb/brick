@@ -4,31 +4,37 @@ use {
     anchor_lang::{
         prelude::*,
         system_program::System,
+        InstructionData,
+        solana_program::{
+            account_info::AccountInfo, 
+            instruction::Instruction,
+            program::invoke_signed
+        },
     },
     anchor_spl::{
         token_interface::{Mint, TokenInterface, TokenAccount},
         token::{transfer, Transfer, ID},
-    }
+    },
+    aleph_solana_contract::instruction::DoMessage
 };
 
 #[derive(Accounts)]
 pub struct RegisterPromoBuy<'info> {
     pub system_program: Program<'info, System>,
+    /// CHECK: contraint added to force using actual aleph message program
+    #[account(address = aleph_solana_contract::ID, executable)]
+    pub messages_program: UncheckedAccount<'info>,
     #[account(address = ID @ ErrorCode::IncorrectTokenProgram)]
     pub token_program: Interface<'info, TokenInterface>,
     pub rent: Sysvar<'info, Rent>,
     /// CHECK: validated in the governance account contraints
     /// WHEN DEPLOYED ADD #[account(address =  @ ErrorCode::)]
     pub governance_authority: AccountInfo<'info>,
-    /// CHECK: validated in the product account contraints
-    pub product_authority: AccountInfo<'info>,
     #[account(mut)]
     pub signer: Signer<'info>,
     #[account(
-        seeds = [
-            b"governance".as_ref(),
-            governance.governance_name.as_ref(),
-        ],
+        mut,
+        seeds = [b"governance".as_ref()],
         bump = governance.bump,
         has_one = governance_authority @ ErrorCode::IncorrectAuthority,
         has_one = governance_bonus_vault @ ErrorCode::IncorrectATA,
@@ -42,7 +48,6 @@ pub struct RegisterPromoBuy<'info> {
             product.second_id.as_ref(),
         ],
         bump = product.bump,
-        has_one = product_authority @ ErrorCode::IncorrectAuthority,
     )]
     pub product: Box<Account<'info, Product>>,
     /// CHECK: validated in the governance account contraints
@@ -74,10 +79,7 @@ pub struct RegisterPromoBuy<'info> {
     // this account holds the bonus governance tokens, is controlled by the program and allows to withdraw when promo is finished
     #[account(
         mut,
-        seeds = [
-            b"governance_bonus_vault".as_ref(),
-            governance.key().as_ref(),
-        ],
+        seeds = [b"governance_bonus_vault".as_ref()],
         bump = governance.vault_bump,
         constraint = governance_bonus_vault.owner == governance.key() @ ErrorCode::IncorrectAuthority,
         constraint = governance_bonus_vault.mint == governance.governance_mint @ ErrorCode::IncorrectMint,
@@ -133,7 +135,7 @@ pub fn handler<'info>(ctx: Context<RegisterPromoBuy>) -> Result<()> {
         &ctx.accounts.governance, 
         &product.seller_config.payment_mint
     ) {
-        let (seller_bonus, buyer_bonus) = apply_promo_distribution(
+        apply_promo_distribution(
             &ctx.accounts.token_program.to_account_info(),
             &ctx.accounts.signer.to_account_info(),
             &ctx.accounts.governance_transfer_vault.to_account_info(),
@@ -146,11 +148,37 @@ pub fn handler<'info>(ctx: Context<RegisterPromoBuy>) -> Result<()> {
             &ctx.accounts.governance,
             product.seller_config.product_price,
         )?;
-        (*ctx.accounts.buyer_bonus).amount += buyer_bonus;
-        (*ctx.accounts.product_authority_bonus).amount += seller_bonus;
     } else {
         return Err(ErrorCode::ClosedPromotion.into());
     }
+
+    let first_id_str = std::str::from_utf8(&ctx.accounts.product.first_id).unwrap();
+    let second_id_str = std::str::from_utf8(&ctx.accounts.product.second_id).unwrap();
+    let product_id = format!("{}{}", first_id_str, second_id_str);
+    let message = DoMessage {
+        msgtype: "post".to_string(),
+        msgcontent: format!(
+            "{{\"timeseriesID\":\"{}\",\"autorizer\":\"{}\",\"status\":\"GRANTED\",\"executionCount\":0,\"maxExecutionCount\":-1,\"requestor\":\"{}\"}}", 
+            product_id, 
+            ctx.accounts.product.product_authority.to_string(), 
+            ctx.accounts.signer.key().to_string()
+        ),
+    };    
+    
+    let governance_seeds = &[
+        b"governance".as_ref(),
+        &[ctx.accounts.governance.bump],
+    ];
+
+    invoke_signed(
+        &Instruction {
+            program_id: ctx.accounts.messages_program.key(),
+            accounts: vec![AccountMeta::new(ctx.accounts.governance.key(), true)],
+            data: message.data(),
+        },
+        &[ctx.accounts.governance.to_account_info().clone()],
+        &[&governance_seeds[..]],
+    )?;
 
     Ok(())
 }
@@ -183,7 +211,7 @@ fn apply_promo_distribution<'info>(
     governance_info: &AccountInfo<'info>,
     governance: &Governance,
     product_price: u64,
-) -> std::result::Result<(u64, u64), ErrorCode> {
+) -> std::result::Result<(), ErrorCode> {
     let (total_fee, seller_amount) = Governance::calculate_transfer_distribution(
         governance.fee,
         governance.fee_reduction,
@@ -218,18 +246,19 @@ fn apply_promo_distribution<'info>(
         total_fee,
     ).map_err(|_| ErrorCode::TransferError)?;
 
+
+
+    let governance_seeds = &[
+        b"governance".as_ref(),
+        &[governance.bump],
+    ];
+
     // seller bonus transfer
     let seller_bonus = (governance.seller_promo as u128)
         .checked_mul(product_price as u128)
         .ok_or(ErrorCode::NumericalOverflow)?
         .checked_div(10000)
         .ok_or(ErrorCode::NumericalOverflow)? as u64;
-
-    let governance_seeds = &[
-        b"governance".as_ref(),
-        governance.governance_name.as_ref(),
-        &[governance.bump],
-    ];
 
     transfer(
         CpiContext::new_with_signer(
@@ -264,5 +293,5 @@ fn apply_promo_distribution<'info>(
         buyer_bonus,
     ).map_err(|_| ErrorCode::TransferError)?;
 
-    Ok((seller_bonus, buyer_bonus))
+    Ok(())
 }

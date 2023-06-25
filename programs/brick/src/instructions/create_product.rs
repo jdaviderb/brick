@@ -22,10 +22,7 @@ pub struct CreateProduct<'info> {
     #[account(mut)]
     pub product_authority: Signer<'info>,
     #[account(
-        seeds = [
-            b"governance".as_ref(),
-            governance.governance_name.as_ref()
-        ],
+        seeds = [b"governance".as_ref()],
         bump = governance.bump,
     )]
     pub governance: Account<'info, Governance>,

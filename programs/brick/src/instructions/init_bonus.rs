@@ -19,10 +19,7 @@ pub struct InitBonus<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
     #[account(
-        seeds = [
-            b"governance".as_ref(),
-            governance.governance_name.as_ref(),
-        ],
+        seeds = [b"governance".as_ref()],
         bump = governance.bump,
         has_one = governance_mint @ ErrorCode::IncorrectMint,
     )]
@@ -56,7 +53,6 @@ pub struct InitBonus<'info> {
 
 pub fn handler<'info>(ctx: Context<InitBonus>,) -> Result<()> {
     (*ctx.accounts.bonus).authority = ctx.accounts.signer.key();
-    (*ctx.accounts.bonus).amount = 0;
     (*ctx.accounts.bonus).bump = *ctx.bumps.get("bonus").unwrap();
     (*ctx.accounts.bonus).vault_bump = *ctx.bumps.get("bonus_vault").unwrap();
 

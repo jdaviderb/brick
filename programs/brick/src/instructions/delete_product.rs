@@ -2,12 +2,10 @@ use {
     crate::state::*,
     crate::errors::ErrorCode,
     anchor_lang::prelude::*,
-    anchor_spl::token_interface::TokenInterface
 };
 
 #[derive(Accounts)]
 pub struct DeleteProduct<'info> {
-    pub token_program: Interface<'info, TokenInterface>,
     #[account(mut)]
     pub product_authority: Signer<'info>,
     #[account(

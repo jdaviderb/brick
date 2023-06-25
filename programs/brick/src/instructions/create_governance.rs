@@ -10,7 +10,6 @@ use {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct CreateGovernanceParams {
-    pub governance_name: [u8; 7],
     pub fee: u16,
     pub fee_reduction: u16,
     pub seller_promo: u16,
@@ -30,10 +29,7 @@ pub struct CreateGovernance<'info> {
         init,
         payer = governance_authority,
         space = Governance::SIZE,
-        seeds = [
-            b"governance".as_ref(),
-            params.governance_name.as_ref(),
-        ],
+        seeds = [b"governance".as_ref()],
         bump,
     )]
     pub governance: Account<'info, Governance>,
@@ -41,10 +37,7 @@ pub struct CreateGovernance<'info> {
     #[account(
         init,
         payer = governance_authority,
-        seeds = [
-            b"governance_bonus_vault".as_ref(),
-            governance.key().as_ref(),
-        ],
+        seeds = [b"governance_bonus_vault".as_ref()],
         bump,
         token::mint = governance_mint,
         token::authority = governance,
@@ -54,9 +47,10 @@ pub struct CreateGovernance<'info> {
 
 pub fn handler<'info>(ctx: Context<CreateGovernance>, params: CreateGovernanceParams) -> Result<()> {
     // this validation make that only the Fishnet account can be created
-    Governance::validate_params(params.clone())?;
+    if params.fee_reduction > 10000 || params.fee > 10000 || params.seller_promo > 10000 || params.buyer_promo > 10000 {
+        return Err(ErrorCode::IncorrectFee.into());
+    }
 
-    (*ctx.accounts.governance).governance_name = params.governance_name;
     (*ctx.accounts.governance).governance_authority = ctx.accounts.governance_authority.key();
     (*ctx.accounts.governance).governance_mint = ctx.accounts.governance_mint.key();
     (*ctx.accounts.governance).governance_bonus_vault = ctx.accounts.governance_bonus_vault.key();

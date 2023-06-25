@@ -16,10 +16,7 @@ pub struct WithdrawBonus<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
     #[account(
-        seeds = [
-            b"governance".as_ref(),
-            governance.governance_name.as_ref(),
-        ],
+        seeds = [b"governance".as_ref()],
         bump = governance.bump,
         has_one = governance_mint @ ErrorCode::IncorrectMint,
         has_one = governance_bonus_vault @ ErrorCode::IncorrectATA,
@@ -40,10 +37,7 @@ pub struct WithdrawBonus<'info> {
     pub governance_mint: Box<InterfaceAccount<'info, Mint>>,
     #[account(
         mut,
-        seeds = [
-            b"governance_bonus_vault".as_ref(),
-            governance.key().as_ref(),
-        ],
+        seeds = [b"governance_bonus_vault".as_ref()],
         bump = governance.vault_bump,
         constraint = governance_bonus_vault.owner == governance.key() @ ErrorCode::IncorrectAuthority,
         constraint = governance_bonus_vault.mint == governance_mint.key() @ ErrorCode::IncorrectMint,    
@@ -90,7 +84,7 @@ pub fn handler<'info>(ctx: Context<WithdrawBonus>) -> Result<()> {
             },
             &[&seeds[..]],
         ),
-        ctx.accounts.bonus.amount,
+        ctx.accounts.bonus_vault.amount,
     ).map_err(|_| ErrorCode::TransferError)?;
 
     close_account(

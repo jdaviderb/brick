@@ -1,7 +1,7 @@
-mod token_metadata;
-mod payment;
-mod app;
+mod product;
+mod governance;
+mod bonus;
 
-pub use token_metadata::*;
-pub use payment::*;
-pub use app::*;
+pub use product::*;
+pub use governance::*;
+pub use bonus::*;
