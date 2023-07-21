@@ -44,4 +44,6 @@ pub enum ErrorCode {
     ClosedPromotion,
     #[msg("Currently you can not withdraw the bonus because the promotion has not finished")]
     OpenPromotion,
+    #[msg("The max size of reward vaults are set at 5")]
+    VaultsVectorFull,
 }

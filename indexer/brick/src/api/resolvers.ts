@@ -13,7 +13,6 @@ import {
 export type AccountsFilters = {
   types?: AccountType[]
   accounts?: string[]
-  app?: string,
   includeStats?: boolean
 }
 
@@ -27,11 +26,6 @@ export type EventsFilters = {
   reverse?: boolean
 }
 
-export type UsersFilters = {
-  address: string,
-  app?: string,
-}
-
 export type GlobalStatsFilters = AccountsFilters
 
 export class APIResolvers {
@@ -40,14 +34,6 @@ export class APIResolvers {
   async getAccounts(args: AccountsFilters): Promise<BrickAccountInfo[]> {
     const acountsData = await this.filterAccounts(args)
     return acountsData.map(({ info, stats }) => ({ ...info, stats }))
-  }
-
-  async getUserWithdrawalsAvailable(args: UsersFilters): Promise<BrickAccountInfo[]> {
-    return await this.domain.getUserWithdrawalsAvailable(args.address, args.app)
-  }
-
-  async getUserRefundsAvailable(args: UsersFilters): Promise<BrickAccountInfo[]> {
-    return await this.domain.getUserRefundsAvailable(args.address, args.app)
   }
 
   async getEvents({
@@ -102,20 +88,12 @@ export class APIResolvers {
   }
 
   // -------------------------------- PROTECTED --------------------------------
-  /*protected async getAccountByAddress(address: string): Promise<AccountStats> {
-    const add: string[] = [address]
-    const account = await this.domain.getAccountStats(add)
-    if (!account) throw new Error(`Account ${address} does not exist`)
-    return account[0]
-  }*/
-
   protected async filterAccounts({
     types,
     accounts,
     includeStats,
-    app,
   }: AccountsFilters): Promise<BrickAccountData[]> {
-    const accountMap = await this.domain.getAccounts(includeStats, app)
+    const accountMap = await this.domain.getAccounts(includeStats)
 
     accounts =
       accounts ||
@@ -124,7 +102,7 @@ export class APIResolvers {
     let accountsData = accounts
       .map((address) => accountMap[address])
       .filter((account) => !!account)
-    
+
     if (types !== undefined) {
       accountsData = accountsData.filter(({ info }) =>
         types!.includes(info.type),

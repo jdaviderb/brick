@@ -1,4 +1,11 @@
+import { BrickEvent, IX_KEY_ACCOUNTS, InstructionType, RawInstruction } from '../utils/layouts/index.js'
+import { BrickAccountStats, BrickAccountInfo } from '../types.js'
+import { eventParser as eParser } from '../parsers/event.js'
+import { createAccountStats } from './stats/timeSeries.js'
 import { StorageStream } from '@aleph-indexer/core'
+import { BRICK_PROGRAM_ID } from '../constants.js'
+import { createEventDAL } from '../dal/event.js'
+import { AccountDomain } from './account.js'
 import {
   IndexerDomainContext,
   AccountIndexerConfigWithMeta,
@@ -16,23 +23,13 @@ import {
   SolanaIndexerWorkerDomainI,
   SolanaParsedInstructionContext,
 } from '@aleph-indexer/solana'
-import { eventParser as eParser } from '../parsers/event.js'
-import { createEventDAL } from '../dal/event.js'
-import { AccountType, PaymentArgs, ParsedTokenMetadata, BrickEvent } from '../utils/layouts/index.js'
-import { BrickAccountStats, BrickAccountInfo } from '../types.js'
-import { AccountDomain } from './account.js'
-import { createAccountStats } from './stats/timeSeries.js'
-import { BRICK_PROGRAM_ID } from '../constants.js'
-import { ImportAccountFromPrivateKey } from 'aleph-sdk-ts/dist/accounts/solana.js'
-import { config } from '../utils/envs.js'
-import { toArray } from 'lodash-es'
 
 export default class WorkerDomain
   extends IndexerWorkerDomain
   implements SolanaIndexerWorkerDomainI, IndexerWorkerDomainWithStats
 {
   protected accounts: Record<string, AccountDomain> = {}
-
+  
   constructor(
     protected context: IndexerDomainContext,
     protected eventParser = eParser,
@@ -100,16 +97,22 @@ export default class WorkerDomain
     context: ParserContext,
     ixsContext: SolanaParsedInstructionContext[],
   ): Promise<void> {
-    if (config.MESSAGES_KEY) {
-      const solAccount = ImportAccountFromPrivateKey(Uint8Array.from(toArray(config.MESSAGES_KEY)))
-      const parsedIxs = await Promise.all(ixsContext.map(async (ix) => await this.eventParser.parse(ix, this.accounts, solAccount)))
-
-      console.log(`indexing ${ixsContext.length} parsed ixs`)
-
-      await this.eventDAL.save(parsedIxs)
-    }
+    console.log(`indexing ${ixsContext.length} parsed ixs`)
+  
+    const parsedIxs = await Promise.all(ixsContext.map(
+      async (ix: SolanaParsedInstructionContext) => {
+        const parsed = (ix.instruction as RawInstruction).parsed
+        return await this.eventParser.parse(
+          ix, 
+          parsed.type === InstructionType.RegisterBuy || parsed.type === InstructionType.RegisterPromoBuy 
+            ? await this.getAccountInfo(parsed.info.product) : undefined
+        )
+      }
+    ))
+    console.log('parsedIxs', parsedIxs)
+    await this.eventDAL.save(parsedIxs)
   }
-
+  
   // ------------- Custom impl methods -------------------
 
   async getAccountInfo(actual: string): Promise<BrickAccountInfo> {
@@ -138,64 +141,5 @@ export default class WorkerDomain
     const accountInstance = this.accounts[account]
     if (!accountInstance) throw new Error(`Account ${account} does not exist`)
     return accountInstance
-  }
-
-  async getUserWithdrawalsAvailable(
-    account: string,
-    app: string | null,
-  ): Promise<BrickAccountInfo[]> {
-    const actualTimestamp = Date.now()
-    const paymentsAccounts: BrickAccountInfo[] = []
-    for (const acc of Object.values(this.accounts)) {
-      console.log(acc.info)
-      if (
-        acc.info.type === AccountType.Payment && 
-        (acc.info.data as PaymentArgs).seller.toString() == account && 
-        actualTimestamp > Number((acc.info.data as PaymentArgs).refundConsumedAt)
-      ) {
-        if (app !== null) {
-          const tokenAccount = (acc.info.data as PaymentArgs).tokenAccount.toString()
-          const appAddress = (this.accounts[tokenAccount].info.data as ParsedTokenMetadata).app.toString()
-          if (this.accounts[app] && app === appAddress) {
-            paymentsAccounts.push(acc.info)
-          }
-        }
-        else {
-          console.log(acc.info)
-          paymentsAccounts.push(acc.info)
-        }
-      }
-    }
-
-    return paymentsAccounts
-  }
-
-  async getUserRefundsAvailable(
-    account: string,
-    app?: string,
-  ): Promise<BrickAccountInfo[]> {
-
-    const actualTimestamp = Date.now()
-    const paymentsAccounts: BrickAccountInfo[] = []
-    for (const acc of Object.values(this.accounts)) {
-      if (
-        acc.info.type === AccountType.Payment && 
-        (acc.info.data as PaymentArgs).buyer.toString() === account &&
-        actualTimestamp < Number((acc.info.data as PaymentArgs).refundConsumedAt)
-      ) {
-        if (app) {
-          const tokenAccount = (acc.info.data as PaymentArgs).tokenAccount.toString()
-          const appAddress = (this.accounts[tokenAccount].info.data as ParsedTokenMetadata).app.toString()
-          if (this.accounts[app] && app === appAddress) {
-            paymentsAccounts.push(acc.info)
-          }
-        }
-        else {
-          paymentsAccounts.push(acc.info)
-        }
-      }
-    }
-
-    return paymentsAccounts
   }
 }

@@ -1,26 +1,26 @@
 import {
-  appDiscriminator,
-  appBeet,
-  paymentDiscriminator,
-  paymentBeet,
-  tokenMetadataDiscriminator,
-  tokenMetadataBeet,
+  bonusDiscriminator,
+  bonusBeet,
+  governanceDiscriminator,
+  governanceBeet,
+  productDiscriminator,
+  productBeet,
 } from './solita/index.js'
 
 export enum AccountType {
-  App = 'App',
-  Payment = 'Payment',
-  TokenMetadata = 'TokenMetadata',
+  Bonus = 'Bonus',
+  Governance = 'Governance',
+  Product = 'Product',
 }
 
 export const ACCOUNT_DISCRIMINATOR: Record<AccountType, Buffer> = {
-  [AccountType.App]: Buffer.from(appDiscriminator),
-  [AccountType.Payment]: Buffer.from(paymentDiscriminator),
-  [AccountType.TokenMetadata]: Buffer.from(tokenMetadataDiscriminator),
+  [AccountType.Bonus]: Buffer.from(bonusDiscriminator),
+  [AccountType.Governance]: Buffer.from(governanceDiscriminator),
+  [AccountType.Product]: Buffer.from(productDiscriminator),
 }
 
 export const ACCOUNTS_DATA_LAYOUT: Record<AccountType, any> = {
-  [AccountType.App]: appBeet,
-  [AccountType.Payment]: paymentBeet,
-  [AccountType.TokenMetadata]: tokenMetadataBeet,
+  [AccountType.Bonus]: bonusBeet,
+  [AccountType.Governance]: governanceBeet,
+  [AccountType.Product]: productBeet,
 }

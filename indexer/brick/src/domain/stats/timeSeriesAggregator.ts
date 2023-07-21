@@ -1,5 +1,5 @@
 import { AccessTimeStats } from '../../types.js'
-import { BrickEvent } from '../../utils/index.js'
+import { BrickEvent } from '../../utils/layouts/index.js'
 
 export class AccessTimeSeriesAggregator {
   aggregate(

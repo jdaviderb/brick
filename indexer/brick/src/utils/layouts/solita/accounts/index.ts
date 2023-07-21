@@ -1,9 +1,9 @@
-export * from './App.js'
-export * from './Payment.js'
-export * from './TokenMetadata.js'
+export * from './Bonus.js'
+export * from './Governance.js'
+export * from './Product.js'
 
-import { App } from './App.js'
-import { Payment } from './Payment.js'
-import { TokenMetadata } from './TokenMetadata.js'
+import { Bonus } from './Bonus.js'
+import { Governance } from './Governance.js'
+import { Product } from './Product.js'
 
-export const accountProviders = { App, Payment, TokenMetadata }
+export const accountProviders = { Bonus, Governance, Product }

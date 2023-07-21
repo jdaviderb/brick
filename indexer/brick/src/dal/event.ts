@@ -1,13 +1,13 @@
 import { PublicKey } from '@solana/web3.js'
 import BN from 'bn.js'
 import { EntityStorage } from '@aleph-indexer/core'
-import { BrickEvent } from '../utils/index.js'
+import { BrickEvent } from '../utils/layouts/index.js'
 
 export type EventStorage = EntityStorage<BrickEvent>
 
 // in this vector you can include the properties of several
 // events that are BN in order to be able to cast them
-const mappedBNProps: string[] = ['refundTimespan', 'timestamp']
+const mappedBNProps: string[] = ['productPrice']
 
 // in this vector you can include the properties of several
 // events that are PublicKey in order to be able to cast them

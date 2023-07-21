@@ -6,23 +6,23 @@
  */
 
 import * as beet from '@metaplex-foundation/beet'
-export type TransactionsInfo = {
-  sold: number
-  used: number
-  shared: number
-  refunded: number
+export type EditPointsParams = {
+  fee: number
+  feeReduction: number
+  sellerPromo: number
+  buyerPromo: number
 }
 
 /**
  * @category userTypes
  * @category generated
  */
-export const transactionsInfoBeet = new beet.BeetArgsStruct<TransactionsInfo>(
+export const editPointsParamsBeet = new beet.BeetArgsStruct<EditPointsParams>(
   [
-    ['sold', beet.u32],
-    ['used', beet.u32],
-    ['shared', beet.u32],
-    ['refunded', beet.u32],
+    ['fee', beet.u16],
+    ['feeReduction', beet.u16],
+    ['sellerPromo', beet.u16],
+    ['buyerPromo', beet.u16],
   ],
-  'TransactionsInfo',
+  'EditPointsParams',
 )

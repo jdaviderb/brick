@@ -1,16 +1,17 @@
+import { EventBase } from '@aleph-indexer/framework'
 import * as solita from './solita/index.js'
-import { EventBase } from '@aleph-indexer/framework';
 
 export enum InstructionType {
-  CreateApp = 'CreateApp',
-  CreateToken = 'CreateToken',
-  EditTokenPrice = 'EditTokenPrice',
-  BuyToken = 'BuyToken',
-  ShareToken = 'ShareToken',
-  WithdrawFunds = 'WithdrawFunds',
-  Refund = 'Refund',
-  UseToken = 'UseToken',
-  DeleteToken = 'DeleteToken',
+  CreateGovernance = 'CreateGovernanceEvent',
+  CreateProduct = 'CreateProductEvent',
+  DeleteProduct = 'DeleteProductEvent',
+  EditPoints = 'EditPointsEvent',
+  EditPaymentMint = 'EditPaymentMintEvent',
+  EditPrice = 'EditPriceEvent',
+  InitBonus = 'InitBonusEvent',
+  RegisterBuy = 'RegisterBuyEvent',
+  RegisterPromoBuy = 'RegisterPromoBuyEvent',
+  WithdrawBonus = 'WithdrawBonusEvent',
 }
 
 export type RawInstructionBase = {
@@ -19,267 +20,200 @@ export type RawInstructionBase = {
   programId: string
 }
 
-/*-----------------------* CUSTOM RAW INSTRUCTION TYPES *-----------------------*/
-
-// cant use solita ix accounts because the framework converts all pubkeys to strings
-export type CreateAppInfo = solita.CreateAppInstructionArgs & {
-  systemProgram?: string
-  rent?: string
-  authority: string
-  app: string
+export type InstructionBase = EventBase<InstructionType> & {
+  programId: string
+  signer: string
+  account: string
 }
 
-export type RawCreateApp = RawInstructionBase & {
-   parsed: {
-    info: CreateAppInfo
-    type: InstructionType.CreateApp
-  }
-}
+/*-----------------------* CUSTOM EVENTS TYPES *-----------------------*/
 
-/*----------------------------------------------------------------------*/
-
-export type CreateTokenInfo = solita.CreateTokenInstructionArgs & {
-  metadataProgram: string
+export type CreateGovernanceInfo = solita.CreateGovernanceInstructionArgs & {
   systemProgram?: string
   tokenProgram?: string
   rent?: string
-  authority: string
-  app: string
-  tokenMint: string
-  token: string
-  acceptedMint: string
-  tokenMetadata: string
+  governanceAuthority: string
+  governance: string
+  governanceMint: string
+  governanceBonusVault: string
 }
 
-export type RawCreateToken = RawInstructionBase & {
+export type CreateGovernanceRaw = RawInstructionBase & {
   parsed: {
-    info: CreateTokenInfo
-    type: InstructionType.CreateToken
+    info: CreateGovernanceInfo
+    type: InstructionType.CreateGovernance
   }
 }
 
 /*----------------------------------------------------------------------*/
 
-export type EditTokenPriceInfo = solita.EditTokenPriceInstructionArgs & {
-  authority: string
-  token: string
+export type CreateProductInfo = solita.CreateProductInstructionArgs & {
+  systemProgram?: string
+  rent?: string
+  productAuthority: string
+  governance: string
+  product: string
+  paymentMint: string
 }
 
-export type RawEditTokenPrice = RawInstructionBase & {
+export type CreateProductRaw = RawInstructionBase & {
   parsed: {
-    info: EditTokenPriceInfo
-    type: InstructionType.EditTokenPrice
+    info: CreateProductInfo
+    type: InstructionType.CreateProduct
   }
 }
 
 /*----------------------------------------------------------------------*/
 
-export type BuyTokenInfo = solita.BuyTokenInstructionArgs & {
+export type DeleteProductInfo = {
+  productAuthority: string
+  product: string
+}
+
+export type DeleteProductRaw = RawInstructionBase & {
+  parsed: {
+    info: DeleteProductInfo
+    type: InstructionType.DeleteProduct
+  }
+}
+
+/*----------------------------------------------------------------------*/
+
+export type EditPointsInfo = solita.CreateProductInstructionArgs & {
+  governanceAuthority: string
+  governance: string
+}
+
+export type EditPointsRaw = RawInstructionBase & {
+  parsed: {
+    info: EditPointsInfo
+    type: InstructionType.EditPoints
+  }
+}
+
+/*----------------------------------------------------------------------*/
+
+export type EditPaymentMintInfo = solita.CreateProductInstructionArgs & {
+  productAuthority: string
+  product: string
+  paymentMint: string
+}
+
+export type EditPaymentMintRaw = RawInstructionBase & {
+  parsed: {
+    info: EditPaymentMintInfo
+    type: InstructionType.EditPaymentMint
+  }
+}
+
+/*----------------------------------------------------------------------*/
+
+export type EditPriceInfo = solita.CreateProductInstructionArgs & {
+  productAuthority: string
+  product: string
+}
+
+export type EditPriceRaw = RawInstructionBase & {
+  parsed: {
+    info: EditPriceInfo
+    type: InstructionType.EditPrice
+  }
+}
+
+/*----------------------------------------------------------------------*/
+
+export type InitBonusInfo = solita.CreateProductInstructionArgs & {
   systemProgram?: string
   tokenProgram?: string
   associatedTokenProgram: string
   rent?: string
-  clock: string
-  authority: string
-  token: string
-  tokenMint: string
+  signer: string
+  governance: string
+  bonus: string
+  bonusVault: string
+  governanceMint: string
+}
+
+export type InitBonusRaw = RawInstructionBase & {
+  parsed: {
+    info: InitBonusInfo
+    type: InstructionType.InitBonus
+  }
+}
+
+/*----------------------------------------------------------------------*/
+
+export type RegisterBuyInfo = solita.CreateProductInstructionArgs & {
+  systemProgram?: string
+  messagesProgram: string
+  tokenProgram?: string
+  rent?: string
+  governanceAuthority: string
+  signer: string
+  governance: string
+  product: string
+  paymentMint: string
+  governanceMint: string
   buyerTransferVault: string
-  acceptedMint: string
-  payment: string
-  paymentVault: string
-  buyerTokenVault: string
+  productAuthorityTransferVault: string
+  governanceTransferVault: string
 }
 
-export type RawBuyToken = RawInstructionBase & {
+export type RegisterBuyRaw = RawInstructionBase & {
   parsed: {
-    info: BuyTokenInfo
-    type: InstructionType.BuyToken
+    info: RegisterBuyInfo
+    type: InstructionType.RegisterBuy
   }
 }
 
 /*----------------------------------------------------------------------*/
 
-export type ShareTokenInfo = solita.ShareTokenInstructionArgs & {
+export type RegisterPromoBuyInfo = solita.CreateProductInstructionArgs & {
   systemProgram?: string
+  messagesProgram: string
   tokenProgram?: string
-  associatedTokenProgram: string
   rent?: string
-  authority: string
-  token: string
-  tokenMint: string
-  receiverVault: string
+  governanceAuthority: string
+  signer: string
+  governance: string
+  product: string
+  governanceMint: string
+  buyerTransferVault: string
+  productAuthorityTransferVault: string
+  governanceTransferVault :string
+  governanceBonusVault: string
+  productAuthorityBonus: string
+  productAuthorityBonusVault: string
+  buyerBonus: string
+  buyerBonusVault: string
 }
 
-export type RawShareToken = RawInstructionBase & {
+export type RegisterPromoBuyRaw = RawInstructionBase & {
   parsed: {
-    info: ShareTokenInfo
-    type: InstructionType.ShareToken
+    info: RegisterPromoBuyInfo
+    type: InstructionType.RegisterPromoBuy
   }
 }
 
 /*----------------------------------------------------------------------*/
 
-export type WithdrawFundsInfo = {
+export type WithdrawBonusInfo = solita.CreateProductInstructionArgs & {
   tokenProgram?: string
-  authority: string
-  app: string
-  appCreatorVault: string
-  token: string
-  tokenMint: string
+  signer: string
+  governance: string
+  bonus: string
+  governanceMint: string
+  governanceBonusVault: string
   receiverVault: string
-  buyer: string
-  payment: string
-  paymentVault: string
+  bonusVault: string
 }
 
-export type RawWithdrawFunds = RawInstructionBase & {
+export type WithdrawBonusRaw = RawInstructionBase & {
   parsed: {
-    info: WithdrawFundsInfo
-    type: InstructionType.WithdrawFunds
+    info: WithdrawBonusInfo
+    type: InstructionType.WithdrawBonus
   }
 }
-
-/*----------------------------------------------------------------------*/
-
-export type RefundInfo = {
-  tokenProgram?: string
-  authority: string
-  token: string
-  tokenMint: string
-  receiverVault: string
-  payment: string
-  paymentVault: string
-  buyerTokenVault: string
-}
-
-export type RawRefund = RawInstructionBase & {
-  parsed: {
-    info: RefundInfo
-    type: InstructionType.Refund
-  }
-}
-
-/*----------------------------------------------------------------------*/
-
-export type UseTokenInfo = {    
-  systemProgram?: string
-  tokenProgram?: string
-  associatedTokenProgram: string
-  rent?: string
-  authority: string
-  token: string
-  tokenMint: string
-  buyerTokenVault: string
-}
-
-export type RawUseToken = RawInstructionBase & {
-  parsed: {
-    info: UseTokenInfo
-    type: InstructionType.UseToken
-  }
-}
-
-/*----------------------------------------------------------------------*/
-
-export type DeleteTokenInfo = {
-  authority: string
-  token: string
-}
-
-export type RawDeletetoken = RawInstructionBase & {
-  parsed: {
-    info: DeleteTokenInfo
-    type: InstructionType.DeleteToken
-  }
-}
-
-/*----------------------------------------------------------------------*/
-
-export type RawInstructionsInfo =
-  | CreateAppInfo
-  | CreateTokenInfo
-  | EditTokenPriceInfo
-  | BuyTokenInfo
-  | ShareTokenInfo
-  | WithdrawFundsInfo
-  | RefundInfo
-  | UseTokenInfo
-  | DeleteTokenInfo
-
-export type RawInstruction =
-  | RawCreateApp
-  | RawCreateToken
-  | RawEditTokenPrice
-  | RawBuyToken
-  | RawShareToken
-  | RawWithdrawFunds
-  | RawRefund
-  | RawUseToken
-  | RawDeletetoken
-
-export type BrickCreateAppEvent = EventBase<InstructionType> & {
-  info: CreateAppInfo
-  signer: string
-  account: string
-}
-
-export type BrickCreateTokenEvent = EventBase<InstructionType> & {
-  info: CreateTokenInfo
-  signer: string
-  account: string
-}
-export type BrickEditTokenPriceEvent = EventBase<InstructionType> & {
-  info: EditTokenPriceInfo
-  signer: string
-  account: string
-}
-
-export type BrickBuyTokenEvent = EventBase<InstructionType> & {
-  info: BuyTokenInfo
-  signer: string
-  account: string
-}
-
-export type BrickShareTokenEvent = EventBase<InstructionType> & {
-  info: ShareTokenInfo
-  signer: string
-  account: string
-}
-
-export type BrickWithdrawFundsEvent = EventBase<InstructionType> & {
-  info: WithdrawFundsInfo
-  signer: string
-  account: string
-}
-
-export type BrickRefundEvent = EventBase<InstructionType> & {
-  info: RefundInfo
-  signer: string
-  account: string
-}
-
-export type BrickUseTokenEvent = EventBase<InstructionType> & {
-  info: UseTokenInfo
-  signer: string
-  account: string
-}
-
-export type BrickDeleteTokenEvent = EventBase<InstructionType> & {
-  info: DeleteTokenInfo
-  signer: string
-  account: string
-}
-
-export type BrickEvent = 
-  | BrickCreateAppEvent 
-  | BrickCreateTokenEvent 
-  | BrickEditTokenPriceEvent 
-  | BrickBuyTokenEvent 
-  | BrickShareTokenEvent 
-  | BrickRefundEvent
-  | BrickWithdrawFundsEvent 
-  | BrickUseTokenEvent 
-  | BrickDeleteTokenEvent
 
 /*----------------------------------------------------------------------*/
 
@@ -293,65 +227,154 @@ export const IX_METHOD_CODE: Map<string, InstructionType | undefined> = new Map<
   InstructionType | undefined
 >([
   [
-    Buffer.from(solita.createAppInstructionDiscriminator).toString('ascii'),
-    InstructionType.CreateApp,
-  ],
-  [
-    Buffer.from(solita.createTokenInstructionDiscriminator).toString('ascii'),
-    InstructionType.CreateToken,
-  ],
-  [
-    Buffer.from(solita.editTokenPriceInstructionDiscriminator).toString(
+    Buffer.from(solita.createGovernanceInstructionDiscriminator).toString(
       'ascii',
     ),
-    InstructionType.EditTokenPrice,
+    InstructionType.CreateGovernance,
   ],
   [
-    Buffer.from(solita.buyTokenInstructionDiscriminator).toString('ascii'),
-    InstructionType.BuyToken,
+    Buffer.from(solita.createProductInstructionDiscriminator).toString('ascii'),
+    InstructionType.CreateProduct,
   ],
   [
-    Buffer.from(solita.shareTokenInstructionDiscriminator).toString('ascii'),
-    InstructionType.ShareToken,
+    Buffer.from(solita.deleteProductInstructionDiscriminator).toString('ascii'),
+    InstructionType.DeleteProduct,
   ],
   [
-    Buffer.from(solita.withdrawFundsInstructionDiscriminator).toString('ascii'),
-    InstructionType.WithdrawFunds,
+    Buffer.from(solita.editPointsInstructionDiscriminator).toString('ascii'),
+    InstructionType.EditPoints,
   ],
   [
-    Buffer.from(solita.refundInstructionDiscriminator).toString('ascii'),
-    InstructionType.Refund,
+    Buffer.from(solita.editPaymentMintInstructionDiscriminator).toString(
+      'ascii',
+    ),
+    InstructionType.EditPaymentMint,
   ],
   [
-    Buffer.from(solita.useTokenInstructionDiscriminator).toString('ascii'),
-    InstructionType.UseToken,
+    Buffer.from(solita.editPriceInstructionDiscriminator).toString('ascii'),
+    InstructionType.EditPrice,
   ],
   [
-    Buffer.from(solita.deletetokenInstructionDiscriminator).toString('ascii'),
-    InstructionType.DeleteToken,
+    Buffer.from(solita.initBonusInstructionDiscriminator).toString('ascii'),
+    InstructionType.InitBonus,
+  ],
+  [
+    Buffer.from(solita.registerBuyInstructionDiscriminator).toString('ascii'),
+    InstructionType.RegisterBuy,
+  ],
+  [
+    Buffer.from(solita.registerPromoBuyInstructionDiscriminator).toString(
+      'ascii',
+    ),
+    InstructionType.RegisterPromoBuy,
+  ],
+  [
+    Buffer.from(solita.withdrawBonusInstructionDiscriminator).toString('ascii'),
+    InstructionType.WithdrawBonus,
   ],
 ])
 
 export const IX_DATA_LAYOUT: Partial<Record<InstructionType, any>> = {
-  [InstructionType.CreateApp]: solita.createAppStruct,
-  [InstructionType.CreateToken]: solita.createTokenStruct,
-  [InstructionType.EditTokenPrice]: solita.editTokenPriceStruct,
-  [InstructionType.BuyToken]: solita.buyTokenStruct,
-  [InstructionType.ShareToken]: solita.shareTokenStruct,
-  [InstructionType.WithdrawFunds]: solita.withdrawFundsStruct,
-  [InstructionType.Refund]: solita.refundStruct,
-  [InstructionType.UseToken]: solita.useTokenStruct,
-  [InstructionType.DeleteToken]: solita.deletetokenStruct,
+  [InstructionType.CreateGovernance]: solita.createGovernanceStruct,
+  [InstructionType.CreateProduct]: solita.createProductStruct,
+  [InstructionType.DeleteProduct]: solita.deleteProductStruct,
+  [InstructionType.EditPoints]: solita.editPointsStruct,
+  [InstructionType.EditPaymentMint]: solita.editPaymentMintStruct,
+  [InstructionType.EditPrice]: solita.editPriceStruct,
+  [InstructionType.InitBonus]: solita.initBonusStruct,
+  [InstructionType.RegisterBuy]: solita.registerBuyStruct,
+  [InstructionType.RegisterPromoBuy]: solita.registerPromoBuyStruct,
+  [InstructionType.WithdrawBonus]: solita.withdrawBonusStruct,
 }
 
 export const IX_ACCOUNTS_LAYOUT: Partial<Record<InstructionType, any>> = {
-  [InstructionType.CreateApp]: solita.CreateAppAccounts,
-  [InstructionType.CreateToken]: solita.CreateTokenAccounts,
-  [InstructionType.EditTokenPrice]: solita.EditTokenPriceAccounts,
-  [InstructionType.BuyToken]: solita.BuyTokenAccounts,
-  [InstructionType.ShareToken]: solita.ShareTokenAccounts,
-  [InstructionType.WithdrawFunds]: solita.WithdrawFundsAccounts,
-  [InstructionType.Refund]: solita.RefundAccounts,
-  [InstructionType.UseToken]: solita.UseTokenAccounts,
-  [InstructionType.DeleteToken]: solita.DeletetokenAccounts,
+  [InstructionType.CreateGovernance]: solita.CreateGovernanceAccounts,
+  [InstructionType.CreateProduct]: solita.CreateProductAccounts,
+  [InstructionType.DeleteProduct]: solita.DeleteProductAccounts,
+  [InstructionType.EditPoints]: solita.EditPointsAccounts,
+  [InstructionType.EditPaymentMint]: solita.EditPaymentMintAccounts,
+  [InstructionType.EditPrice]: solita.EditPriceAccounts,
+  [InstructionType.InitBonus]: solita.InitBonusAccounts,
+  [InstructionType.RegisterBuy]: solita.RegisterBuyAccounts,
+  [InstructionType.RegisterPromoBuy]: solita.RegisterPromoBuyAccounts,
+  [InstructionType.WithdrawBonus]: solita.WithdrawBonusAccounts,
 }
+
+export const IX_KEY_ACCOUNTS: Record<InstructionType, string[]> = {
+  [InstructionType.CreateGovernance]: ['governance', 'governanceAuthority'],
+  [InstructionType.CreateProduct]: ['product', 'productAuthority'],
+  [InstructionType.DeleteProduct]: ['product', 'productAuthority'],
+  [InstructionType.EditPoints]: ['governance', 'governanceAuthority'],
+  [InstructionType.EditPaymentMint]: ['product', 'productAuthority'],
+  [InstructionType.EditPrice]: ['product', 'productAuthority'],
+  [InstructionType.InitBonus]: ['bonus', 'signer'],
+  [InstructionType.RegisterBuy]: ['product', 'signer'],
+  [InstructionType.RegisterPromoBuy]: ['product', 'signer'],
+  [InstructionType.WithdrawBonus]: ['bonus', 'signer'],
+}
+
+export type RawInstructionInfo =
+  | CreateGovernanceInfo
+  | CreateProductInfo
+  | DeleteProductInfo
+  | EditPointsInfo
+  | EditPaymentMintInfo
+  | EditPriceInfo
+  | InitBonusInfo
+  | RegisterBuyInfo
+  | RegisterPromoBuyInfo
+  | WithdrawBonusInfo
+
+export type RawInstruction =
+  | CreateGovernanceRaw
+  | CreateProductRaw
+  | DeleteProductRaw
+  | EditPointsRaw
+  | EditPaymentMintRaw
+  | EditPriceRaw
+  | InitBonusRaw
+  | RegisterBuyRaw
+  | RegisterPromoBuyRaw
+  | WithdrawBonusRaw
+
+export enum InstructionInfo {
+  CreateGovernanceInfo = 'CreateGovernanceInfo',
+  CreateProductInfo = 'CreateProductInfo',
+  DeleteProductInfo = 'DeleteProductInfo',
+  EditPointsInfo = 'EditPointsInfo',
+  EditPaymentMintInfo = 'EditPaymentMintInfo',
+  EditPriceInfo = 'EditPriceInfo',
+  InitBonusInfo = 'InitBonusInfo',
+  RegisterBuyInfo = 'RegisterBuyInfo',
+  RegisterPromoBuyInfo = 'RegisterPromoBuyInfo',
+  WithdrawBonusInfo = 'WithdrawBonusInfo',
+}
+
+export interface EventInfo<InstructionInfo> {
+  info: InstructionInfo
+  signer: string
+  account: string
+}
+
+export type CreateGovernanceEvent = EventBase<InstructionType> & EventInfo<CreateGovernanceInfo>
+export type CreateProductEvent = EventBase<InstructionType> & EventInfo<CreateProductInfo>
+export type DeleteProductEvent = EventBase<InstructionType> & EventInfo<DeleteProductInfo>
+export type EditPointsEvent = EventBase<InstructionType> & EventInfo<EditPointsInfo>
+export type EditPaymentMintEvent = EventBase<InstructionType> & EventInfo<EditPaymentMintInfo>
+export type EditPriceEvent = EventBase<InstructionType> & EventInfo<EditPriceInfo>
+export type InitBonusEvent = EventBase<InstructionType> & EventInfo<InitBonusInfo>
+export type RegisterBuyEvent = EventBase<InstructionType> & EventInfo<RegisterBuyInfo>
+export type RegisterPromoBuyEvent = EventBase<InstructionType> & EventInfo<RegisterPromoBuyInfo>
+export type WithdrawBonusEvent = EventBase<InstructionType> & EventInfo<WithdrawBonusInfo>
+
+export type BrickEvent = 
+  | CreateGovernanceEvent
+  | CreateProductEvent
+  | DeleteProductEvent
+  | EditPointsEvent
+  | EditPaymentMintEvent
+  | EditPriceEvent
+  | InitBonusEvent
+  | RegisterBuyEvent
+  | RegisterPromoBuyEvent
+  | WithdrawBonusEvent

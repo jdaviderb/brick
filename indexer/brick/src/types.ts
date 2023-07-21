@@ -1,17 +1,17 @@
 import {
   AccountType,
-  ParsedAccountsData,
   BrickEvent,
+  ParsedAccountsData,
 } from './utils/layouts/index.js'
 
-export type AlephDataSetContent = {
-  name:              string;
-  owner:             string;
-  desc:              string;
-  available:         boolean;
-  ownsAllTimeseries: boolean;
-  timeseriesIDs:     string[];
-  views:             string[];
+export type DataSetContent = {
+  name: string
+  owner: string
+  desc: string
+  available: boolean
+  ownsAllTimeseries: boolean
+  timeseriesIDs: string[]
+  views: string[]
 }
 
 export type BrickAccountInfo = {

@@ -7,73 +7,77 @@
 
 import * as beet from '@metaplex-foundation/beet'
 import * as web3 from '@solana/web3.js'
+import {
+  CreateProductParams,
+  createProductParamsBeet,
+} from '../types/CreateProductParams.js'
 
 /**
  * @category Instructions
- * @category CreateApp
+ * @category CreateProduct
  * @category generated
  */
-export type CreateAppInstructionArgs = {
-  appName: string
-  feeBasisPoints: number
+export type CreateProductInstructionArgs = {
+  params: CreateProductParams
 }
 /**
  * @category Instructions
- * @category CreateApp
+ * @category CreateProduct
  * @category generated
  */
-export const createAppStruct = new beet.FixableBeetArgsStruct<
-  CreateAppInstructionArgs & {
+export const createProductStruct = new beet.BeetArgsStruct<
+  CreateProductInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */
   }
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['appName', beet.utf8String],
-    ['feeBasisPoints', beet.u16],
+    ['params', createProductParamsBeet],
   ],
-  'CreateAppInstructionArgs',
+  'CreateProductInstructionArgs',
 )
 /**
- * Accounts required by the _createApp_ instruction
+ * Accounts required by the _createProduct_ instruction
  *
- * @property [_writable_, **signer**] authority
- * @property [_writable_] app
+ * @property [_writable_, **signer**] productAuthority
+ * @property [] governance
+ * @property [_writable_] product
+ * @property [] paymentMint
  * @category Instructions
- * @category CreateApp
+ * @category CreateProduct
  * @category generated
  */
-export type CreateAppInstructionAccounts = {
+export type CreateProductInstructionAccounts = {
   systemProgram?: web3.PublicKey
   rent?: web3.PublicKey
-  authority: web3.PublicKey
-  app: web3.PublicKey
+  productAuthority: web3.PublicKey
+  governance: web3.PublicKey
+  product: web3.PublicKey
+  paymentMint: web3.PublicKey
   anchorRemainingAccounts?: web3.AccountMeta[]
 }
 
-export const createAppInstructionDiscriminator = [
-  165, 212, 136, 33, 249, 223, 246, 249,
+export const createProductInstructionDiscriminator = [
+  183, 155, 202, 119, 43, 114, 174, 225,
 ]
 
 /**
- * Creates a _CreateApp_ instruction.
+ * Creates a _CreateProduct_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category CreateApp
+ * @category CreateProduct
  * @category generated
  */
-export function createCreateAppInstruction(
-  accounts: CreateAppInstructionAccounts,
-  args: CreateAppInstructionArgs,
-  programId = new web3.PublicKey(
-    'BrickarF2QeREBZsapbhgYPHJi5FYkJVnx7mZhxETCt5',
-  ),
+export function createCreateProductInstruction(
+  accounts: CreateProductInstructionAccounts,
+  args: CreateProductInstructionArgs,
+  programId = new web3.PublicKey('PROGRAM PUBKEY'),
 ) {
-  const [data] = createAppStruct.serialize({
-    instructionDiscriminator: createAppInstructionDiscriminator,
+  const [data] = createProductStruct.serialize({
+    instructionDiscriminator: createProductInstructionDiscriminator,
     ...args,
   })
   const keys: web3.AccountMeta[] = [
@@ -88,13 +92,23 @@ export function createCreateAppInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.authority,
+      pubkey: accounts.productAuthority,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: accounts.app,
+      pubkey: accounts.governance,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.product,
       isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.paymentMint,
+      isWritable: false,
       isSigner: false,
     },
   ]

@@ -1,7 +1,7 @@
+mod marketplace;
 mod product;
-mod governance;
-mod bonus;
+mod reward;
 
+pub use marketplace::*;
 pub use product::*;
-pub use governance::*;
-pub use bonus::*;
+pub use reward::*;

@@ -3,102 +3,121 @@ use {
     crate::errors::ErrorCode,
     anchor_lang::{
         prelude::*,
-        solana_program::{
-            account_info::AccountInfo, 
-            instruction::Instruction,
-            program::invoke_signed
-        },
         system_program::System,
-        InstructionData
     },
     anchor_spl::{
-        token_interface::{Mint, TokenInterface, TokenAccount},
-        token::{transfer, Transfer, ID},
+        token_interface::{Mint, MintTo, TokenInterface, TokenAccount},
+        token::{transfer, Transfer, ID as TokenProgramV0},
+        token_2022::{mint_to, ID as TokenProgram2022},
+        associated_token::{AssociatedToken, ID as AssociatedTokenProgram},
     },
-    aleph_solana_contract::instruction::DoMessage
 };
 
 #[derive(Accounts)]
 pub struct RegisterBuy<'info> {
     pub system_program: Program<'info, System>,
-    /// CHECK: contraint added to force using actual aleph message program
-    #[account(address = aleph_solana_contract::ID, executable)]
-    pub messages_program: UncheckedAccount<'info>,
-    #[account(address = ID @ ErrorCode::IncorrectTokenProgram, executable)]
-    pub token_program: Interface<'info, TokenInterface>,
+    #[account(address = TokenProgramV0 @ ErrorCode::IncorrectTokenProgram, executable)]
+    pub token_program_v0: Interface<'info, TokenInterface>,
+    #[account(address = TokenProgram2022 @ ErrorCode::IncorrectTokenProgram, executable)]
+    pub token_program_22: Interface<'info, TokenInterface>,
+    #[account(address = AssociatedTokenProgram @ ErrorCode::IncorrectTokenProgram, executable)]
+    pub associated_token_program: Program<'info, AssociatedToken>,
     pub rent: Sysvar<'info, Rent>,
-    /// CHECK: validated in the governance account contraints
-    /// WHEN DEPLOYED ADD #[account(address =  @ ErrorCode::)]
-    pub governance_authority: AccountInfo<'info>,
     #[account(mut)]
     pub signer: Signer<'info>,
     #[account(
         mut,
-        seeds = [b"governance".as_ref()],
-        bump = governance.bump,
-        has_one = governance_authority @ ErrorCode::IncorrectAuthority,
-        has_one = governance_mint @ ErrorCode::IncorrectMint,
+        seeds = [
+            b"marketplace".as_ref(),
+            marketplace.authority.as_ref(),
+        ],
+        bump = marketplace.bumps.bump,
     )]
-    pub governance: Account<'info, Governance>,
+    pub marketplace: Box<Account<'info, Marketplace>>,
     #[account(
+        mut,
         seeds = [
             b"product".as_ref(),
             product.first_id.as_ref(),
             product.second_id.as_ref(),
+            product.marketplace.as_ref(),
         ],
-        bump = product.bump,
+        bump = product.bumps.bump,
     )]
     pub product: Box<Account<'info, Product>>,
     #[account(
         mut,
+        seeds = [
+            b"product_mint".as_ref(),
+            product.first_id.as_ref(),
+            product.second_id.as_ref(),
+            marketplace.key().as_ref(),
+        ],
+        bump = product.bumps.mint_bump,
+        constraint = product_mint.key() == product.product_mint
+            @ ErrorCode::IncorrectMint,
+    )]    
+    pub product_mint: Box<InterfaceAccount<'info, Mint>>,
+    #[account(
         constraint = payment_mint.key() == product.seller_config.payment_mint
             @ ErrorCode::IncorrectMint,
     )]
     pub payment_mint: Box<InterfaceAccount<'info, Mint>>,
-    /// CHECK: validated in the governance account contraints
-    pub governance_mint: Box<InterfaceAccount<'info, Mint>>,
+    /// init_if_needed PR fix t2022: https://github.com/coral-xyz/anchor/pull/2541
+    /// init_if_needed,
+    /// payer = signer,
+    /// associated_token::mint = product_mint,
+    /// associated_token::authority = signer,
+    /// associated_token::token_program = token_program_22,
+    #[account(
+        mut,
+        constraint = buyer_token_vault.owner == signer.key()
+            @ ErrorCode::IncorrectAuthority,
+        constraint = buyer_token_vault.mint == product_mint.key()
+            @ ErrorCode::IncorrectATA,
+    )]
+    pub buyer_token_vault: Box<InterfaceAccount<'info, TokenAccount>>,
     #[account(
         mut,
         constraint = buyer_transfer_vault.owner == signer.key()
             @ ErrorCode::IncorrectAuthority,
-        constraint = buyer_transfer_vault.mint == payment_mint.key()
+        constraint = buyer_transfer_vault.mint == product.seller_config.payment_mint.key()
             @ ErrorCode::IncorrectATA,
     )]
     pub buyer_transfer_vault: Box<InterfaceAccount<'info, TokenAccount>>,
     #[account(
         mut,
-        constraint = product_authority_transfer_vault.owner == product.product_authority 
+        constraint = seller_transfer_vault.owner == product.authority 
             @ ErrorCode::IncorrectAuthority,
-        constraint = product_authority_transfer_vault.mint == payment_mint.key()
+        constraint = seller_transfer_vault.mint == product.seller_config.payment_mint.key()
             @ ErrorCode::IncorrectATA,
     )]
-    pub product_authority_transfer_vault: Box<InterfaceAccount<'info, TokenAccount>>,
+    pub seller_transfer_vault: Box<InterfaceAccount<'info, TokenAccount>>,
     /// ATA that receives fees
     #[account(
         mut,
-        constraint = governance_transfer_vault.owner == governance.governance_authority 
+        constraint = marketplace_transfer_vault.owner == marketplace.authority 
             @ ErrorCode::IncorrectAuthority,
-        constraint = governance_transfer_vault.mint == payment_mint.key() 
+        constraint = marketplace_transfer_vault.mint == payment_mint.key() 
             @ ErrorCode::IncorrectATA,
     )]
-    pub governance_transfer_vault: Box<InterfaceAccount<'info, TokenAccount>>,
+    pub marketplace_transfer_vault: Box<InterfaceAccount<'info, TokenAccount>>,
 }
 
 pub fn handler<'info>(ctx: Context<RegisterBuy>) -> Result<()> {
-    if ctx.accounts.governance.fee > 0 {
-        let (total_fee, seller_amount) = Governance::calculate_transfer_distribution(
-            ctx.accounts.governance.fee,
-            ctx.accounts.governance.fee_reduction,
-            ctx.accounts.governance.governance_mint,
+    if ctx.accounts.marketplace.fees_config.fee > 0 {
+        let (total_fee, seller_amount) = Marketplace::calculate_transfer_distribution(
+            ctx.accounts.marketplace.fees_config.clone(),
             ctx.accounts.product.seller_config.payment_mint,
             ctx.accounts.product.seller_config.product_price,
         )?;
+        
         transfer(
             CpiContext::new(
-                ctx.accounts.token_program.to_account_info(), 
+                ctx.accounts.token_program_v0.to_account_info(), 
                 Transfer {
                     from: ctx.accounts.buyer_transfer_vault.to_account_info(),
-                    to: ctx.accounts.governance_transfer_vault.to_account_info(),
+                    to: ctx.accounts.marketplace_transfer_vault.to_account_info(),
                     authority: ctx.accounts.signer.to_account_info(),
                 },
             ),
@@ -107,10 +126,10 @@ pub fn handler<'info>(ctx: Context<RegisterBuy>) -> Result<()> {
 
         transfer(
             CpiContext::new(
-                ctx.accounts.token_program.to_account_info(), 
+                ctx.accounts.token_program_v0.to_account_info(), 
                 Transfer {
                     from: ctx.accounts.buyer_transfer_vault.to_account_info(),
-                    to: ctx.accounts.product_authority_transfer_vault.to_account_info(),
+                    to: ctx.accounts.seller_transfer_vault.to_account_info(),
                     authority: ctx.accounts.signer.to_account_info(),
                 },
             ),
@@ -119,10 +138,10 @@ pub fn handler<'info>(ctx: Context<RegisterBuy>) -> Result<()> {
     } else {
         transfer(
             CpiContext::new(
-                ctx.accounts.token_program.to_account_info(), 
+                ctx.accounts.token_program_v0.to_account_info(), 
                 Transfer {
                     from: ctx.accounts.buyer_transfer_vault.to_account_info(),
-                    to: ctx.accounts.product_authority_transfer_vault.to_account_info(),
+                    to: ctx.accounts.seller_transfer_vault.to_account_info(),
                     authority: ctx.accounts.signer.to_account_info(),
                 },
             ),
@@ -130,33 +149,26 @@ pub fn handler<'info>(ctx: Context<RegisterBuy>) -> Result<()> {
         ).map_err(|_| ErrorCode::TransferError)?;
     }
 
-    let first_id_str = std::str::from_utf8(&ctx.accounts.product.first_id).unwrap();
-    let second_id_str = std::str::from_utf8(&ctx.accounts.product.second_id).unwrap();
-    let product_id = format!("{}{}", first_id_str, second_id_str);
-    let message = DoMessage {
-        msgtype: "post".to_string(),
-        msgcontent: format!(
-            "{{\"timeseriesID\":\"{}\",\"autorizer\":\"{}\",\"status\":\"GRANTED\",\"executionCount\":0,\"maxExecutionCount\":-1,\"requestor\":\"{}\"}}", 
-            product_id, 
-            ctx.accounts.product.product_authority.to_string(), 
-            ctx.accounts.signer.key().to_string()
-        ),
-    };    
-    
-    let governance_seeds = &[
-        b"governance".as_ref(),
-        &[ctx.accounts.governance.bump],
+    let seeds = &[
+        b"product".as_ref(),
+        ctx.accounts.product.first_id.as_ref(),
+        ctx.accounts.product.second_id.as_ref(),
+        ctx.accounts.product.marketplace.as_ref(),
+        &[ctx.accounts.product.bumps.bump],
     ];
 
-    invoke_signed(
-        &Instruction {
-            program_id: ctx.accounts.messages_program.key(),
-            accounts: vec![AccountMeta::new(ctx.accounts.governance.key(), true)],
-            data: message.data(),
-        },
-        &[ctx.accounts.governance.to_account_info().clone()],
-        &[&governance_seeds[..]],
-    )?;
+    mint_to(
+        CpiContext::new_with_signer(
+            ctx.accounts.token_program_22.to_account_info(),
+            MintTo {
+                mint: ctx.accounts.product_mint.to_account_info(),
+                to: ctx.accounts.buyer_token_vault.to_account_info(),
+                authority: ctx.accounts.product.to_account_info(),
+            },
+            &[&seeds[..]],
+        ),
+        1
+    ).map_err(|_| ErrorCode::MintToError)?;
 
     Ok(())
 }

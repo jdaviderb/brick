@@ -8,80 +8,78 @@
 import * as splToken from '@solana/spl-token'
 import * as beet from '@metaplex-foundation/beet'
 import * as web3 from '@solana/web3.js'
+import {
+  CreateGovernanceParams,
+  createGovernanceParamsBeet,
+} from '../types/CreateGovernanceParams.js'
 
 /**
  * @category Instructions
- * @category ShareToken
+ * @category CreateGovernance
  * @category generated
  */
-export type ShareTokenInstructionArgs = {
-  exemplars: number
+export type CreateGovernanceInstructionArgs = {
+  params: CreateGovernanceParams
 }
 /**
  * @category Instructions
- * @category ShareToken
+ * @category CreateGovernance
  * @category generated
  */
-export const shareTokenStruct = new beet.BeetArgsStruct<
-  ShareTokenInstructionArgs & {
+export const createGovernanceStruct = new beet.BeetArgsStruct<
+  CreateGovernanceInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */
   }
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['exemplars', beet.u32],
+    ['params', createGovernanceParamsBeet],
   ],
-  'ShareTokenInstructionArgs',
+  'CreateGovernanceInstructionArgs',
 )
 /**
- * Accounts required by the _shareToken_ instruction
+ * Accounts required by the _createGovernance_ instruction
  *
- * @property [] associatedTokenProgram
- * @property [_writable_, **signer**] authority
- * @property [_writable_] token
- * @property [_writable_] tokenMint
- * @property [_writable_] receiver
- * @property [_writable_] receiverVault
+ * @property [_writable_, **signer**] governanceAuthority
+ * @property [_writable_] governance
+ * @property [] governanceMint
+ * @property [_writable_] governanceBonusVault
  * @category Instructions
- * @category ShareToken
+ * @category CreateGovernance
  * @category generated
  */
-export type ShareTokenInstructionAccounts = {
+export type CreateGovernanceInstructionAccounts = {
   systemProgram?: web3.PublicKey
   tokenProgram?: web3.PublicKey
-  associatedTokenProgram: web3.PublicKey
   rent?: web3.PublicKey
-  authority: web3.PublicKey
-  token: web3.PublicKey
-  tokenMint: web3.PublicKey
-  receiver: web3.PublicKey
-  receiverVault: web3.PublicKey
+  governanceAuthority: web3.PublicKey
+  governance: web3.PublicKey
+  governanceMint: web3.PublicKey
+  governanceBonusVault: web3.PublicKey
   anchorRemainingAccounts?: web3.AccountMeta[]
 }
 
-export const shareTokenInstructionDiscriminator = [
-  80, 39, 57, 250, 182, 43, 129, 221,
+export const createGovernanceInstructionDiscriminator = [
+  134, 46, 105, 91, 27, 91, 99, 157,
 ]
 
 /**
- * Creates a _ShareToken_ instruction.
+ * Creates a _CreateGovernance_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category ShareToken
+ * @category CreateGovernance
  * @category generated
  */
-export function createShareTokenInstruction(
-  accounts: ShareTokenInstructionAccounts,
-  args: ShareTokenInstructionArgs,
-  programId = new web3.PublicKey(
-    'BrickarF2QeREBZsapbhgYPHJi5FYkJVnx7mZhxETCt5',
-  ),
+export function createCreateGovernanceInstruction(
+  accounts: CreateGovernanceInstructionAccounts,
+  args: CreateGovernanceInstructionArgs,
+  programId = new web3.PublicKey('PROGRAM PUBKEY'),
 ) {
-  const [data] = shareTokenStruct.serialize({
-    instructionDiscriminator: shareTokenInstructionDiscriminator,
+  const [data] = createGovernanceStruct.serialize({
+    instructionDiscriminator: createGovernanceInstructionDiscriminator,
     ...args,
   })
   const keys: web3.AccountMeta[] = [
@@ -96,37 +94,27 @@ export function createShareTokenInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.associatedTokenProgram,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
       pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.authority,
+      pubkey: accounts.governanceAuthority,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: accounts.token,
+      pubkey: accounts.governance,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: accounts.tokenMint,
-      isWritable: true,
+      pubkey: accounts.governanceMint,
+      isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.receiver,
-      isWritable: true,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.receiverVault,
+      pubkey: accounts.governanceBonusVault,
       isWritable: true,
       isSigner: false,
     },

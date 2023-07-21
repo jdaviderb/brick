@@ -7,79 +7,81 @@
 
 import * as beet from '@metaplex-foundation/beet'
 import * as web3 from '@solana/web3.js'
+import {
+  EditPointsParams,
+  editPointsParamsBeet,
+} from '../types/EditPointsParams.js'
 
 /**
  * @category Instructions
- * @category EditTokenPrice
+ * @category EditPoints
  * @category generated
  */
-export type EditTokenPriceInstructionArgs = {
-  tokenPrice: number
+export type EditPointsInstructionArgs = {
+  params: EditPointsParams
 }
 /**
  * @category Instructions
- * @category EditTokenPrice
+ * @category EditPoints
  * @category generated
  */
-export const editTokenPriceStruct = new beet.BeetArgsStruct<
-  EditTokenPriceInstructionArgs & {
+export const editPointsStruct = new beet.BeetArgsStruct<
+  EditPointsInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */
   }
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['tokenPrice', beet.u32],
+    ['params', editPointsParamsBeet],
   ],
-  'EditTokenPriceInstructionArgs',
+  'EditPointsInstructionArgs',
 )
 /**
- * Accounts required by the _editTokenPrice_ instruction
+ * Accounts required by the _editPoints_ instruction
  *
- * @property [_writable_, **signer**] authority
- * @property [_writable_] token
+ * @property [_writable_, **signer**] governanceAuthority
+ * @property [_writable_] governance
  * @category Instructions
- * @category EditTokenPrice
+ * @category EditPoints
  * @category generated
  */
-export type EditTokenPriceInstructionAccounts = {
-  authority: web3.PublicKey
-  token: web3.PublicKey
+export type EditPointsInstructionAccounts = {
+  governanceAuthority: web3.PublicKey
+  governance: web3.PublicKey
   anchorRemainingAccounts?: web3.AccountMeta[]
 }
 
-export const editTokenPriceInstructionDiscriminator = [
-  197, 30, 108, 1, 210, 189, 181, 237,
+export const editPointsInstructionDiscriminator = [
+  9, 164, 47, 125, 181, 202, 77, 193,
 ]
 
 /**
- * Creates a _EditTokenPrice_ instruction.
+ * Creates a _EditPoints_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category EditTokenPrice
+ * @category EditPoints
  * @category generated
  */
-export function createEditTokenPriceInstruction(
-  accounts: EditTokenPriceInstructionAccounts,
-  args: EditTokenPriceInstructionArgs,
-  programId = new web3.PublicKey(
-    'BrickarF2QeREBZsapbhgYPHJi5FYkJVnx7mZhxETCt5',
-  ),
+export function createEditPointsInstruction(
+  accounts: EditPointsInstructionAccounts,
+  args: EditPointsInstructionArgs,
+  programId = new web3.PublicKey('PROGRAM PUBKEY'),
 ) {
-  const [data] = editTokenPriceStruct.serialize({
-    instructionDiscriminator: editTokenPriceInstructionDiscriminator,
+  const [data] = editPointsStruct.serialize({
+    instructionDiscriminator: editPointsInstructionDiscriminator,
     ...args,
   })
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.authority,
+      pubkey: accounts.governanceAuthority,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: accounts.token,
+      pubkey: accounts.governance,
       isWritable: true,
       isSigner: false,
     },

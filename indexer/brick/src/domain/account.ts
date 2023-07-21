@@ -6,8 +6,8 @@ import {
   AccountStats,
 } from '@aleph-indexer/framework'
 import { EventDALIndex, EventStorage } from '../dal/event.js'
+import { BrickEvent } from '../utils/layouts/index.js'
 import { BrickAccountInfo, BrickAccountStats } from '../types.js'
-import { BrickEvent } from '../utils/index.js'
 
 export class AccountDomain {
   constructor(

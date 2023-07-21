@@ -1,5 +1,5 @@
 import { BRICK_PROGRAM_ID, BRICK_PROGRAM_ID_PK } from '../../constants.js'
-import { AccountType, TokenMetadataArgs } from '../../utils/layouts/index.js'
+import { AccountType } from '../../utils/layouts/index.js'
 import { BrickAccountInfo } from '../../types.js'
 import {
   ACCOUNT_DISCRIMINATOR,
@@ -39,7 +39,12 @@ export default class BrickDiscoverer {
   async getAllAccounts(): Promise<BrickAccountInfo[]> {
     const connection = solanaPrivateRPC.getConnection()
     const accountsInfo: BrickAccountInfo[] = []
+    // todo: If you want to only index a subset of account types, you can filter them here
+    const accountTypesToFilter: AccountType[] = [
+      /*AccountType.*/
+    ]
     for (const type of this.accountTypes) {
+      if (accountTypesToFilter.includes(type)) continue
       const accounts = await connection.getProgramAccounts(
         BRICK_PROGRAM_ID_PK,
         {
@@ -65,44 +70,21 @@ export default class BrickDiscoverer {
     resp: { pubkey: PublicKey; account: AccountInfo<Buffer> },
     type: AccountType,
   ): BrickAccountInfo {
+    const data = ACCOUNTS_DATA_LAYOUT[type].deserialize(resp.account.data)[0]
     const address = resp.pubkey.toBase58()
-
-    try {
-      let data = ACCOUNTS_DATA_LAYOUT[type].deserialize(resp.account.data)[0]
-
-      let name: string = address
-      if (Object.hasOwn(data, 'name')) {
-        if ((data as any).name instanceof Uint8Array)
-          name = ((data as any).name as Uint8Array).toString()
-        if ((data as any).name instanceof String) name = (data as any).name
-      }
-
-      if (type === AccountType.TokenMetadata) {
-        const offChainId2 = Buffer.from((data as TokenMetadataArgs).offChainId2)
-        data["offChainId2"] = offChainId2.toString('utf-8').trim()
-        const offChainMetadata = Buffer.from((data as TokenMetadataArgs).offChainMetadata)
-        data["offChainMetadata"] = offChainMetadata.toString('utf-8').trim()
-      }
-      return {
-        name,
-        programId: BRICK_PROGRAM_ID,
-        type,
-        address: address,
-        data: data,
-      }
-    } catch(e) {
-      return {
-        address,
-        programId: BRICK_PROGRAM_ID,
-        type,
-        name: address,
-        data: {
-          authority: BRICK_PROGRAM_ID_PK,
-          feeBasisPoints: 0,
-          bump: 0,
-          appName: "old payment account with a different schema"
-        },
-      }
+    // Parsing names from on-chain account data can be complicated at times...
+    let name: string = address
+    if (data.hasOwnProperty('name')) {
+      if ((data as any).name instanceof Uint8Array)
+        name = ((data as any).name as Uint8Array).toString()
+      if ((data as any).name instanceof String) name = (data as any).name
+    }
+    return {
+      name,
+      programId: BRICK_PROGRAM_ID,
+      type,
+      address: address,
+      data: data,
     }
   }
 }

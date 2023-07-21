@@ -5,14 +5,12 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
 import * as web3 from '@solana/web3.js'
+import * as beet from '@metaplex-foundation/beet'
 import * as beetSolana from '@metaplex-foundation/beet-solana'
 export type SellerConfig = {
-  refundTimespan: beet.bignum
-  price: number
-  acceptedMint: web3.PublicKey
-  exemplars: number
+  paymentMint: web3.PublicKey
+  productPrice: beet.bignum
 }
 
 /**
@@ -21,10 +19,8 @@ export type SellerConfig = {
  */
 export const sellerConfigBeet = new beet.BeetArgsStruct<SellerConfig>(
   [
-    ['refundTimespan', beet.u64],
-    ['price', beet.u32],
-    ['acceptedMint', beetSolana.publicKey],
-    ['exemplars', beet.i32],
+    ['paymentMint', beetSolana.publicKey],
+    ['productPrice', beet.u64],
   ],
   'SellerConfig',
 )

@@ -14,7 +14,6 @@ import {
   GlobalStatsFilters,
   APIResolvers,
   AccountsFilters,
-  UsersFilters,
 } from './resolvers.js'
 import MainDomain from '../domain/main.js'
 
@@ -37,7 +36,6 @@ export default class APISchema extends IndexerAPISchema {
             args: {
               types: { type: new GraphQLList(GraphQLString) },
               accounts: { type: new GraphQLList(GraphQLString) },
-              app: { type: GraphQLString },
             },
             resolve: (_, ctx, __, info) => {
               ctx.includeStats =
@@ -47,28 +45,6 @@ export default class APISchema extends IndexerAPISchema {
                 )
 
               return this.resolver.getAccounts(ctx as AccountsFilters)
-            },
-          },
-
-          userWithdrawalsAvailable: {
-            type: Types.AccountsInfo,
-            args: {
-              address: { type: GraphQLString },
-              app: { type: GraphQLString },
-            },
-            resolve: (_, ctx) => {
-              return this.resolver.getUserWithdrawalsAvailable(ctx as UsersFilters)
-            },
-          },
-
-          userRefundsAvailable: {
-            type: Types.AccountsInfo,
-            args: {
-              address: { type: GraphQLString },
-              app: { type: GraphQLString },
-            },
-            resolve: (_, ctx) => {
-              return this.resolver.getUserRefundsAvailable(ctx as UsersFilters)
             },
           },
 

@@ -12,98 +12,26 @@ const createErrorFromCodeLookup: Map<number, () => ErrorWithCode> = new Map()
 const createErrorFromNameLookup: Map<string, () => ErrorWithCode> = new Map()
 
 /**
- * TimeForRefundHasConsumed: 'Refund time has consumed'
+ * CannotCloseProduct: 'There are still users with active payments'
  *
  * @category Errors
  * @category generated
  */
-export class TimeForRefundHasConsumedError extends Error {
+export class CannotCloseProductError extends Error {
   readonly code: number = 0x1770
-  readonly name: string = 'TimeForRefundHasConsumed'
+  readonly name: string = 'CannotCloseProduct'
   constructor() {
-    super('Refund time has consumed')
+    super('There are still users with active payments')
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, TimeForRefundHasConsumedError)
+      Error.captureStackTrace(this, CannotCloseProductError)
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1770, () => new TimeForRefundHasConsumedError())
+createErrorFromCodeLookup.set(0x1770, () => new CannotCloseProductError())
 createErrorFromNameLookup.set(
-  'TimeForRefundHasConsumed',
-  () => new TimeForRefundHasConsumedError(),
-)
-
-/**
- * NotEnoughTokensAvailable: 'There are not enough tokens to buy'
- *
- * @category Errors
- * @category generated
- */
-export class NotEnoughTokensAvailableError extends Error {
-  readonly code: number = 0x1771
-  readonly name: string = 'NotEnoughTokensAvailable'
-  constructor() {
-    super('There are not enough tokens to buy')
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, NotEnoughTokensAvailableError)
-    }
-  }
-}
-
-createErrorFromCodeLookup.set(0x1771, () => new NotEnoughTokensAvailableError())
-createErrorFromNameLookup.set(
-  'NotEnoughTokensAvailable',
-  () => new NotEnoughTokensAvailableError(),
-)
-
-/**
- * UsersStillHoldUnusedTokens: 'There are still users with a token available for use'
- *
- * @category Errors
- * @category generated
- */
-export class UsersStillHoldUnusedTokensError extends Error {
-  readonly code: number = 0x1772
-  readonly name: string = 'UsersStillHoldUnusedTokens'
-  constructor() {
-    super('There are still users with a token available for use')
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, UsersStillHoldUnusedTokensError)
-    }
-  }
-}
-
-createErrorFromCodeLookup.set(
-  0x1772,
-  () => new UsersStillHoldUnusedTokensError(),
-)
-createErrorFromNameLookup.set(
-  'UsersStillHoldUnusedTokens',
-  () => new UsersStillHoldUnusedTokensError(),
-)
-
-/**
- * CannotWithdrawYet: 'You cannot withdraw these funds yet'
- *
- * @category Errors
- * @category generated
- */
-export class CannotWithdrawYetError extends Error {
-  readonly code: number = 0x1773
-  readonly name: string = 'CannotWithdrawYet'
-  constructor() {
-    super('You cannot withdraw these funds yet')
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, CannotWithdrawYetError)
-    }
-  }
-}
-
-createErrorFromCodeLookup.set(0x1773, () => new CannotWithdrawYetError())
-createErrorFromNameLookup.set(
-  'CannotWithdrawYet',
-  () => new CannotWithdrawYetError(),
+  'CannotCloseProduct',
+  () => new CannotCloseProductError(),
 )
 
 /**
@@ -113,7 +41,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class StringTooLongError extends Error {
-  readonly code: number = 0x1774
+  readonly code: number = 0x1771
   readonly name: string = 'StringTooLong'
   constructor() {
     super('You are providing a string that is too long')
@@ -123,7 +51,7 @@ export class StringTooLongError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1774, () => new StringTooLongError())
+createErrorFromCodeLookup.set(0x1771, () => new StringTooLongError())
 createErrorFromNameLookup.set('StringTooLong', () => new StringTooLongError())
 
 /**
@@ -133,7 +61,7 @@ createErrorFromNameLookup.set('StringTooLong', () => new StringTooLongError())
  * @category generated
  */
 export class NumericalOverflowError extends Error {
-  readonly code: number = 0x1775
+  readonly code: number = 0x1772
   readonly name: string = 'NumericalOverflow'
   constructor() {
     super('Numerical Overflow happened')
@@ -143,7 +71,7 @@ export class NumericalOverflowError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1775, () => new NumericalOverflowError())
+createErrorFromCodeLookup.set(0x1772, () => new NumericalOverflowError())
 createErrorFromNameLookup.set(
   'NumericalOverflow',
   () => new NumericalOverflowError(),
@@ -156,7 +84,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class IncorrectFeeError extends Error {
-  readonly code: number = 0x1776
+  readonly code: number = 0x1773
   readonly name: string = 'IncorrectFee'
   constructor() {
     super('You are setting a higher fee than allowed')
@@ -166,7 +94,7 @@ export class IncorrectFeeError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1776, () => new IncorrectFeeError())
+createErrorFromCodeLookup.set(0x1773, () => new IncorrectFeeError())
 createErrorFromNameLookup.set('IncorrectFee', () => new IncorrectFeeError())
 
 /**
@@ -176,7 +104,7 @@ createErrorFromNameLookup.set('IncorrectFee', () => new IncorrectFeeError())
  * @category generated
  */
 export class InconrrectAppAccountError extends Error {
-  readonly code: number = 0x1777
+  readonly code: number = 0x1774
   readonly name: string = 'InconrrectAppAccount'
   constructor() {
     super('You are providing a wrong app account')
@@ -186,7 +114,7 @@ export class InconrrectAppAccountError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1777, () => new InconrrectAppAccountError())
+createErrorFromCodeLookup.set(0x1774, () => new InconrrectAppAccountError())
 createErrorFromNameLookup.set(
   'InconrrectAppAccount',
   () => new InconrrectAppAccountError(),
@@ -199,7 +127,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class InconrrectCreatorAccountError extends Error {
-  readonly code: number = 0x1778
+  readonly code: number = 0x1775
   readonly name: string = 'InconrrectCreatorAccount'
   constructor() {
     super('You are providing a wrong creator vault')
@@ -209,193 +137,336 @@ export class InconrrectCreatorAccountError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1778, () => new InconrrectCreatorAccountError())
+createErrorFromCodeLookup.set(0x1775, () => new InconrrectCreatorAccountError())
 createErrorFromNameLookup.set(
   'InconrrectCreatorAccount',
   () => new InconrrectCreatorAccountError(),
 )
 
 /**
- * IncorrectPaymentToken: 'You are trying to pay a different mint than the one stated by the seller'
+ * IncorrectPaymentMint: 'You are trying to pay a different mint than the one stated by the seller'
  *
  * @category Errors
  * @category generated
  */
-export class IncorrectPaymentTokenError extends Error {
-  readonly code: number = 0x1779
-  readonly name: string = 'IncorrectPaymentToken'
+export class IncorrectPaymentMintError extends Error {
+  readonly code: number = 0x1776
+  readonly name: string = 'IncorrectPaymentMint'
   constructor() {
     super(
       'You are trying to pay a different mint than the one stated by the seller',
     )
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, IncorrectPaymentTokenError)
+      Error.captureStackTrace(this, IncorrectPaymentMintError)
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1779, () => new IncorrectPaymentTokenError())
+createErrorFromCodeLookup.set(0x1776, () => new IncorrectPaymentMintError())
 createErrorFromNameLookup.set(
-  'IncorrectPaymentToken',
-  () => new IncorrectPaymentTokenError(),
+  'IncorrectPaymentMint',
+  () => new IncorrectPaymentMintError(),
 )
 
 /**
- * IncorrectBuyerTokenAccountOnTransfer: 'You are providing a wrong buyer token account, is where the funds come from to pay'
+ * IncorrectATA: 'You are providing a wrong associated token account'
  *
  * @category Errors
  * @category generated
  */
-export class IncorrectBuyerTokenAccountOnTransferError extends Error {
+export class IncorrectATAError extends Error {
+  readonly code: number = 0x1777
+  readonly name: string = 'IncorrectATA'
+  constructor() {
+    super('You are providing a wrong associated token account')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, IncorrectATAError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1777, () => new IncorrectATAError())
+createErrorFromNameLookup.set('IncorrectATA', () => new IncorrectATAError())
+
+/**
+ * IncorrectAuthority: 'You are not the authority'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class IncorrectAuthorityError extends Error {
+  readonly code: number = 0x1778
+  readonly name: string = 'IncorrectAuthority'
+  constructor() {
+    super('You are not the authority')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, IncorrectAuthorityError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1778, () => new IncorrectAuthorityError())
+createErrorFromNameLookup.set(
+  'IncorrectAuthority',
+  () => new IncorrectAuthorityError(),
+)
+
+/**
+ * IncorrectMint: 'You are providing an incorrect mint'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class IncorrectMintError extends Error {
+  readonly code: number = 0x1779
+  readonly name: string = 'IncorrectMint'
+  constructor() {
+    super('You are providing an incorrect mint')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, IncorrectMintError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1779, () => new IncorrectMintError())
+createErrorFromNameLookup.set('IncorrectMint', () => new IncorrectMintError())
+
+/**
+ * IncorrectNonce: 'Given nonce is invalid'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class IncorrectNonceError extends Error {
   readonly code: number = 0x177a
-  readonly name: string = 'IncorrectBuyerTokenAccountOnTransfer'
+  readonly name: string = 'IncorrectNonce'
   constructor() {
-    super(
-      'You are providing a wrong buyer token account, is where the funds come from to pay',
-    )
+    super('Given nonce is invalid')
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, IncorrectBuyerTokenAccountOnTransferError)
+      Error.captureStackTrace(this, IncorrectNonceError)
     }
   }
 }
 
-createErrorFromCodeLookup.set(
-  0x177a,
-  () => new IncorrectBuyerTokenAccountOnTransferError(),
-)
-createErrorFromNameLookup.set(
-  'IncorrectBuyerTokenAccountOnTransfer',
-  () => new IncorrectBuyerTokenAccountOnTransferError(),
-)
+createErrorFromCodeLookup.set(0x177a, () => new IncorrectNonceError())
+createErrorFromNameLookup.set('IncorrectNonce', () => new IncorrectNonceError())
 
 /**
- * IncorrectBuyerTokenAccountToStorePurchasedToken: 'You are providing a wrong buyer token account, is where the access token will be received'
+ * IncorrectSeeds: 'Incorrect seeds'
  *
  * @category Errors
  * @category generated
  */
-export class IncorrectBuyerTokenAccountToStorePurchasedTokenError extends Error {
+export class IncorrectSeedsError extends Error {
   readonly code: number = 0x177b
-  readonly name: string = 'IncorrectBuyerTokenAccountToStorePurchasedToken'
+  readonly name: string = 'IncorrectSeeds'
+  constructor() {
+    super('Incorrect seeds')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, IncorrectSeedsError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x177b, () => new IncorrectSeedsError())
+createErrorFromNameLookup.set('IncorrectSeeds', () => new IncorrectSeedsError())
+
+/**
+ * IncorrectGovernanceName: 'You are not allowed to create a governance account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class IncorrectGovernanceNameError extends Error {
+  readonly code: number = 0x177c
+  readonly name: string = 'IncorrectGovernanceName'
+  constructor() {
+    super('You are not allowed to create a governance account')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, IncorrectGovernanceNameError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x177c, () => new IncorrectGovernanceNameError())
+createErrorFromNameLookup.set(
+  'IncorrectGovernanceName',
+  () => new IncorrectGovernanceNameError(),
+)
+
+/**
+ * IncorrectTokenProgram: 'You are providing a wrong token program'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class IncorrectTokenProgramError extends Error {
+  readonly code: number = 0x177d
+  readonly name: string = 'IncorrectTokenProgram'
+  constructor() {
+    super('You are providing a wrong token program')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, IncorrectTokenProgramError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x177d, () => new IncorrectTokenProgramError())
+createErrorFromNameLookup.set(
+  'IncorrectTokenProgram',
+  () => new IncorrectTokenProgramError(),
+)
+
+/**
+ * ConversionError: 'Failed to convert data'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class ConversionErrorError extends Error {
+  readonly code: number = 0x177e
+  readonly name: string = 'ConversionError'
+  constructor() {
+    super('Failed to convert data')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, ConversionErrorError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x177e, () => new ConversionErrorError())
+createErrorFromNameLookup.set(
+  'ConversionError',
+  () => new ConversionErrorError(),
+)
+
+/**
+ * TransferError: 'Transfer error'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class TransferErrorError extends Error {
+  readonly code: number = 0x177f
+  readonly name: string = 'TransferError'
+  constructor() {
+    super('Transfer error')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, TransferErrorError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x177f, () => new TransferErrorError())
+createErrorFromNameLookup.set('TransferError', () => new TransferErrorError())
+
+/**
+ * MintToError: 'Error during the mint_to CPI'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MintToErrorError extends Error {
+  readonly code: number = 0x1780
+  readonly name: string = 'MintToError'
+  constructor() {
+    super('Error during the mint_to CPI')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MintToErrorError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1780, () => new MintToErrorError())
+createErrorFromNameLookup.set('MintToError', () => new MintToErrorError())
+
+/**
+ * BurnError: 'Error during the burn CPI'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class BurnErrorError extends Error {
+  readonly code: number = 0x1781
+  readonly name: string = 'BurnError'
+  constructor() {
+    super('Error during the burn CPI')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, BurnErrorError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1781, () => new BurnErrorError())
+createErrorFromNameLookup.set('BurnError', () => new BurnErrorError())
+
+/**
+ * CloseAccountError: 'Error during the close account CPI'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CloseAccountErrorError extends Error {
+  readonly code: number = 0x1782
+  readonly name: string = 'CloseAccountError'
+  constructor() {
+    super('Error during the close account CPI')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CloseAccountErrorError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1782, () => new CloseAccountErrorError())
+createErrorFromNameLookup.set(
+  'CloseAccountError',
+  () => new CloseAccountErrorError(),
+)
+
+/**
+ * ClosedPromotion: 'Currently we do not offer any promotion'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class ClosedPromotionError extends Error {
+  readonly code: number = 0x1783
+  readonly name: string = 'ClosedPromotion'
+  constructor() {
+    super('Currently we do not offer any promotion')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, ClosedPromotionError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1783, () => new ClosedPromotionError())
+createErrorFromNameLookup.set(
+  'ClosedPromotion',
+  () => new ClosedPromotionError(),
+)
+
+/**
+ * OpenPromotion: 'Currently you can not withdraw the bonus because the promotion has not finished'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class OpenPromotionError extends Error {
+  readonly code: number = 0x1784
+  readonly name: string = 'OpenPromotion'
   constructor() {
     super(
-      'You are providing a wrong buyer token account, is where the access token will be received',
+      'Currently you can not withdraw the bonus because the promotion has not finished',
     )
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(
-        this,
-        IncorrectBuyerTokenAccountToStorePurchasedTokenError,
-      )
+      Error.captureStackTrace(this, OpenPromotionError)
     }
   }
 }
 
-createErrorFromCodeLookup.set(
-  0x177b,
-  () => new IncorrectBuyerTokenAccountToStorePurchasedTokenError(),
-)
-createErrorFromNameLookup.set(
-  'IncorrectBuyerTokenAccountToStorePurchasedToken',
-  () => new IncorrectBuyerTokenAccountToStorePurchasedTokenError(),
-)
-
-/**
- * IncorrectTokenAuthority: 'You are not the owner of this token account'
- *
- * @category Errors
- * @category generated
- */
-export class IncorrectTokenAuthorityError extends Error {
-  readonly code: number = 0x177c
-  readonly name: string = 'IncorrectTokenAuthority'
-  constructor() {
-    super('You are not the owner of this token account')
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, IncorrectTokenAuthorityError)
-    }
-  }
-}
-
-createErrorFromCodeLookup.set(0x177c, () => new IncorrectTokenAuthorityError())
-createErrorFromNameLookup.set(
-  'IncorrectTokenAuthority',
-  () => new IncorrectTokenAuthorityError(),
-)
-
-/**
- * IncorrectPaymentAuthority: 'You are not the owner of this payment account'
- *
- * @category Errors
- * @category generated
- */
-export class IncorrectPaymentAuthorityError extends Error {
-  readonly code: number = 0x177d
-  readonly name: string = 'IncorrectPaymentAuthority'
-  constructor() {
-    super('You are not the owner of this payment account')
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, IncorrectPaymentAuthorityError)
-    }
-  }
-}
-
-createErrorFromCodeLookup.set(
-  0x177d,
-  () => new IncorrectPaymentAuthorityError(),
-)
-createErrorFromNameLookup.set(
-  'IncorrectPaymentAuthority',
-  () => new IncorrectPaymentAuthorityError(),
-)
-
-/**
- * IncorrectPaymentVault: 'You are providing a worng payment vault'
- *
- * @category Errors
- * @category generated
- */
-export class IncorrectPaymentVaultError extends Error {
-  readonly code: number = 0x177e
-  readonly name: string = 'IncorrectPaymentVault'
-  constructor() {
-    super('You are providing a worng payment vault')
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, IncorrectPaymentVaultError)
-    }
-  }
-}
-
-createErrorFromCodeLookup.set(0x177e, () => new IncorrectPaymentVaultError())
-createErrorFromNameLookup.set(
-  'IncorrectPaymentVault',
-  () => new IncorrectPaymentVaultError(),
-)
-
-/**
- * IncorrectReceiverTokenAccount: 'You are providing an incorrect token account'
- *
- * @category Errors
- * @category generated
- */
-export class IncorrectReceiverTokenAccountError extends Error {
-  readonly code: number = 0x177f
-  readonly name: string = 'IncorrectReceiverTokenAccount'
-  constructor() {
-    super('You are providing an incorrect token account')
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, IncorrectReceiverTokenAccountError)
-    }
-  }
-}
-
-createErrorFromCodeLookup.set(
-  0x177f,
-  () => new IncorrectReceiverTokenAccountError(),
-)
-createErrorFromNameLookup.set(
-  'IncorrectReceiverTokenAccount',
-  () => new IncorrectReceiverTokenAccountError(),
-)
+createErrorFromCodeLookup.set(0x1784, () => new OpenPromotionError())
+createErrorFromNameLookup.set('OpenPromotion', () => new OpenPromotionError())
 
 /**
  * Attempts to resolve a custom program error from the provided error code.

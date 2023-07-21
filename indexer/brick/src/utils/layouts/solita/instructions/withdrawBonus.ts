@@ -11,59 +11,59 @@ import * as web3 from '@solana/web3.js'
 
 /**
  * @category Instructions
- * @category Refund
+ * @category WithdrawBonus
  * @category generated
  */
-export const refundStruct = new beet.BeetArgsStruct<{
+export const withdrawBonusStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number[] /* size: 8 */
 }>(
   [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
-  'RefundInstructionArgs',
+  'WithdrawBonusInstructionArgs',
 )
 /**
- * Accounts required by the _refund_ instruction
+ * Accounts required by the _withdrawBonus_ instruction
  *
- * @property [_writable_, **signer**] authority
- * @property [_writable_] token
- * @property [_writable_] tokenMint
+ * @property [_writable_, **signer**] signer
+ * @property [] governance
+ * @property [_writable_] bonus
+ * @property [] governanceMint
+ * @property [_writable_] governanceBonusVault
  * @property [_writable_] receiverVault
- * @property [_writable_] payment
- * @property [_writable_] paymentVault
- * @property [_writable_] buyerTokenVault
+ * @property [_writable_] bonusVault
  * @category Instructions
- * @category Refund
+ * @category WithdrawBonus
  * @category generated
  */
-export type RefundInstructionAccounts = {
+export type WithdrawBonusInstructionAccounts = {
   tokenProgram?: web3.PublicKey
-  authority: web3.PublicKey
-  token: web3.PublicKey
-  tokenMint: web3.PublicKey
+  signer: web3.PublicKey
+  governance: web3.PublicKey
+  bonus: web3.PublicKey
+  governanceMint: web3.PublicKey
+  governanceBonusVault: web3.PublicKey
   receiverVault: web3.PublicKey
-  payment: web3.PublicKey
-  paymentVault: web3.PublicKey
-  buyerTokenVault: web3.PublicKey
+  bonusVault: web3.PublicKey
   anchorRemainingAccounts?: web3.AccountMeta[]
 }
 
-export const refundInstructionDiscriminator = [2, 96, 183, 251, 63, 208, 46, 46]
+export const withdrawBonusInstructionDiscriminator = [
+  112, 110, 149, 206, 101, 110, 1, 232,
+]
 
 /**
- * Creates a _Refund_ instruction.
+ * Creates a _WithdrawBonus_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @category Instructions
- * @category Refund
+ * @category WithdrawBonus
  * @category generated
  */
-export function createRefundInstruction(
-  accounts: RefundInstructionAccounts,
-  programId = new web3.PublicKey(
-    'BrickarF2QeREBZsapbhgYPHJi5FYkJVnx7mZhxETCt5',
-  ),
+export function createWithdrawBonusInstruction(
+  accounts: WithdrawBonusInstructionAccounts,
+  programId = new web3.PublicKey('PROGRAM PUBKEY'),
 ) {
-  const [data] = refundStruct.serialize({
-    instructionDiscriminator: refundInstructionDiscriminator,
+  const [data] = withdrawBonusStruct.serialize({
+    instructionDiscriminator: withdrawBonusInstructionDiscriminator,
   })
   const keys: web3.AccountMeta[] = [
     {
@@ -72,17 +72,27 @@ export function createRefundInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.authority,
+      pubkey: accounts.signer,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: accounts.token,
+      pubkey: accounts.governance,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.bonus,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: accounts.tokenMint,
+      pubkey: accounts.governanceMint,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.governanceBonusVault,
       isWritable: true,
       isSigner: false,
     },
@@ -92,17 +102,7 @@ export function createRefundInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.payment,
-      isWritable: true,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.paymentVault,
-      isWritable: true,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.buyerTokenVault,
+      pubkey: accounts.bonusVault,
       isWritable: true,
       isSigner: false,
     },

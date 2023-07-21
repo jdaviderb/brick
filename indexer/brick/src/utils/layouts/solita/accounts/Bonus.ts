@@ -10,54 +10,52 @@ import * as beetSolana from '@metaplex-foundation/beet-solana'
 import * as beet from '@metaplex-foundation/beet'
 
 /**
- * Arguments used to create {@link App}
+ * Arguments used to create {@link Bonus}
  * @category Accounts
  * @category generated
  */
-export type AppArgs = {
+export type BonusArgs = {
   authority: web3.PublicKey
-  feeBasisPoints: number
   bump: number
-  appName: string
+  vaultBump: number
 }
 
-export const appDiscriminator = [67, 135, 84, 79, 153, 49, 239, 169]
+export const bonusDiscriminator = [198, 155, 31, 171, 113, 36, 189, 12]
 /**
- * Holds the data for the {@link App} Account and provides de/serialization
+ * Holds the data for the {@link Bonus} Account and provides de/serialization
  * functionality for that data
  *
  * @category Accounts
  * @category generated
  */
-export class App implements AppArgs {
+export class Bonus implements BonusArgs {
   private constructor(
     readonly authority: web3.PublicKey,
-    readonly feeBasisPoints: number,
     readonly bump: number,
-    readonly appName: string,
+    readonly vaultBump: number,
   ) {}
 
   /**
-   * Creates a {@link App} instance from the provided args.
+   * Creates a {@link Bonus} instance from the provided args.
    */
-  static fromArgs(args: AppArgs) {
-    return new App(args.authority, args.feeBasisPoints, args.bump, args.appName)
+  static fromArgs(args: BonusArgs) {
+    return new Bonus(args.authority, args.bump, args.vaultBump)
   }
 
   /**
-   * Deserializes the {@link App} from the data of the provided {@link web3.AccountInfo}.
+   * Deserializes the {@link Bonus} from the data of the provided {@link web3.AccountInfo}.
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static fromAccountInfo(
     accountInfo: web3.AccountInfo<Buffer>,
     offset = 0,
-  ): [App, number] {
-    return App.deserialize(accountInfo.data, offset)
+  ): [Bonus, number] {
+    return Bonus.deserialize(accountInfo.data, offset)
   }
 
   /**
    * Retrieves the account info from the provided address and deserializes
-   * the {@link App} from its data.
+   * the {@link Bonus} from its data.
    *
    * @throws Error if no account info is found at the address or if deserialization fails
    */
@@ -65,15 +63,15 @@ export class App implements AppArgs {
     connection: web3.Connection,
     address: web3.PublicKey,
     commitmentOrConfig?: web3.Commitment | web3.GetAccountInfoConfig,
-  ): Promise<App> {
+  ): Promise<Bonus> {
     const accountInfo = await connection.getAccountInfo(
       address,
       commitmentOrConfig,
     )
     if (accountInfo == null) {
-      throw new Error(`Unable to find App account at ${address}`)
+      throw new Error(`Unable to find Bonus account at ${address}`)
     }
-    return App.fromAccountInfo(accountInfo, 0)[0]
+    return Bonus.fromAccountInfo(accountInfo, 0)[0]
   }
 
   /**
@@ -83,76 +81,71 @@ export class App implements AppArgs {
    * @param programId - the program that owns the accounts we are filtering
    */
   static gpaBuilder(
-    programId: web3.PublicKey = new web3.PublicKey(
-      'BrickarF2QeREBZsapbhgYPHJi5FYkJVnx7mZhxETCt5',
-    ),
+    programId: web3.PublicKey = new web3.PublicKey('PROGRAM PUBKEY'),
   ) {
-    return beetSolana.GpaBuilder.fromStruct(programId, appBeet)
+    return beetSolana.GpaBuilder.fromStruct(programId, bonusBeet)
   }
 
   /**
-   * Deserializes the {@link App} from the provided data Buffer.
+   * Deserializes the {@link Bonus} from the provided data Buffer.
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
-  static deserialize(buf: Buffer, offset = 0): [App, number] {
-    return appBeet.deserialize(buf, offset)
+  static deserialize(buf: Buffer, offset = 0): [Bonus, number] {
+    return bonusBeet.deserialize(buf, offset)
   }
 
   /**
-   * Serializes the {@link App} into a Buffer.
+   * Serializes the {@link Bonus} into a Buffer.
    * @returns a tuple of the created Buffer and the offset up to which the buffer was written to store it.
    */
   serialize(): [Buffer, number] {
-    return appBeet.serialize({
-      accountDiscriminator: appDiscriminator,
+    return bonusBeet.serialize({
+      accountDiscriminator: bonusDiscriminator,
       ...this,
     })
   }
 
   /**
    * Returns the byteSize of a {@link Buffer} holding the serialized data of
-   * {@link App} for the provided args.
-   *
-   * @param args need to be provided since the byte size for this account
-   * depends on them
+   * {@link Bonus}
    */
-  static byteSize(args: AppArgs) {
-    const instance = App.fromArgs(args)
-    return appBeet.toFixedFromValue({
-      accountDiscriminator: appDiscriminator,
-      ...instance,
-    }).byteSize
+  static get byteSize() {
+    return bonusBeet.byteSize
   }
 
   /**
    * Fetches the minimum balance needed to exempt an account holding
-   * {@link App} data from rent
+   * {@link Bonus} data from rent
    *
-   * @param args need to be provided since the byte size for this account
-   * depends on them
    * @param connection used to retrieve the rent exemption information
    */
   static async getMinimumBalanceForRentExemption(
-    args: AppArgs,
     connection: web3.Connection,
     commitment?: web3.Commitment,
   ): Promise<number> {
     return connection.getMinimumBalanceForRentExemption(
-      App.byteSize(args),
+      Bonus.byteSize,
       commitment,
     )
   }
 
   /**
-   * Returns a readable version of {@link App} properties
+   * Determines if the provided {@link Buffer} has the correct byte size to
+   * hold {@link Bonus} data.
+   */
+  static hasCorrectByteSize(buf: Buffer, offset = 0) {
+    return buf.byteLength - offset === Bonus.byteSize
+  }
+
+  /**
+   * Returns a readable version of {@link Bonus} properties
    * and can be used to convert to JSON and/or logging
    */
   pretty() {
     return {
       authority: this.authority.toBase58(),
-      feeBasisPoints: this.feeBasisPoints,
       bump: this.bump,
-      appName: this.appName,
+      vaultBump: this.vaultBump,
     }
   }
 }
@@ -161,19 +154,18 @@ export class App implements AppArgs {
  * @category Accounts
  * @category generated
  */
-export const appBeet = new beet.FixableBeetStruct<
-  App,
-  AppArgs & {
+export const bonusBeet = new beet.BeetStruct<
+  Bonus,
+  BonusArgs & {
     accountDiscriminator: number[] /* size: 8 */
   }
 >(
   [
     ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['authority', beetSolana.publicKey],
-    ['feeBasisPoints', beet.u16],
     ['bump', beet.u8],
-    ['appName', beet.utf8String],
+    ['vaultBump', beet.u8],
   ],
-  App.fromArgs,
-  'App',
+  Bonus.fromArgs,
+  'Bonus',
 )

@@ -11,59 +11,59 @@ import * as web3 from '@solana/web3.js'
 
 /**
  * @category Instructions
- * @category UseToken
+ * @category InitBonus
  * @category generated
  */
-export const useTokenStruct = new beet.BeetArgsStruct<{
+export const initBonusStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number[] /* size: 8 */
 }>(
   [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
-  'UseTokenInstructionArgs',
+  'InitBonusInstructionArgs',
 )
 /**
- * Accounts required by the _useToken_ instruction
+ * Accounts required by the _initBonus_ instruction
  *
  * @property [] associatedTokenProgram
- * @property [_writable_, **signer**] authority
- * @property [_writable_] token
- * @property [_writable_] tokenMint
- * @property [_writable_] buyerTokenVault
+ * @property [_writable_, **signer**] signer
+ * @property [] governance
+ * @property [_writable_] bonus
+ * @property [_writable_] bonusVault
+ * @property [] governanceMint
  * @category Instructions
- * @category UseToken
+ * @category InitBonus
  * @category generated
  */
-export type UseTokenInstructionAccounts = {
+export type InitBonusInstructionAccounts = {
   systemProgram?: web3.PublicKey
   tokenProgram?: web3.PublicKey
   associatedTokenProgram: web3.PublicKey
   rent?: web3.PublicKey
-  authority: web3.PublicKey
-  token: web3.PublicKey
-  tokenMint: web3.PublicKey
-  buyerTokenVault: web3.PublicKey
+  signer: web3.PublicKey
+  governance: web3.PublicKey
+  bonus: web3.PublicKey
+  bonusVault: web3.PublicKey
+  governanceMint: web3.PublicKey
   anchorRemainingAccounts?: web3.AccountMeta[]
 }
 
-export const useTokenInstructionDiscriminator = [
-  149, 40, 199, 254, 83, 150, 43, 26,
+export const initBonusInstructionDiscriminator = [
+  234, 68, 252, 216, 66, 1, 25, 244,
 ]
 
 /**
- * Creates a _UseToken_ instruction.
+ * Creates a _InitBonus_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @category Instructions
- * @category UseToken
+ * @category InitBonus
  * @category generated
  */
-export function createUseTokenInstruction(
-  accounts: UseTokenInstructionAccounts,
-  programId = new web3.PublicKey(
-    'BrickarF2QeREBZsapbhgYPHJi5FYkJVnx7mZhxETCt5',
-  ),
+export function createInitBonusInstruction(
+  accounts: InitBonusInstructionAccounts,
+  programId = new web3.PublicKey('PROGRAM PUBKEY'),
 ) {
-  const [data] = useTokenStruct.serialize({
-    instructionDiscriminator: useTokenInstructionDiscriminator,
+  const [data] = initBonusStruct.serialize({
+    instructionDiscriminator: initBonusInstructionDiscriminator,
   })
   const keys: web3.AccountMeta[] = [
     {
@@ -87,23 +87,28 @@ export function createUseTokenInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.authority,
+      pubkey: accounts.signer,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: accounts.token,
+      pubkey: accounts.governance,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.bonus,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: accounts.tokenMint,
+      pubkey: accounts.bonusVault,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: accounts.buyerTokenVault,
-      isWritable: true,
+      pubkey: accounts.governanceMint,
+      isWritable: false,
       isSigner: false,
     },
   ]

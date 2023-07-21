@@ -10,60 +10,65 @@ import * as web3 from '@solana/web3.js'
 
 /**
  * @category Instructions
- * @category Deletetoken
+ * @category EditPaymentMint
  * @category generated
  */
-export const deletetokenStruct = new beet.BeetArgsStruct<{
+export const editPaymentMintStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number[] /* size: 8 */
 }>(
   [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
-  'DeletetokenInstructionArgs',
+  'EditPaymentMintInstructionArgs',
 )
 /**
- * Accounts required by the _deletetoken_ instruction
+ * Accounts required by the _editPaymentMint_ instruction
  *
- * @property [_writable_, **signer**] authority
- * @property [_writable_] token
+ * @property [_writable_, **signer**] productAuthority
+ * @property [_writable_] product
+ * @property [] paymentMint
  * @category Instructions
- * @category Deletetoken
+ * @category EditPaymentMint
  * @category generated
  */
-export type DeletetokenInstructionAccounts = {
-  authority: web3.PublicKey
-  token: web3.PublicKey
+export type EditPaymentMintInstructionAccounts = {
+  productAuthority: web3.PublicKey
+  product: web3.PublicKey
+  paymentMint: web3.PublicKey
   anchorRemainingAccounts?: web3.AccountMeta[]
 }
 
-export const deletetokenInstructionDiscriminator = [
-  144, 227, 92, 140, 137, 31, 96, 86,
+export const editPaymentMintInstructionDiscriminator = [
+  52, 180, 55, 241, 212, 97, 221, 173,
 ]
 
 /**
- * Creates a _Deletetoken_ instruction.
+ * Creates a _EditPaymentMint_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @category Instructions
- * @category Deletetoken
+ * @category EditPaymentMint
  * @category generated
  */
-export function createDeletetokenInstruction(
-  accounts: DeletetokenInstructionAccounts,
-  programId = new web3.PublicKey(
-    'BrickarF2QeREBZsapbhgYPHJi5FYkJVnx7mZhxETCt5',
-  ),
+export function createEditPaymentMintInstruction(
+  accounts: EditPaymentMintInstructionAccounts,
+  programId = new web3.PublicKey('PROGRAM PUBKEY'),
 ) {
-  const [data] = deletetokenStruct.serialize({
-    instructionDiscriminator: deletetokenInstructionDiscriminator,
+  const [data] = editPaymentMintStruct.serialize({
+    instructionDiscriminator: editPaymentMintInstructionDiscriminator,
   })
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.authority,
+      pubkey: accounts.productAuthority,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: accounts.token,
+      pubkey: accounts.product,
       isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.paymentMint,
+      isWritable: false,
       isSigner: false,
     },
   ]

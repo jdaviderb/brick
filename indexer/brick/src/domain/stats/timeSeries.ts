@@ -9,8 +9,8 @@ import {
   TimeSeriesStats,
 } from '@aleph-indexer/framework'
 import { EventDALIndex, EventStorage } from '../../dal/event.js'
+import { BrickEvent } from '../../utils/layouts/index.js'
 import { AccessTimeStats, BrickAccountStats } from '../../types.js'
-import { BrickEvent } from '../../utils/index.js'
 import statsAggregator from './statsAggregator.js'
 import accessAggregator from './timeSeriesAggregator.js'
 
@@ -47,6 +47,7 @@ export async function createAccountStats(
     statsStateDAL,
     statsTimeSeriesDAL,
   )
+
   return new AccountTimeSeriesStatsManager<BrickAccountStats>(
     {
       blockchainId,

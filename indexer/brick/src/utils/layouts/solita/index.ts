@@ -4,169 +4,188 @@ export * from './instructions/index.js'
 export * from './types/index.js'
 
 import {
-  App,
-  AppArgs,
-  Payment,
-  PaymentArgs,
-  TokenMetadata,
-  TokenMetadataArgs,
+  Bonus,
+  BonusArgs,
+  Governance,
+  GovernanceArgs,
+  Product,
+  ProductArgs,
 } from './accounts/index.js'
 
-import { SellerConfig, TransactionsInfo, Bumps } from './types/index.js'
+import {
+  CreateGovernanceParams,
+  CreateProductParams,
+  EditPointsParams,
+  SellerConfig,
+} from './types/index.js'
 
-export type CreateAppInstruction = {
+export type CreateGovernanceInstruction = {
   programId: PublicKey
   keys: AccountMeta[]
   data: Buffer
 }
 
-export const CreateAppAccounts = ['systemProgram', 'rent', 'authority', 'app']
-
-export type CreateTokenInstruction = {
-  programId: PublicKey
-  keys: AccountMeta[]
-  data: Buffer
-}
-
-export const CreateTokenAccounts = [
-  'metadataProgram',
+export const CreateGovernanceAccounts = [
   'systemProgram',
   'tokenProgram',
   'rent',
-  'authority',
-  'app',
-  'tokenMint',
-  'token',
-  'acceptedMint',
-  'tokenMetadata',
+  'governanceAuthority',
+  'governance',
+  'governanceMint',
+  'governanceBonusVault',
 ]
 
-export type EditTokenPriceInstruction = {
+export type CreateProductInstruction = {
   programId: PublicKey
   keys: AccountMeta[]
   data: Buffer
 }
 
-export const EditTokenPriceAccounts = ['authority', 'token']
+export const CreateProductAccounts = [
+  'systemProgram',
+  'rent',
+  'productAuthority',
+  'governance',
+  'product',
+  'paymentMint',
+]
 
-export type BuyTokenInstruction = {
+export type DeleteProductInstruction = {
   programId: PublicKey
   keys: AccountMeta[]
   data: Buffer
 }
 
-export const BuyTokenAccounts = [
+export const DeleteProductAccounts = ['productAuthority', 'product']
+
+export type EditPointsInstruction = {
+  programId: PublicKey
+  keys: AccountMeta[]
+  data: Buffer
+}
+
+export const EditPointsAccounts = ['governanceAuthority', 'governance']
+
+export type EditPaymentMintInstruction = {
+  programId: PublicKey
+  keys: AccountMeta[]
+  data: Buffer
+}
+
+export const EditPaymentMintAccounts = [
+  'productAuthority',
+  'product',
+  'paymentMint',
+]
+
+export type EditPriceInstruction = {
+  programId: PublicKey
+  keys: AccountMeta[]
+  data: Buffer
+}
+
+export const EditPriceAccounts = ['productAuthority', 'product']
+
+export type InitBonusInstruction = {
+  programId: PublicKey
+  keys: AccountMeta[]
+  data: Buffer
+}
+
+export const InitBonusAccounts = [
   'systemProgram',
   'tokenProgram',
   'associatedTokenProgram',
   'rent',
-  'clock',
-  'authority',
-  'token',
-  'tokenMint',
+  'signer',
+  'governance',
+  'bonus',
+  'bonusVault',
+  'governanceMint',
+]
+
+export type RegisterBuyInstruction = {
+  programId: PublicKey
+  keys: AccountMeta[]
+  data: Buffer
+}
+
+export const RegisterBuyAccounts = [
+  'systemProgram',
+  'messagesProgram',
+  'tokenProgram',
+  'rent',
+  'governanceAuthority',
+  'signer',
+  'governance',
+  'product',
+  'paymentMint',
+  'governanceMint',
   'buyerTransferVault',
-  'acceptedMint',
-  'payment',
-  'paymentVault',
-  'buyerTokenVault',
+  'productAuthorityTransferVault',
+  'governanceTransferVault',
 ]
 
-export type ShareTokenInstruction = {
+export type RegisterPromoBuyInstruction = {
   programId: PublicKey
   keys: AccountMeta[]
   data: Buffer
 }
 
-export const ShareTokenAccounts = [
+export const RegisterPromoBuyAccounts = [
   'systemProgram',
+  'messagesProgram',
   'tokenProgram',
-  'associatedTokenProgram',
   'rent',
-  'authority',
-  'token',
-  'tokenMint',
-  'receiver',
-  'receiverVault',
+  'governanceAuthority',
+  'signer',
+  'governance',
+  'product',
+  'governanceMint',
+  'buyerTransferVault',
+  'productAuthorityTransferVault',
+  'governanceTransferVault',
+  'governanceBonusVault',
+  'productAuthorityBonus',
+  'productAuthorityBonusVault',
+  'buyerBonus',
+  'buyerBonusVault',
 ]
 
-export type WithdrawFundsInstruction = {
+export type WithdrawBonusInstruction = {
   programId: PublicKey
   keys: AccountMeta[]
   data: Buffer
 }
 
-export const WithdrawFundsAccounts = [
+export const WithdrawBonusAccounts = [
   'tokenProgram',
-  'authority',
-  'app',
-  'appCreatorVault',
-  'token',
-  'tokenMint',
+  'signer',
+  'governance',
+  'bonus',
+  'governanceMint',
+  'governanceBonusVault',
   'receiverVault',
-  'buyer',
-  'payment',
-  'paymentVault',
+  'bonusVault',
 ]
-
-export type RefundInstruction = {
-  programId: PublicKey
-  keys: AccountMeta[]
-  data: Buffer
-}
-
-export const RefundAccounts = [
-  'tokenProgram',
-  'authority',
-  'token',
-  'tokenMint',
-  'receiverVault',
-  'payment',
-  'paymentVault',
-  'buyerTokenVault',
-]
-
-export type UseTokenInstruction = {
-  programId: PublicKey
-  keys: AccountMeta[]
-  data: Buffer
-}
-
-export const UseTokenAccounts = [
-  'systemProgram',
-  'tokenProgram',
-  'associatedTokenProgram',
-  'rent',
-  'authority',
-  'token',
-  'tokenMint',
-  'buyerTokenVault',
-]
-
-export type DeletetokenInstruction = {
-  programId: PublicKey
-  keys: AccountMeta[]
-  data: Buffer
-}
-
-export const DeletetokenAccounts = ['authority', 'token']
 
 export type ParsedInstructions =
-  | CreateAppInstruction
-  | CreateTokenInstruction
-  | EditTokenPriceInstruction
-  | BuyTokenInstruction
-  | ShareTokenInstruction
-  | WithdrawFundsInstruction
-  | RefundInstruction
-  | UseTokenInstruction
-  | DeletetokenInstruction
-export type ParsedAccounts = App | Payment | TokenMetadata
+  | CreateGovernanceInstruction
+  | CreateProductInstruction
+  | DeleteProductInstruction
+  | EditPointsInstruction
+  | EditPaymentMintInstruction
+  | EditPriceInstruction
+  | InitBonusInstruction
+  | RegisterBuyInstruction
+  | RegisterPromoBuyInstruction
+  | WithdrawBonusInstruction
+export type ParsedAccounts = Bonus | Governance | Product
 
-export type ParsedTokenMetadata = Omit<TokenMetadataArgs, 'offChainId2' | 'offChainMetadata'> & {
-  offChainId2: string,
-  offChainMetadata: string,
-}
+export type ParsedAccountsData = BonusArgs | GovernanceArgs | ProductArgs
 
-export type ParsedAccountsData = AppArgs | PaymentArgs | ParsedTokenMetadata
-
-export type ParsedTypes = SellerConfig | TransactionsInfo | Bumps
+export type ParsedTypes =
+  | CreateGovernanceParams
+  | CreateProductParams
+  | EditPointsParams
+  | SellerConfig
