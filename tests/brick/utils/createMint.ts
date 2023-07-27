@@ -4,10 +4,12 @@ import {
   MintLayout,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
+import { ConfirmOptions } from "@solana/web3.js";
 
 export const createMint = async (
   provider: AnchorProvider,
-  decimals = 5
+  confirmOptions: ConfirmOptions,
+  decimals = 0,
 ): Promise<web3.PublicKey> => {
   const tokenMint = new web3.Keypair();
   const lamportsForMint =
@@ -33,7 +35,8 @@ export const createMint = async (
           provider.wallet.publicKey
         )
       ),
-    [tokenMint]
+    [tokenMint],
+    confirmOptions
   );
   return tokenMint.publicKey;
 };

@@ -12,6 +12,9 @@ pub struct EditMarketplaceInfoParams {
     pub seller_reward: u16,
     pub buyer_reward: u16,
     pub rewards_enabled: bool,
+    pub allow_secondary: bool,
+    pub permissionless: bool,
+    pub fee_payer: FeePayer,
 }
 
 #[derive(Accounts)]
@@ -32,9 +35,6 @@ pub struct EditMarketplaceInfo<'info> {
     /// CHECK: no need to validate, marketplace auth is the unique wallet who can call this instruction
     pub reward_mint: Box<InterfaceAccount<'info, Mint>>,
     pub discount_mint: Box<InterfaceAccount<'info, Mint>>,
-    /// CHECK: no need to validate because is an ix that only marketplace auth can call, 
-    /// there are some cases when a user can set a "null" value and won't be an initialized account
-    pub reward_trigger_mint: AccountInfo<'info>,
 }
 
 pub fn handler<'info>(
@@ -45,10 +45,16 @@ pub fn handler<'info>(
         return Err(ErrorCode::IncorrectFee.into());
     }
 
+    (*ctx.accounts.marketplace).permission_config = PermissionConfig {
+        allow_secondary: params.allow_secondary,
+        permissionless: params.permissionless,
+        access_mint: ctx.accounts.marketplace.permission_config.access_mint,
+    };
     (*ctx.accounts.marketplace).fees_config = FeesConfig {
         discount_mint: ctx.accounts.discount_mint.key(),
         fee: params.fee,
         fee_reduction: params.fee_reduction,
+        fee_payer: params.fee_payer,
     };
     (*ctx.accounts.marketplace).rewards_config = RewardsConfig {
         reward_mint: ctx.accounts.reward_mint.key(),
@@ -56,7 +62,6 @@ pub fn handler<'info>(
         seller_reward: params.seller_reward,
         buyer_reward: params.buyer_reward,
         rewards_enabled: params.rewards_enabled,
-        reward_trigger_mint: ctx.accounts.reward_trigger_mint.key(),
     };
     
     Ok(())

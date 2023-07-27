@@ -1,4 +1,5 @@
 pub mod state;
+pub mod utils;
 pub mod errors;
 mod instructions;
 use {
@@ -11,6 +12,11 @@ declare_id!("brick5DMMWvdRZQU9tsnyeHBNsY9hbyH2NhFRH1wjkB");
 #[program]
 pub mod brick {
     use super::*;
+
+    /// airdrop a token that allows users to create products in a specific marketplace
+    pub fn accept_request(ctx: Context<AcceptRequest>) -> Result<()> {
+        accept_request::handler(ctx)
+    }
 
     /// seller can edit payment_mint and product_price
     pub fn edit_product_info(ctx: Context<EditProductInfo>, product_price: u64) -> Result<()> {
@@ -37,6 +43,11 @@ pub mod brick {
         init_product::handler(ctx, params)
     }
 
+    /// creates on chain request to get access to sell products in a specific marketplace
+    pub fn init_request(ctx: Context<InitRequest>) -> Result<()> {
+        init_request::handler(ctx)
+    }
+
     /// if a marketplace wants to change the reward mint, sellers and buyers have to create a new vault
     /// because there is only one PDA, reward is the authority of these vaults
     pub fn init_reward_vault(ctx: Context<InitRewardVault>) -> Result<()> {
@@ -49,13 +60,8 @@ pub mod brick {
     
     /// manages the transfers (buyer -> seller and fees to marketplace authority) 
     /// and buyers receive a token as a proof of payment (each product has its own tokenc)
-    pub fn register_buy(ctx: Context<RegisterBuy>) -> Result<()> {
-        register_buy::handler(ctx)
-    }
-
-    /// register_buy + sellers and buyers can receive token rewards for interacting with the smart contract 
-    pub fn register_reward_buy(ctx: Context<RegisterRewardBuy>) -> Result<()> {
-        register_reward_buy::handler(ctx)
+    pub fn register_buy(ctx: Context<RegisterBuy>, bump: u8, amount: u64) -> Result<()> {
+        register_buy::handler(ctx, bump, amount)
     }
 
     /// when promotion is ended users can withdraw the funds stored in the vaults and managed by the reward PFA

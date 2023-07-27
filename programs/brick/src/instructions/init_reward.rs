@@ -55,7 +55,7 @@ pub struct InitReward<'info> {
     pub reward_vault: Box<InterfaceAccount<'info, TokenAccount>>,
 }
 
-pub fn handler<'info>(ctx: Context<InitReward>,) -> Result<()> {
+pub fn handler<'info>(ctx: Context<InitReward>) -> Result<()> {
     let mut vaults: Vec<Pubkey> = Vec::with_capacity(Reward::VAULT_COUNT); 
     vaults.push(ctx.accounts.reward_vault.key());
 

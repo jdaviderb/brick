@@ -45,6 +45,7 @@ describe("brick", () => {
   let productMint: anchor.web3.PublicKey;
   let buyerTokenVault: anchor.web3.PublicKey;
   let mintBump: number;
+  let marketplaceSOLVault: [anchor.web3.PublicKey, number];
   let marketplaceVaults: [anchor.web3.PublicKey, number][] = [];
   let buyerVaults: [anchor.web3.PublicKey, number][] = [];
   let sellerVaults: [anchor.web3.PublicKey, number][] = [];
@@ -52,6 +53,7 @@ describe("brick", () => {
   let sellerRewardVaults: [anchor.web3.PublicKey, number][] = [];
   let buyerRewardVaults: [anchor.web3.PublicKey, number][] = [];
   let bountyVaults: [anchor.web3.PublicKey, number][] = [];
+  let accessVaults: [anchor.web3.PublicKey, number][] = [];
 
   // Program account addresses:
   let marketplacePubkey: anchor.web3.PublicKey;
@@ -67,7 +69,14 @@ describe("brick", () => {
   let sellerRewardMarketplace: number;
   let buyerRewardMarketplace: number;
   let rewardsEnabled: boolean;
-  let rewardTriggerMint: anchor.web3.PublicKey;
+  let allowSecondary: boolean;
+  let permissionless: boolean;
+  let accessMint: anchor.web3.PublicKey;
+  let accessMintBump: number;
+  const FeePayer = {
+    Buyer: { buyer: {} },
+    Seller: { seller: {} },
+  };
 
   // Product properties
   let productPrice: BN;
@@ -75,15 +84,7 @@ describe("brick", () => {
   let secondId: Buffer;
 
   it("Should create marketplace account", async () => {
-    rewardMint = discountMint = paymentMints[0] = await createMint(provider);
-
-    // If rewardTriggerMint == null_mint && rewardsEnabled == false -> NO REWARDS
-    // If rewardTriggerMint == null_mint && rewardsEnabled == true -> REWARDS (regardless of the payment mint)
-    // If rewardTriggerMint == mint && rewardsEnabled == true -> REWARDS only with specific rewardTriggerMint
-    [rewardTriggerMint] = anchor.web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("null", "utf-8")],
-      program.programId
-    );
+    rewardMint = discountMint = paymentMints[0] = await createMint(provider, confirmOptions);
 
     const balance = 1000;
     marketplaceAuth = await createFundedWallet(provider, balance);
@@ -107,24 +108,39 @@ describe("brick", () => {
     bountyVaults.push([bountyVault, 0])
 
     fee = feeReduction = sellerRewardMarketplace = buyerRewardMarketplace = 0;
-    rewardsEnabled = false;
+    rewardsEnabled = allowSecondary = false;
+    permissionless = true;
+
+    [accessMint, accessMintBump] = anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("access_mint", "utf-8"),
+        marketplacePubkey.toBuffer(),
+      ],
+      program.programId
+    );
 
     const initMarketplaceParams = {
       fee: fee,
       feeReduction: feeReduction,
       sellerReward: sellerRewardMarketplace,
       buyerReward: buyerRewardMarketplace,
-      rewardsEnabled: rewardsEnabled
+      deliverToken: false,
+      rewardsEnabled: rewardsEnabled,
+      allowSecondary: allowSecondary,
+      permissionless: permissionless,
+      accessMintBump: accessMintBump,
+      feePayer: FeePayer.Seller,
     };
     const initMarketplaceAccounts = {
       systemProgram: SystemProgram.programId,
       tokenProgramV0: TOKEN_PROGRAM_ID,
+      tokenProgram2022: TOKEN_2022_PROGRAM_ID,
       rent: SYSVAR_RENT_PUBKEY,
       signer: marketplaceAuth.publicKey,
       marketplace: marketplacePubkey,
+      accessMint: accessMint,
       rewardMint: rewardMint,
       discountMint: discountMint,
-      rewardTriggerMint: rewardTriggerMint,
       bountyVault: bountyVault,
     };
      
@@ -135,18 +151,24 @@ describe("brick", () => {
       .rpc(confirmOptions)
       .catch(console.error);
 
+    const solBalance = await provider.connection.getBalance(marketplaceAuth.publicKey, confirmOptions);
+    console.log('Crate marketplace cost: ' + (1000 - solBalance / anchor.web3.LAMPORTS_PER_SOL) + ' SOL');
+
     const marketplaceAccount = await program.account.marketplace.fetch(marketplacePubkey);
     assert.isDefined(marketplaceAccount);
     assert.equal(marketplaceAccount.authority.toString(), marketplaceAuth.publicKey.toString());
+    assert.equal(marketplaceAccount.permissionConfig.accessMint.toString(), accessMint.toString());
+    assert.equal(marketplaceAccount.permissionConfig.permissionless, permissionless);
+    assert.equal(marketplaceAccount.permissionConfig.allowSecondary, allowSecondary);
     assert.equal(marketplaceAccount.feesConfig.discountMint.toString(), discountMint.toString());
     assert.equal(marketplaceAccount.feesConfig.fee, fee);
     assert.equal(marketplaceAccount.feesConfig.feeReduction, feeReduction);
+    assert.equal(marketplaceAccount.feesConfig.feePayer.toString(), FeePayer.Seller.toString());
     assert.equal(marketplaceAccount.rewardsConfig.rewardMint.toString(), rewardMint.toString());
     assert.equal(marketplaceAccount.rewardsConfig.bountyVaults[0].toString(), bountyVaults[0][0].toString());
     assert.equal(marketplaceAccount.rewardsConfig.sellerReward, sellerRewardMarketplace);
     assert.equal(marketplaceAccount.rewardsConfig.buyerReward, buyerRewardMarketplace);
     assert.equal(marketplaceAccount.rewardsConfig.rewardsEnabled, rewardsEnabled);
-    assert.equal(marketplaceAccount.rewardsConfig.rewardTriggerMint.toString(), rewardTriggerMint.toString());
 
     /// marketplace pda is created with "marketpalce" and signer address, lets try to create the same pda
     /// another user cant create the previous marketplace and authority cant be changed
@@ -169,14 +191,17 @@ describe("brick", () => {
       feeReduction: 100,
       sellerReward: 100,
       buyerReward: 100,
-      rewardsEnabled: true
+      rewardsEnabled: !rewardsEnabled,
+      allowSecondary: !allowSecondary,
+      permissionless: !permissionless,
+      feePayer: FeePayer.Buyer,
     };
+
     const editMarketplaceInfoAccounts = {
       signer: marketplaceAuth.publicKey,
       marketplace: marketplacePubkey,
-      rewardMint: await createMint(provider),
-      discountMint: await createMint(provider),
-      rewardTriggerMint: await createMint(provider),
+      rewardMint: await createMint(provider, confirmOptions),
+      discountMint: await createMint(provider, confirmOptions),
     };
 
     await program.methods
@@ -189,15 +214,18 @@ describe("brick", () => {
     const changedMarketplaceAccount = await program.account.marketplace.fetch(marketplacePubkey);
     assert.isDefined(changedMarketplaceAccount);
     assert.equal(changedMarketplaceAccount.authority.toString(), marketplaceAuth.publicKey.toString());
+    assert.equal(changedMarketplaceAccount.permissionConfig.accessMint.toString(), accessMint.toString());
+    assert.equal(changedMarketplaceAccount.permissionConfig.permissionless, !permissionless);
+    assert.equal(changedMarketplaceAccount.permissionConfig.allowSecondary, !allowSecondary);
     assert.equal(changedMarketplaceAccount.feesConfig.discountMint.toString(), editMarketplaceInfoAccounts.discountMint.toString());
+    assert.equal(changedMarketplaceAccount.feesConfig.feePayer.toString(), FeePayer.Buyer.toString());
     assert.equal(changedMarketplaceAccount.feesConfig.fee, 100);
     assert.equal(changedMarketplaceAccount.feesConfig.feeReduction, 100);
     assert.equal(changedMarketplaceAccount.rewardsConfig.rewardMint.toString(), editMarketplaceInfoAccounts.rewardMint.toString());
     assert.equal(changedMarketplaceAccount.rewardsConfig.bountyVaults[0].toString(), bountyVaults[0][0].toString());
     assert.equal(changedMarketplaceAccount.rewardsConfig.sellerReward, 100);
     assert.equal(changedMarketplaceAccount.rewardsConfig.buyerReward, 100);
-    assert.equal(changedMarketplaceAccount.rewardsConfig.rewardsEnabled, true);
-    assert.equal(changedMarketplaceAccount.rewardsConfig.rewardTriggerMint.toString(), editMarketplaceInfoAccounts.rewardTriggerMint.toString());
+    assert.equal(changedMarketplaceAccount.rewardsConfig.rewardsEnabled, !rewardsEnabled);
 
     // another wallet tries to change product data
     const balance = 1000;
@@ -207,14 +235,16 @@ describe("brick", () => {
       feeReduction: feeReduction,
       sellerReward: sellerRewardMarketplace,
       buyerReward: buyerRewardMarketplace,
-      rewardsEnabled: rewardsEnabled
+      rewardsEnabled: rewardsEnabled,
+      allowSecondary: allowSecondary,
+      permissionless: permissionless,
+      feePayer: FeePayer.Seller,
     };
     const exploiterEditInfoAccounts = {
       signer: exploiter.publicKey,
       marketplace: marketplacePubkey,
       rewardMint: rewardMint,
       discountMint: discountMint,
-      rewardTriggerMint: rewardTriggerMint,
     };
 
     try {
@@ -228,23 +258,27 @@ describe("brick", () => {
       if (e as anchor.AnchorError)
         assert.equal(e.error.errorCode.code, "ConstraintSeeds");
     }
-
+  
     // to be able to re-use this account and its data, the account data will be the same that was before this unit test
+    const initMarketplaceParams = {
+      fee: fee,
+      feeReduction: feeReduction,
+      sellerReward: sellerRewardMarketplace,
+      buyerReward: buyerRewardMarketplace,
+      rewardsEnabled: rewardsEnabled,
+      allowSecondary: allowSecondary,
+      permissionless: permissionless,
+      feePayer: FeePayer.Seller,
+    };
+    const initMarketplaceAccounts = {
+      signer: marketplaceAuth.publicKey,
+      marketplace: marketplacePubkey,
+      rewardMint: rewardMint,
+      discountMint: discountMint,
+    };
     await program.methods
-      .editMarketplaceInfo({
-        fee: fee,
-        feeReduction: feeReduction,
-        sellerReward: sellerRewardMarketplace,
-        buyerReward: buyerRewardMarketplace,
-        rewardsEnabled: rewardsEnabled
-      })
-      .accounts({
-        signer: marketplaceAuth.publicKey,
-        marketplace: marketplacePubkey,
-        rewardMint: rewardMint,
-        discountMint: discountMint,
-        rewardTriggerMint: rewardTriggerMint,
-      })
+      .editMarketplaceInfo(initMarketplaceParams)
+      .accounts(initMarketplaceAccounts)
       .signers([marketplaceAuth])
       .rpc(confirmOptions)
       .catch(console.error);
@@ -252,7 +286,11 @@ describe("brick", () => {
     const marketplaceAccount = await program.account.marketplace.fetch(marketplacePubkey);
     assert.isDefined(marketplaceAccount);
     assert.equal(marketplaceAccount.authority.toString(), marketplaceAuth.publicKey.toString());
+    assert.equal(marketplaceAccount.permissionConfig.accessMint.toString(), accessMint.toString());
+    assert.equal(marketplaceAccount.permissionConfig.permissionless, permissionless);
+    assert.equal(marketplaceAccount.permissionConfig.allowSecondary, allowSecondary);
     assert.equal(marketplaceAccount.feesConfig.discountMint.toString(), discountMint.toString());
+    assert.equal(marketplaceAccount.feesConfig.feePayer.toString(), FeePayer.Seller.toString());
     assert.equal(marketplaceAccount.feesConfig.fee, fee);
     assert.equal(marketplaceAccount.feesConfig.feeReduction, feeReduction);
     assert.equal(marketplaceAccount.rewardsConfig.rewardMint.toString(), rewardMint.toString());
@@ -260,7 +298,6 @@ describe("brick", () => {
     assert.equal(marketplaceAccount.rewardsConfig.sellerReward, sellerRewardMarketplace);
     assert.equal(marketplaceAccount.rewardsConfig.buyerReward, buyerRewardMarketplace);
     assert.equal(marketplaceAccount.rewardsConfig.rewardsEnabled, rewardsEnabled);
-    assert.equal(marketplaceAccount.rewardsConfig.rewardTriggerMint.toString(), rewardTriggerMint.toString());
   });
 
   it("Should create a product account", async () => {
@@ -286,7 +323,7 @@ describe("brick", () => {
       ],
       program.programId
     );
-    productPrice = new BN(100);
+    productPrice = new BN(10000);
 
     const initProductParams = {
       firstId: [...firstId],
@@ -302,7 +339,9 @@ describe("brick", () => {
       marketplace: marketplacePubkey,
       product: productPubkey,
       productMint: productMint,
-      paymentMint: paymentMints[0]
+      paymentMint: paymentMints[0],
+      accessMint: null,
+      accessVault: null,
     };
 
     await program.methods
@@ -311,6 +350,9 @@ describe("brick", () => {
       .signers([seller])
       .rpc(confirmOptions)
       .catch(console.error);
+
+    const solBalance = await provider.connection.getBalance(seller.publicKey, confirmOptions);
+    console.log('Crate product cost: ' + (1000 - solBalance / anchor.web3.LAMPORTS_PER_SOL) + ' SOL');
 
     const productAccount = await program.account.product.fetch(productPubkey);
     assert.isDefined(productAccount);
@@ -370,8 +412,9 @@ describe("brick", () => {
     }
   });
 */
+
   it("Should edit product data", async () => {
-    const newPaymentMintPubkey = await createMint(provider);
+    const newPaymentMintPubkey = await createMint(provider, confirmOptions);
     const newPrice = new BN(88);
 
     const editProductInfoAccounts = {
@@ -425,11 +468,11 @@ describe("brick", () => {
     assert.equal(Number(productAccount.sellerConfig.productPrice), Number(productPrice));
   });
 
-  it("Should register a buy (no fees)", async () => {
+  it("Should register a buy no fees two amounts", async () => {
     const buyerSOLBalance = 1000;
     buyer = await createFundedWallet(provider, buyerSOLBalance);
 
-    const vaultBalances = 1000000;
+    const vaultBalances = 1000000000;
     marketplaceVaults.push([
       await createFundedAssociatedTokenAccount(
         provider,
@@ -457,42 +500,49 @@ describe("brick", () => {
       ),
       vaultBalances
     ]);
-    
-    const buyerTokenVaultAccount = await getOrCreateAssociatedTokenAccount(
-      provider.connection,
-      buyer as anchor.web3.Signer,
-      productMint,
-      buyer.publicKey,
-      false,
-      "confirmed",
-      confirmOptions,
-      TOKEN_2022_PROGRAM_ID,
+  
+    const [paymentPubkey, bump] = anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("payment", "utf-8"), 
+        buyer.publicKey.toBuffer(), 
+        productPubkey.toBuffer(),
+      ],
+      program.programId
     );
-    buyerTokenVault = buyerTokenVaultAccount.address;
-    
+
     const registerBuyAccounts = {
       systemProgram: SystemProgram.programId,
       tokenProgramV0: TOKEN_PROGRAM_ID,
-      tokenProgram22: TOKEN_2022_PROGRAM_ID,
-      associatedTokenProgram: ASSOCIATED_PROGRAM_ID,
+      tokenProgram2022: TOKEN_2022_PROGRAM_ID,
       rent: SYSVAR_RENT_PUBKEY,
       signer: buyer.publicKey,
+      seller: null,
+      marketplaceAuth: null,
       marketplace: marketplacePubkey,
       product: productPubkey,
-      productMint: productMint,
+      payment: paymentPubkey,
+      productMint: null,
       paymentMint: paymentMints[0],
-      buyerTokenVault: buyerTokenVault,
+      buyerTokenVault: null,
       buyerTransferVault: buyerVaults[0][0],
       sellerTransferVault: sellerVaults[0][0],
       marketplaceTransferVault: marketplaceVaults[0][0],
+      bountyVault: null,
+      sellerReward: null,
+      sellerRewardVault: null,
+      buyerReward: null,
+      buyerRewardVault: null,
     };
 
     await program.methods
-      .registerBuy()
+      .registerBuy(bump, new BN(2))
       .accounts(registerBuyAccounts)
       .signers([buyer])
       .rpc(confirmOptions)
       .catch(console.error);
+
+    const solBalance = await provider.connection.getBalance(buyer.publicKey, confirmOptions);
+    console.log('Purchase a product costs without mint: ' + (1000 - solBalance / anchor.web3.LAMPORTS_PER_SOL) + ' SOL');
 
     const buyerVaultAccount = await getOrCreateAssociatedTokenAccount(
       provider.connection,
@@ -504,7 +554,7 @@ describe("brick", () => {
       confirmOptions,
       TOKEN_PROGRAM_ID,
     );
-    buyerVaults[0][1] = vaultBalances - Number(productPrice);
+    buyerVaults[0][1] = vaultBalances - 2 * Number(productPrice);
     assert.equal(Number(buyerVaultAccount.amount), buyerVaults[0][1]);
     
     const sellerVaultAccount = await getOrCreateAssociatedTokenAccount(
@@ -517,10 +567,11 @@ describe("brick", () => {
       confirmOptions,
       TOKEN_PROGRAM_ID,
     );
-    sellerVaults[0][1] = vaultBalances + Number(productPrice);
+    sellerVaults[0][1] = vaultBalances + 2 * Number(productPrice);
     assert.equal(Number(sellerVaultAccount.amount), sellerVaults[0][1]);
   });
 
+  /*
   it("Buyer can not transfer the product token", async () => {
     const sellerTokenVaultAccount = await getOrCreateAssociatedTokenAccount(
       provider.connection,
@@ -554,6 +605,7 @@ describe("brick", () => {
       assert.isTrue(e.toString().includes("0x25"));
     }
   });
+  */
 
   it("Should register a buy (with fees)", async () => {
     [fee, feeReduction, sellerRewardMarketplace, buyerRewardMarketplace] = [100, 0, 0, 0];
@@ -562,14 +614,16 @@ describe("brick", () => {
       feeReduction: feeReduction,
       sellerReward: sellerRewardMarketplace,
       buyerReward: buyerRewardMarketplace,
-      rewardsEnabled: false
+      rewardsEnabled: rewardsEnabled,
+      allowSecondary: allowSecondary,
+      permissionless: permissionless,
+      feePayer: FeePayer.Seller,
     };
     const editMarketplaceInfoAccounts = {
       signer: marketplaceAuth.publicKey,
       marketplace: marketplacePubkey,
       rewardMint: rewardMint,
       discountMint: discountMint,
-      rewardTriggerMint: rewardTriggerMint,
     };
 
     await program.methods
@@ -579,25 +633,41 @@ describe("brick", () => {
       .rpc()
       .catch(console.error);
 
+    const [paymentPubkey, bump] = anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("payment", "utf-8"), 
+        buyer.publicKey.toBuffer(), 
+        productPubkey.toBuffer(),
+      ],
+      program.programId
+    );
+
     const registerBuyAccounts = {
       systemProgram: SystemProgram.programId,
       tokenProgramV0: TOKEN_PROGRAM_ID,
-      tokenProgram22: TOKEN_2022_PROGRAM_ID,
+      tokenProgram2022: TOKEN_2022_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_PROGRAM_ID,
       rent: SYSVAR_RENT_PUBKEY,
       signer: buyer.publicKey,
+      seller: null,
+      marketplaceAuth: null,
       marketplace: marketplacePubkey,
       product: productPubkey,
-      productMint: productMint,
+      payment: paymentPubkey,
+      productMint: null,
       paymentMint: paymentMints[0],
-      buyerTokenVault: buyerTokenVault,
+      buyerTokenVault: null,
       buyerTransferVault: buyerVaults[0][0],
       sellerTransferVault: sellerVaults[0][0],
       marketplaceTransferVault: marketplaceVaults[0][0],
+      bountyVault: null,
+      sellerReward: null,
+      sellerRewardVault: null,
+      buyerReward: null,
+      buyerRewardVault: null,
     };
-
     await program.methods
-      .registerBuy()
+      .registerBuy(bump, new BN(1))
       .accounts(registerBuyAccounts)
       .signers([buyer])
       .rpc(confirmOptions)
@@ -652,14 +722,16 @@ describe("brick", () => {
       feeReduction: feeReduction,
       sellerReward: sellerRewardMarketplace,
       buyerReward: buyerRewardMarketplace,
-      rewardsEnabled: false
+      rewardsEnabled: rewardsEnabled,
+      allowSecondary: allowSecondary,
+      permissionless: permissionless,
+      feePayer: FeePayer.Seller,
     };
     const editMarketplaceInfoAccounts = {
       signer: marketplaceAuth.publicKey,
       marketplace: marketplacePubkey,
       rewardMint: rewardMint,
       discountMint: discountMint,
-      rewardTriggerMint: rewardTriggerMint,
     };
 
     await program.methods
@@ -669,30 +741,47 @@ describe("brick", () => {
       .rpc()
       .catch(console.error);
 
+    const [paymentPubkey, bump] = anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("payment", "utf-8"), 
+        buyer.publicKey.toBuffer(), 
+        productPubkey.toBuffer(),
+      ],
+      program.programId
+    );
+
     const registerBuyAccounts = {
       systemProgram: SystemProgram.programId,
       tokenProgramV0: TOKEN_PROGRAM_ID,
-      tokenProgram22: TOKEN_2022_PROGRAM_ID,
+      tokenProgram2022: TOKEN_2022_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_PROGRAM_ID,
       rent: SYSVAR_RENT_PUBKEY,
       signer: buyer.publicKey,
+      seller: null,
+      marketplaceAuth: null,
       marketplace: marketplacePubkey,
       product: productPubkey,
-      productMint: productMint,
+      payment: paymentPubkey,
+      productMint: null,
       paymentMint: paymentMints[0],
-      buyerTokenVault: buyerTokenVault,
+      buyerTokenVault: null,
       buyerTransferVault: buyerVaults[0][0],
       sellerTransferVault: sellerVaults[0][0],
       marketplaceTransferVault: marketplaceVaults[0][0],
+      bountyVault: null,
+      sellerReward: null,
+      sellerRewardVault: null,
+      buyerReward: null,
+      buyerRewardVault: null,
     };
 
     await program.methods
-      .registerBuy()
+      .registerBuy(bump, new BN(1))
       .accounts(registerBuyAccounts)
       .signers([buyer])
       .rpc(confirmOptions)
       .catch(console.error);
-    
+
     const marketAuthTransferVaultAccount = await getOrCreateAssociatedTokenAccount(
       provider.connection,
       marketplaceAuth as anchor.web3.Signer,
@@ -706,7 +795,7 @@ describe("brick", () => {
     const marketplaceFee = Math.floor((Number(productPrice) * (fee - feeReduction)) / 10000);
     marketplaceVaults[0][1] = marketplaceVaults[0][1] + marketplaceFee;
     assert.equal(Number(marketAuthTransferVaultAccount.amount), marketplaceVaults[0][1]);
-    
+
     const buyerVaultAccount = await getOrCreateAssociatedTokenAccount(
       provider.connection,
       buyer as anchor.web3.Signer,
@@ -736,7 +825,8 @@ describe("brick", () => {
 
   it("Should register a buy during promo time, users can withdraw bonus when that promo is finished (not when still active)", async () => {
     // fill the token account controlled by the program to send the rewards
-    bountyVaults[0][1] == 500;
+    bountyVaults[0][1] = 1000000;
+    marketplaceVaults[0][1] = marketplaceVaults[0][1] - 1000000;
     await provider.sendAndConfirm(
       new Transaction()
         .add(
@@ -750,20 +840,22 @@ describe("brick", () => {
       [marketplaceAuth as anchor.web3.Signer]
     );
     [fee, feeReduction, sellerRewardMarketplace, buyerRewardMarketplace] = [100, 20, 20, 20];
-
+    rewardsEnabled = true;
     const editMarketplaceInfoParams = {
       fee: fee,
       feeReduction: feeReduction,
       sellerReward: sellerRewardMarketplace,
       buyerReward: buyerRewardMarketplace,
-      rewardsEnabled: true
+      rewardsEnabled: rewardsEnabled,
+      allowSecondary: allowSecondary,
+      permissionless: permissionless,
+      feePayer: FeePayer.Seller,
     };
     const editMarketplaceInfoAccounts = {
       signer: marketplaceAuth.publicKey,
       marketplace: marketplacePubkey,
       rewardMint: rewardMint,
       discountMint: discountMint,
-      rewardTriggerMint: rewardTriggerMint,
     };
 
     await program.methods
@@ -858,19 +950,30 @@ describe("brick", () => {
     assert.equal(buyerRewardAccount.marketplace.toString(), marketplacePubkey.toString());
     assert.equal(buyerRewardAccount.rewardVaults[0].toString(), buyerRewardVault.toString());
 
+    const [paymentPubkey, bump] = anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("payment", "utf-8"), 
+        buyer.publicKey.toBuffer(), 
+        productPubkey.toBuffer(),
+      ],
+      program.programId
+    );
     const registerRewardBuyAccounts = {
       systemProgram: SystemProgram.programId,
       tokenProgramV0: TOKEN_PROGRAM_ID,
-      tokenProgram22: TOKEN_2022_PROGRAM_ID,
+      tokenProgram2022: TOKEN_2022_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_PROGRAM_ID,
       rent: SYSVAR_RENT_PUBKEY,
       signer: buyer.publicKey,
+      seller: null,
+      marketplaceAuth: null,
       marketplace: marketplacePubkey,
       product: productPubkey,
-      productMint: productMint,
+      payment: paymentPubkey,
+      productMint: null,
       paymentMint: paymentMints[0],
       rewardMint: rewardMint,
-      buyerTokenVault: buyerTokenVault,
+      buyerTokenVault: null,
       buyerTransferVault: buyerVaults[0][0],
       sellerTransferVault: sellerVaults[0][0],
       marketplaceTransferVault: marketplaceVaults[0][0],
@@ -882,7 +985,7 @@ describe("brick", () => {
     };
 
     await program.methods
-      .registerRewardBuy()
+      .registerBuy(bump, new BN(1))
       .accounts(registerRewardBuyAccounts)
       .signers([buyer])
       .rpc(confirmOptions)
@@ -918,19 +1021,22 @@ describe("brick", () => {
     }
 
     // promo is finished with rewardsEnable = false
+    rewardsEnabled = false;
     const changeMarketplaceInfoParams = {
       fee: fee,
       feeReduction: feeReduction,
       sellerReward: sellerRewardMarketplace,
       buyerReward: buyerRewardMarketplace,
-      rewardsEnabled: false
+      rewardsEnabled: rewardsEnabled,
+      allowSecondary: allowSecondary,
+      permissionless: permissionless,
+      feePayer: FeePayer.Seller,
     };
     const changeMarketplaceInfoAccounts = {
       signer: marketplaceAuth.publicKey,
       marketplace: marketplacePubkey,
       rewardMint: rewardMint,
       discountMint: discountMint,
-      rewardTriggerMint: rewardTriggerMint,
     };
 
     await program.methods
@@ -1032,4 +1138,180 @@ describe("brick", () => {
     assert.equal(Number(buyerTokenTransferVaultAccount.amount), buyerVaults[0][1]);    
     assert.equal(Number(sellerTokenVaultAccount.amount), sellerVaults[0][1]);
   });
+
+  it("Should make the marketplace token-gated", async () => {
+    const editMarketplaceInfoParams = {
+      fee: 0,
+      feeReduction: 0,
+      sellerReward: 0,
+      buyerReward: 0,
+      rewardsEnabled: false,
+      allowSecondary: false,
+      permissionless: false,
+      feePayer: FeePayer.Buyer,
+    };
+
+    const editMarketplaceInfoAccounts = {
+      signer: marketplaceAuth.publicKey,
+      marketplace: marketplacePubkey,
+      rewardMint: await createMint(provider, confirmOptions),
+      discountMint: await createMint(provider, confirmOptions),
+    };
+
+    await program.methods
+      .editMarketplaceInfo(editMarketplaceInfoParams)
+      .accounts(editMarketplaceInfoAccounts)
+      .signers([marketplaceAuth])
+      .rpc()
+      .catch(console.error);
+
+    const receiverVault = getAssociatedTokenAddressSync(accessMint, seller.publicKey, false, TOKEN_2022_PROGRAM_ID);
+    const [request] = anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("request", "utf-8"),
+        seller.publicKey.toBuffer(),
+        marketplacePubkey.toBuffer()
+      ],
+      program.programId
+    );
+    const initRequestAccounts = {
+      systemProgram: SystemProgram.programId,
+      rent: SYSVAR_RENT_PUBKEY,
+      signer: seller.publicKey,
+      marketplace: marketplacePubkey,
+      request: request,
+    };
+    await program.methods
+      .initRequest()
+      .accounts(initRequestAccounts)
+      .signers([seller])
+      .rpc()
+      .catch(console.error);
+
+    const acceptRequestAccounts = {
+      systemProgram: SystemProgram.programId,
+      tokenProgram2022: TOKEN_2022_PROGRAM_ID,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      rent: SYSVAR_RENT_PUBKEY,
+      signer: marketplaceAuth.publicKey,
+      receiver: seller.publicKey,
+      marketplace: marketplacePubkey,
+      request: request,
+      accessMint: accessMint,
+      receiverVault: receiverVault,
+    };
+
+    await program.methods
+      .acceptRequest()
+      .accounts(acceptRequestAccounts)
+      .signers([marketplaceAuth])
+      .rpc()
+      .catch(console.error);
+
+    [firstId, secondId] = getSplitId(uuid());
+    const balance = 1000;
+    seller = await createFundedWallet(provider, balance);
+    [productPubkey] = anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("product", "utf-8"), 
+        firstId, 
+        secondId,
+        marketplacePubkey.toBuffer()
+      ],
+      program.programId
+    );
+    [productMint, mintBump] = anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("product_mint", "utf-8"), 
+        firstId, 
+        secondId,
+        marketplacePubkey.toBuffer()
+      ],
+      program.programId
+    );
+    productPrice = new BN(100);
+    const initProductParams = {
+      firstId: [...firstId],
+      secondId: [...secondId],
+      productPrice: productPrice,
+      mintBump: mintBump,
+    };
+    const initProductAccounts = {
+      systemProgram: SystemProgram.programId,
+      tokenProgram2022: TOKEN_2022_PROGRAM_ID,
+      rent: SYSVAR_RENT_PUBKEY,
+      signer: seller.publicKey,
+      marketplace: marketplacePubkey,
+      product: productPubkey,
+      productMint: productMint,
+      paymentMint: paymentMints[0],
+      accessMint: accessMint,
+      accessVault: receiverVault,
+    };
+    await program.methods
+      .initProduct(initProductParams)
+      .accounts(initProductAccounts)
+      .signers([seller])
+      .rpc()
+      .catch(console.error);
+
+    [firstId, secondId] = getSplitId(uuid());
+    [productPubkey] = anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("product", "utf-8"), 
+        firstId, 
+        secondId,
+        marketplacePubkey.toBuffer()
+      ],
+      program.programId
+    );
+    [productMint, mintBump] = anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("product_mint", "utf-8"), 
+        firstId, 
+        secondId,
+        marketplacePubkey.toBuffer()
+      ],
+      program.programId
+    );
+    productPrice = new BN(100);
+    const buyerVault = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      buyer as anchor.web3.Signer,
+      accessMint,
+      buyer.publicKey,
+      false,
+      "confirmed",
+      confirmOptions,
+      TOKEN_2022_PROGRAM_ID,
+    );
+    const initErrorProductParams = {
+      firstId: [...firstId],
+      secondId: [...secondId],
+      productPrice: productPrice,
+      mintBump: mintBump,
+    };
+    const initErrorProductAccounts = {
+      systemProgram: SystemProgram.programId,
+      tokenProgram2022: TOKEN_2022_PROGRAM_ID,
+      rent: SYSVAR_RENT_PUBKEY,
+      signer: buyer.publicKey,
+      marketplace: marketplacePubkey,
+      product: productPubkey,
+      productMint: productMint,
+      paymentMint: paymentMints[0],
+      accessMint: accessMint,
+      accessVault: buyerVault.address,
+    };
+    try {
+      await program.methods
+        .initProduct(initErrorProductParams)
+        .accounts(initErrorProductAccounts)
+        .signers([buyer])
+        .rpc();
+    } catch (e) {
+      if (e as anchor.AnchorError)
+        assert.equal(e.error.errorCode.code, "NotInWithelist");
+    }
+  });    
 })

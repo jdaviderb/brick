@@ -1,25 +1,20 @@
 use {
     crate::state::*,
     crate::errors::ErrorCode,
+    crate::utils::init_mint,
     anchor_lang::{
         prelude::*,
-        system_program::{System, CreateAccount, create_account},
-        solana_program::program::invoke_signed,
+        system_program::System,
     },
     anchor_spl::{
         token_interface::{
             TokenInterface,
-            Mint, 
-            InitializeMint, 
-            initialize_mint,
+            Mint,
+            TokenAccount
         },
         token_2022::ID as TokenProgram2022,
     },
-    spl_token_2022::{
-        extension::ExtensionType,
-        state::Mint as Mint2022,
-        instruction::initialize_non_transferable_mint
-    },
+    spl_token_2022::extension::ExtensionType,
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
@@ -74,9 +69,33 @@ pub struct InitProduct<'info> {
     )]    
     pub product_mint: AccountInfo<'info>,
     pub payment_mint: Box<InterfaceAccount<'info, Mint>>,
+    #[account(
+        mut,
+        seeds = [
+            b"access_mint".as_ref(),
+            marketplace.key().as_ref(),
+        ],
+        bump = marketplace.bumps.access_mint_bump,
+    )]    
+    pub access_mint: Option<Box<InterfaceAccount<'info, Mint>>>,
+    /// CHECK: validated in the instruction logic
+    #[account(mut)]    
+    pub access_vault: Option<Box<InterfaceAccount<'info, TokenAccount>>>,
 }
 
 pub fn handler<'info>(ctx: Context<InitProduct>, params: InitProductParams) -> Result<()> {
+    if !ctx.accounts.marketplace.permission_config.permissionless {
+        let access_vault = ctx.accounts.access_vault.as_ref()
+            .ok_or(ErrorCode::OptionalAccountNotProvided)?;
+    
+        if access_vault.mint != ctx.accounts.marketplace.permission_config.access_mint {
+            return Err(ErrorCode::IncorrectATA.into());
+        }
+        if access_vault.amount == 0 {
+            return Err(ErrorCode::NotInWithelist.into());
+        }
+    }
+    
     let marketplace_key = ctx.accounts.marketplace.key();
 
     (*ctx.accounts.product).authority = ctx.accounts.signer.key();
@@ -94,14 +113,13 @@ pub fn handler<'info>(ctx: Context<InitProduct>, params: InitProductParams) -> R
         mint_bump: params.mint_bump,
     };
 
+    // validate product_mint pda
     let mint_seeds = &[
         b"product_mint".as_ref(),
         ctx.accounts.product.first_id.as_ref(),
         ctx.accounts.product.second_id.as_ref(),
         marketplace_key.as_ref(),
     ];
-
-    // validate product_mint pda
     let (account_address, nonce) = Pubkey::find_program_address(mint_seeds, &ctx.program_id.key());
     if account_address != ctx.accounts.product_mint.key() {
         msg!(
@@ -110,41 +128,11 @@ pub fn handler<'info>(ctx: Context<InitProduct>, params: InitProductParams) -> R
             account_address,
         );
         return Err(ErrorCode::IncorrectSeeds.into());
-    } else {
-        msg!("Both addresses match");
     }
 
     let mut signer_mint_seeds = mint_seeds.to_vec();
     let bump = &[nonce];
     signer_mint_seeds.push(bump);
-
-    // create the mint with the non transferable extension:
-    let space = ExtensionType::get_account_len::<Mint2022>(&[ExtensionType::NonTransferable]);
-    create_account(
-        CpiContext::new_with_signer(
-            ctx.accounts.system_program.to_account_info(),
-            CreateAccount { 
-                from: ctx.accounts.signer.to_account_info(), 
-                to: ctx.accounts.product_mint.to_account_info()
-            },
-            &[&signer_mint_seeds[..]],
-        ),
-        ctx.accounts.rent.minimum_balance(space), 
-        space as u64, 
-        &ctx.accounts.token_program_2022.key()
-    )?;
-
-    invoke_signed(
-        &initialize_non_transferable_mint(
-            &ctx.accounts.token_program_2022.key(), 
-            &ctx.accounts.product_mint.key()
-        )?,
-        &[
-            ctx.accounts.product.to_account_info().clone(),
-            ctx.accounts.product_mint.to_account_info().clone()
-        ],
-        &[&signer_mint_seeds[..]],
-    )?;
 
     let product_seeds = &[
         b"product".as_ref(),
@@ -152,18 +140,23 @@ pub fn handler<'info>(ctx: Context<InitProduct>, params: InitProductParams) -> R
         &[ctx.accounts.product.bumps.bump],
     ];
 
-    initialize_mint(
-        CpiContext::new_with_signer(
-            ctx.accounts.token_program_2022.to_account_info(),
-            InitializeMint {
-                mint: ctx.accounts.product_mint.to_account_info(),
-                rent: ctx.accounts.rent.to_account_info(),
-            },
-            &[&signer_mint_seeds[..], &product_seeds[..]],
-        ),
-        0, 
-        &ctx.accounts.product.key(), 
-        None
+    let extensions = if ctx.accounts.marketplace.permission_config.allow_secondary {
+        vec![]
+    } else {
+        vec![ExtensionType::NonTransferable]
+    };
+
+    init_mint(
+        signer_mint_seeds,
+        product_seeds.to_vec(),
+        extensions,
+        ctx.accounts.system_program.to_account_info(),
+        ctx.accounts.token_program_2022.to_account_info(),
+        ctx.accounts.rent.to_account_info(),
+        ctx.accounts.product_mint.to_account_info(),
+        ctx.accounts.product.to_account_info(),
+        ctx.accounts.signer.to_account_info(),
+        ctx.accounts.rent.clone(),
     )?;
 
     Ok(())
