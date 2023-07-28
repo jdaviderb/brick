@@ -14,7 +14,7 @@ use {
         token::{transfer, Transfer, ID as TokenProgramV0},
         token_2022::{mint_to, ID as TokenProgram2022},
     },
-    spl_token_2022::native_mint::ID as NativeMint
+    spl_token::native_mint::ID as NativeMint
 };
 
 #[derive(Accounts)]
@@ -102,7 +102,7 @@ pub struct RegisterBuy<'info> {
         constraint = buyer_transfer_vault.mint == product.seller_config.payment_mint.key()
             @ ErrorCode::IncorrectATA,
     )]
-    pub buyer_transfer_vault: InterfaceAccount<'info, TokenAccount>,
+    pub buyer_transfer_vault: Option<Box<InterfaceAccount<'info, TokenAccount>>>,
     #[account(
         mut,
         constraint = seller_transfer_vault.owner == product.authority 
@@ -110,7 +110,7 @@ pub struct RegisterBuy<'info> {
         constraint = seller_transfer_vault.mint == product.seller_config.payment_mint.key()
             @ ErrorCode::IncorrectATA,
     )]
-    pub seller_transfer_vault: InterfaceAccount<'info, TokenAccount>,
+    pub seller_transfer_vault: Option<Box<InterfaceAccount<'info, TokenAccount>>>,
     /// ATA that receives fees
     #[account(
         mut,
@@ -119,7 +119,7 @@ pub struct RegisterBuy<'info> {
         constraint = marketplace_transfer_vault.mint == payment_mint.key() 
             @ ErrorCode::IncorrectATA,
     )]
-    pub marketplace_transfer_vault: InterfaceAccount<'info, TokenAccount>,
+    pub marketplace_transfer_vault: Option<Box<InterfaceAccount<'info, TokenAccount>>>,
     // this account holds the reward tokens
     #[account(mut)]
     pub bounty_vault: Option<Box<InterfaceAccount<'info, TokenAccount>>>,
@@ -153,12 +153,19 @@ pub fn handler<'info>(ctx: Context<RegisterBuy>, _bump: u8, amount: u64) -> Resu
             adjusted_product_price,
         )?;
     } else {
+        let marketplace_transfer_vault = ctx.accounts.marketplace_transfer_vault.as_ref()
+            .ok_or(ErrorCode::OptionalAccountNotProvided)?;
+        let seller_transfer_vault = ctx.accounts.seller_transfer_vault.as_ref()
+            .ok_or(ErrorCode::OptionalAccountNotProvided)?;        
+        let buyer_transfer_vault = ctx.accounts.buyer_transfer_vault.as_ref()
+            .ok_or(ErrorCode::OptionalAccountNotProvided)?;
+        
         handle_spl(
             ctx.accounts.token_program_v0.to_account_info(),
             ctx.accounts.signer.to_account_info(),
-            ctx.accounts.marketplace_transfer_vault.to_account_info(),
-            ctx.accounts.seller_transfer_vault.to_account_info(),
-            ctx.accounts.buyer_transfer_vault.to_account_info(),
+            marketplace_transfer_vault.to_account_info(),
+            seller_transfer_vault.to_account_info(),
+            buyer_transfer_vault.to_account_info(),
             ctx.accounts.marketplace.fees_config.clone(),
             ctx.accounts.product.seller_config.payment_mint,
             adjusted_product_price,            

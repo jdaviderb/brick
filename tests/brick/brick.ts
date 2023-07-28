@@ -10,6 +10,7 @@ import {
   getAssociatedTokenAddress,
   getAssociatedTokenAddressSync,
   ASSOCIATED_TOKEN_PROGRAM_ID,
+  NATIVE_MINT,
 } from "@solana/spl-token";
 import { 
   createFundedAssociatedTokenAccount, 
@@ -468,7 +469,7 @@ describe("brick", () => {
     assert.equal(Number(productAccount.sellerConfig.productPrice), Number(productPrice));
   });
 
-  it("Should register a buy no fees two amounts", async () => {
+  it("Should register a buy, no fees, two amounts in the same instruction", async () => {
     const buyerSOLBalance = 1000;
     buyer = await createFundedWallet(provider, buyerSOLBalance);
 
@@ -533,7 +534,6 @@ describe("brick", () => {
       buyerReward: null,
       buyerRewardVault: null,
     };
-
     await program.methods
       .registerBuy(bump, new BN(2))
       .accounts(registerBuyAccounts)
@@ -712,6 +712,89 @@ describe("brick", () => {
     );
     marketplaceVaults[0][1] = marketplaceVaults[0][1] + marketplaceFee;
     assert.equal(Number(marketAuthTransferVaultAccount.amount), marketplaceVaults[0][1]);
+  });
+
+  it("Should register a buy (with fees and native mint)", async () => {
+    const newPaymentMintPubkey = NATIVE_MINT;
+    const newPrice = new BN(88);
+
+    const editProductInfoAccounts = {
+      signer: seller.publicKey,
+      product: productPubkey,
+      paymentMint: newPaymentMintPubkey,
+    };
+    await program.methods
+      .editProductInfo(newPrice)
+      .accounts(editProductInfoAccounts)
+      .signers([seller])
+      .rpc()
+      .catch(console.error);
+
+    const [paymentPubkey, bump] = anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("payment", "utf-8"), 
+        buyer.publicKey.toBuffer(), 
+        productPubkey.toBuffer(),
+      ],
+      program.programId
+    );
+
+    const marketAuthBalance = await provider.connection.getBalance(marketplaceAuth.publicKey, confirmOptions);
+    const sellerBalance = await provider.connection.getBalance(seller.publicKey, confirmOptions);
+    const buyerBalance = await provider.connection.getBalance(buyer.publicKey, confirmOptions);
+
+    const registerBuyAccounts = {
+      systemProgram: SystemProgram.programId,
+      tokenProgramV0: TOKEN_PROGRAM_ID,
+      tokenProgram2022: TOKEN_2022_PROGRAM_ID,
+      associatedTokenProgram: ASSOCIATED_PROGRAM_ID,
+      rent: SYSVAR_RENT_PUBKEY,
+      signer: buyer.publicKey,
+      seller: seller.publicKey,
+      marketplaceAuth: marketplaceAuth.publicKey,
+      marketplace: marketplacePubkey,
+      product: productPubkey,
+      payment: paymentPubkey,
+      productMint: null,
+      paymentMint: newPaymentMintPubkey,
+      buyerTokenVault: null,
+      buyerTransferVault: null,
+      sellerTransferVault: null,
+      marketplaceTransferVault: null,
+      bountyVault: null,
+      sellerReward: null,
+      sellerRewardVault: null,
+      buyerReward: null,
+      buyerRewardVault: null,
+    };
+    await program.methods
+      .registerBuy(bump, new BN(1))
+      .accounts(registerBuyAccounts)
+      .signers([buyer])
+      .rpc(confirmOptions)
+      .catch(console.error);
+
+    // Set the previous product configuration
+    const initialEditProductInfoAccounts = {
+      signer: seller.publicKey,
+      product: productPubkey,
+      paymentMint: paymentMints[0],
+    };
+    await program.methods
+      .editProductInfo(productPrice)
+      .accounts(initialEditProductInfoAccounts)
+      .signers([seller])
+      .rpc()
+      .catch(console.error);
+
+    const postMarketAuthBalance = await provider.connection.getBalance(marketplaceAuth.publicKey, confirmOptions);
+    const postSellerBalance = await provider.connection.getBalance(seller.publicKey, confirmOptions);
+    const postBuyerBalance = await provider.connection.getBalance(buyer.publicKey, confirmOptions);
+    const marketplaceFee = Math.floor((Number(newPrice) * fee) / 10000);
+
+    assert.equal(postMarketAuthBalance, marketAuthBalance + marketplaceFee);
+    assert.equal(postSellerBalance, sellerBalance + Number(newPrice) - marketplaceFee);
+    assert.equal(postBuyerBalance, buyerBalance - Number(newPrice));
   });
 
   it("Should register a buy (with fees and specific mint makes fee reduction)", async () => {
