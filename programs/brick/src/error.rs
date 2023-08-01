@@ -30,6 +30,8 @@ pub enum ErrorCode {
     IncorrectGovernanceName,
     #[msg("You are providing a wrong token program")]
     IncorrectTokenProgram,
+    #[msg("You are trying to sign an incorrect instruction based on marketplace configuration")]
+    IncorrectInstruction,
     #[msg("Failed to convert data")]
     ConversionError,
     #[msg("Transfer error")]

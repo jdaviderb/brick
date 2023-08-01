@@ -1,8 +1,8 @@
 use {
     crate::{
-        utils::*, 
         state::*,
         error::ErrorCode,
+        utils::*,
     },
     anchor_lang::{
         prelude::*,
@@ -13,18 +13,20 @@ use {
         },
     },    
     anchor_spl::{
-        token_interface::{Mint, TokenInterface, TokenAccount},
+        token_interface::{MintTo, Mint, TokenInterface, TokenAccount},
+        token_2022::{mint_to, ID as TokenProgram2022},
         token::{transfer, Transfer, ID as TokenProgramV0,},
     },
     spl_token::native_mint::ID as NativeMint
 };
 
 #[derive(Accounts)]
-pub struct RegisterBuy<'info> {
+pub struct RegisterBuyToken<'info> {
     pub system_program: Program<'info, System>,
     #[account(address = TokenProgramV0 @ ErrorCode::IncorrectTokenProgram, executable)]
     pub token_program_v0: Interface<'info, TokenInterface>,
-    pub rent: Sysvar<'info, Rent>,
+    #[account(address = TokenProgram2022 @ ErrorCode::IncorrectTokenProgram, executable)]
+    pub token_program_2022: Interface<'info, TokenInterface>,
     #[account(mut)]
     pub signer: Signer<'info>,
     #[account(
@@ -54,34 +56,48 @@ pub struct RegisterBuy<'info> {
             b"product".as_ref(),
             product.first_id.as_ref(),
             product.second_id.as_ref(),
-            product.marketplace.as_ref(),
+            marketplace.key().as_ref(),
         ],
         bump = product.bumps.bump,
     )]
     pub product: Box<Account<'info, Product>>,
-    /// CHECK: this account is used as index, not initialized
     #[account(
-        init_if_needed,
-        payer = signer,
-        space = PAYMENT_SIZE,
+        mut,
         seeds = [
-            b"payment".as_ref(),
-            signer.key().as_ref(),
-            product.key().as_ref(),
+            b"product_mint".as_ref(),
+            product.first_id.as_ref(),
+            product.second_id.as_ref(),
+            marketplace.key().as_ref(),
         ],
-        bump,
-    )]
-    pub payment: Account<'info, Payment>,
+        bump = product.bumps.mint_bump,
+        constraint = product_mint.key() == product.product_mint
+            @ ErrorCode::IncorrectMint,
+    )]    
+    pub product_mint: Box<InterfaceAccount<'info, Mint>>,
     #[account(
         constraint = payment_mint.key() == product.seller_config.payment_mint
             @ ErrorCode::IncorrectMint,
     )]
     pub payment_mint: InterfaceAccount<'info, Mint>,
+    /// init_if_needed PR fix t2022: https://github.com/coral-xyz/anchor/pull/2541
+    /// init_if_needed,
+    /// payer = signer,
+    /// associated_token::mint = product_mint,
+    /// associated_token::authority = signer,
+    /// associated_token::token_program = token_program_22,
+    #[account(
+        mut,
+        constraint = buyer_token_vault.owner == signer.key()
+            @ ErrorCode::IncorrectAuthority,
+        constraint = buyer_token_vault.mint == product.product_mint
+            @ ErrorCode::IncorrectATA,
+    )]
+    pub buyer_token_vault: Box<InterfaceAccount<'info, TokenAccount>>,
     #[account(
         mut,
         constraint = buyer_transfer_vault.owner == signer.key()
             @ ErrorCode::IncorrectAuthority,
-        constraint = buyer_transfer_vault.mint == product.seller_config.payment_mint.key()
+        constraint = buyer_transfer_vault.mint == payment_mint.key()
             @ ErrorCode::IncorrectATA,
     )]
     pub buyer_transfer_vault: Option<Box<InterfaceAccount<'info, TokenAccount>>>,
@@ -89,7 +105,7 @@ pub struct RegisterBuy<'info> {
         mut,
         constraint = seller_transfer_vault.owner == product.authority 
             @ ErrorCode::IncorrectAuthority,
-        constraint = seller_transfer_vault.mint == product.seller_config.payment_mint.key()
+        constraint = seller_transfer_vault.mint == product.seller_config.payment_mint
             @ ErrorCode::IncorrectATA,
     )]
     pub seller_transfer_vault: Option<Box<InterfaceAccount<'info, TokenAccount>>>,
@@ -132,17 +148,14 @@ pub struct RegisterBuy<'info> {
     pub buyer_reward_vault: Option<Box<InterfaceAccount<'info, TokenAccount>>>,
 }
 
-pub fn handler<'info>(ctx: Context<RegisterBuy>, amount: u32) -> Result<()> {
+pub fn handler<'info>(ctx: Context<RegisterBuyToken>, amount: u32) -> Result<()> {
     let total_amount = ctx.accounts.product.seller_config.product_price
         .checked_mul(amount.into()).ok_or(ErrorCode::NumericalOverflow)?;
     let marketplace = &ctx.accounts.marketplace;
 
-    if !marketplace.token_config.chain_counter {
+    if !marketplace.token_config.deliver_token {
         return Err(ErrorCode::IncorrectInstruction.into());
     }
-
-    // this account its a counter of the times a user has purchased a product 
-    (*ctx.accounts.payment).units += amount;
 
     // payment and fees
     if cmp_pubkeys(&ctx.accounts.payment_mint.key(), &NativeMint) {
@@ -190,9 +203,9 @@ pub fn handler<'info>(ctx: Context<RegisterBuy>, amount: u32) -> Result<()> {
             .ok_or(ErrorCode::OptionalAccountNotProvided)?;
         let buyer_reward = ctx.accounts.buyer_reward.as_ref()
             .ok_or(ErrorCode::OptionalAccountNotProvided)?;
-        
-        assert_authority(&seller_reward.authority, &ctx.accounts.product.authority)?;
-        assert_authority(&buyer_reward.authority, &ctx.accounts.signer.key())?;
+
+        assert_authority(&seller_reward.key(), &ctx.accounts.product.authority)?;
+        assert_authority(&buyer_reward.key(), &ctx.accounts.signer.key())?;
 
         let seller_bonus = (marketplace.rewards_config.seller_reward as u128)
             .checked_mul(ctx.accounts.product.seller_config.product_price as u128)
@@ -214,7 +227,7 @@ pub fn handler<'info>(ctx: Context<RegisterBuy>, amount: u32) -> Result<()> {
             marketplace.authority.as_ref(),
             &[marketplace.bumps.bump],
         ];
-        
+
         if cmp_pubkeys(&ctx.accounts.payment_mint.key(), &NativeMint) {
             let seller = ctx.accounts.seller.as_ref()
                 .ok_or(ErrorCode::OptionalAccountNotProvided)?;
@@ -276,6 +289,26 @@ pub fn handler<'info>(ctx: Context<RegisterBuy>, amount: u32) -> Result<()> {
         }
     }
 
+    let seeds = &[
+        b"product".as_ref(),
+        ctx.accounts.product.first_id.as_ref(),
+        ctx.accounts.product.second_id.as_ref(),
+        ctx.accounts.product.marketplace.as_ref(),
+        &[ctx.accounts.product.bumps.bump],
+    ];
+
+    mint_to(
+        CpiContext::new_with_signer(
+            ctx.accounts.token_program_2022.to_account_info(),
+            MintTo {
+                mint: ctx.accounts.product_mint.to_account_info(),
+                to: ctx.accounts.buyer_token_vault.to_account_info(),
+                authority: ctx.accounts.product.to_account_info(),
+            },
+            &[&seeds[..]],
+        ),
+        amount.into()
+    ).map_err(|_| ErrorCode::MintToError)?;
+    
     Ok(())
 }
-

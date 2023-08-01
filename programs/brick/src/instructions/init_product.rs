@@ -1,11 +1,10 @@
 use {
     crate::state::*,
-    crate::errors::ErrorCode,
-    crate::utils::init_mint,
-    anchor_lang::{
-        prelude::*,
-        system_program::System,
-    },
+    crate::error::ErrorCode,
+    crate::utils::mint_builder,
+    anchor_lang::prelude::*,
+    spl_token_2022::extension::ExtensionType,
+    anchor_lang::system_program::System,
     anchor_spl::{
         token_interface::{
             TokenInterface,
@@ -14,7 +13,6 @@ use {
         },
         token_2022::ID as TokenProgram2022,
     },
-    spl_token_2022::extension::ExtensionType,
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
@@ -46,7 +44,7 @@ pub struct InitProduct<'info> {
     #[account(
         init,
         payer = signer,
-        space = Product::SIZE,
+        space = PRODUCT_SIZE,
         seeds = [
             b"product".as_ref(),
             params.first_id.as_ref(),
@@ -76,10 +74,15 @@ pub struct InitProduct<'info> {
             marketplace.key().as_ref(),
         ],
         bump = marketplace.bumps.access_mint_bump,
+        constraint = access_mint.key() == marketplace.permission_config.access_mint
+            @ ErrorCode::IncorrectMint
     )]    
     pub access_mint: Option<Box<InterfaceAccount<'info, Mint>>>,
-    /// CHECK: validated in the instruction logic
-    #[account(mut)]    
+    #[account(
+        mut,
+        constraint = access_vault.mint == marketplace.permission_config.access_mint
+            @ ErrorCode::IncorrectMint
+    )]    
     pub access_vault: Option<Box<InterfaceAccount<'info, TokenAccount>>>,
 }
 
@@ -87,15 +90,11 @@ pub fn handler<'info>(ctx: Context<InitProduct>, params: InitProductParams) -> R
     if !ctx.accounts.marketplace.permission_config.permissionless {
         let access_vault = ctx.accounts.access_vault.as_ref()
             .ok_or(ErrorCode::OptionalAccountNotProvided)?;
-    
-        if access_vault.mint != ctx.accounts.marketplace.permission_config.access_mint {
-            return Err(ErrorCode::IncorrectATA.into());
-        }
+
         if access_vault.amount == 0 {
             return Err(ErrorCode::NotInWithelist.into());
         }
     }
-    
     let marketplace_key = ctx.accounts.marketplace.key();
 
     (*ctx.accounts.product).authority = ctx.accounts.signer.key();
@@ -140,13 +139,13 @@ pub fn handler<'info>(ctx: Context<InitProduct>, params: InitProductParams) -> R
         &[ctx.accounts.product.bumps.bump],
     ];
 
-    let extensions = if ctx.accounts.marketplace.permission_config.allow_secondary {
+    let extensions = if ctx.accounts.marketplace.token_config.transferable {
         vec![]
     } else {
         vec![ExtensionType::NonTransferable]
     };
 
-    init_mint(
+    mint_builder(
         signer_mint_seeds,
         product_seeds.to_vec(),
         extensions,

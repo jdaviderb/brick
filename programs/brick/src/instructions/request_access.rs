@@ -4,7 +4,7 @@ use {
 };
 
 #[derive(Accounts)]
-pub struct InitRequest<'info> {
+pub struct RequestAccess<'info> {
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
     #[account(mut)]
@@ -21,7 +21,7 @@ pub struct InitRequest<'info> {
     #[account(
         init,
         payer = signer,
-        space = Request::SIZE,
+        space = ACCESS_SIZE,
         seeds = [
             b"request".as_ref(),
             signer.key().as_ref(),
@@ -29,10 +29,10 @@ pub struct InitRequest<'info> {
         ],
         bump,
     )]
-    pub request: Account<'info, Request>,
+    pub request: Account<'info, Access>,
 }
 
-pub fn handler<'info>(ctx: Context<InitRequest>) -> Result<()> {
+pub fn handler<'info>(ctx: Context<RequestAccess>) -> Result<()> {
     (*ctx.accounts.request).authority = ctx.accounts.signer.key();
     (*ctx.accounts.request).marketplace =  ctx.accounts.marketplace.key();
     (*ctx.accounts.request).bump = *ctx.bumps.get("request").unwrap();

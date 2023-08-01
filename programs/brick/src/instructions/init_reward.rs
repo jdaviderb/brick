@@ -1,6 +1,6 @@
 use {
     crate::state::*,
-    crate::errors::ErrorCode,
+    crate::error::ErrorCode,
     anchor_lang::prelude::*,
     anchor_spl::{
         token_interface::{Mint, TokenInterface, TokenAccount},
@@ -28,7 +28,7 @@ pub struct InitReward<'info> {
     #[account(
         init,
         payer = signer,
-        space = Reward::SIZE,
+        space = REWARD_SIZE,
         seeds = [
             b"reward".as_ref(),
             signer.key().as_ref(),
@@ -56,10 +56,10 @@ pub struct InitReward<'info> {
 }
 
 pub fn handler<'info>(ctx: Context<InitReward>) -> Result<()> {
-    let mut vaults: Vec<Pubkey> = Vec::with_capacity(Reward::VAULT_COUNT); 
+    let mut vaults: Vec<Pubkey> = Vec::with_capacity(VAULT_COUNT); 
     vaults.push(ctx.accounts.reward_vault.key());
 
-    let mut vault_bumps: Vec<u8> = Vec::with_capacity(Reward::VAULT_COUNT); 
+    let mut vault_bumps: Vec<u8> = Vec::with_capacity(VAULT_COUNT); 
     vault_bumps.push(*ctx.bumps.get("reward_vault").unwrap());
 
     (*ctx.accounts.reward).authority = ctx.accounts.signer.key();

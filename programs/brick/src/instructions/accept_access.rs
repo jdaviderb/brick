@@ -1,16 +1,17 @@
 use {
     crate::state::*,
-    crate::errors::ErrorCode,
+    crate::error::ErrorCode,
     anchor_lang::prelude::*,
     anchor_spl::{
-        token_interface::{MintTo, Mint, TokenInterface, TokenAccount},
-        token_2022::{mint_to, ID as TokenProgram2022},
+        token_2022::mint_to,
+        token_interface::{Mint, MintTo, TokenInterface, TokenAccount},
+        token_2022::ID as TokenProgram2022,
         associated_token::AssociatedToken
     }
 };
 
 #[derive(Accounts)]
-pub struct AcceptRequest<'info> {
+pub struct AcceptAccess<'info> {
     pub system_program: Program<'info, System>,
     #[account(address = TokenProgram2022 @ ErrorCode::IncorrectTokenProgram)]
     pub token_program_2022: Interface<'info, TokenInterface>,
@@ -43,7 +44,7 @@ pub struct AcceptRequest<'info> {
         bump = request.bump,
         close = receiver,
     )]
-    pub request: Account<'info, Request>,
+    pub request: Account<'info, Access>,
     /// CHECK: validated in the marketplace account
     #[account(
         mut,
@@ -61,10 +62,10 @@ pub struct AcceptRequest<'info> {
         associated_token::authority = receiver,
         associated_token::token_program = token_program_2022
     )]
-    pub receiver_vault: Box<InterfaceAccount<'info, TokenAccount>>,
+    pub access_vault: Box<InterfaceAccount<'info, TokenAccount>>,
 }
 
-pub fn handler<'info>(ctx: Context<AcceptRequest>) -> Result<()> {
+pub fn handler<'info>(ctx: Context<AcceptAccess>) -> Result<()> {
     let signer_key = ctx.accounts.signer.key();
     let marketplace_seeds = &[
         b"marketplace".as_ref(),
@@ -77,7 +78,7 @@ pub fn handler<'info>(ctx: Context<AcceptRequest>) -> Result<()> {
             ctx.accounts.token_program_2022.to_account_info(),
             MintTo {
                 mint: ctx.accounts.access_mint.to_account_info(),
-                to: ctx.accounts.receiver_vault.to_account_info(),
+                to: ctx.accounts.access_vault.to_account_info(),
                 authority: ctx.accounts.marketplace.to_account_info(),
             },
             &[&marketplace_seeds[..]],

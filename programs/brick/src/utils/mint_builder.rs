@@ -1,6 +1,6 @@
 use {
     anchor_lang::prelude::*,
-    crate::errors::ErrorCode,
+    crate::error::ErrorCode,
     anchor_lang::{
         system_program::{CreateAccount, create_account},
         solana_program::program::invoke_signed,
@@ -16,7 +16,7 @@ use {
     },
 };
 
-pub fn init_mint<'info>(
+pub fn mint_builder<'info>(
     mint_seeds: Vec<&[u8]>,
     mint_authority_seeds: Vec<&[u8]>,
     extensions: Vec<ExtensionType>,

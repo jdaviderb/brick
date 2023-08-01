@@ -1,6 +1,6 @@
 use {
     crate::state::*,
-    crate::errors::ErrorCode,
+    crate::error::ErrorCode,
     anchor_lang::prelude::*,
     anchor_spl::{
         associated_token::AssociatedToken,
@@ -59,7 +59,7 @@ pub struct InitRewardVault<'info> {
 }
 
 pub fn handler<'info>(ctx: Context<InitRewardVault>,) -> Result<()> {
-    if ctx.accounts.reward.reward_vaults.len() >= Reward::VAULT_COUNT {
+    if ctx.accounts.reward.reward_vaults.len() >= VAULT_COUNT {
         return Err(ErrorCode::VaultsVectorFull.into());
     }
 

@@ -1,6 +1,6 @@
 use {
     crate::state::*,
-    crate::errors::ErrorCode,
+    crate::error::ErrorCode,
     anchor_lang::prelude::*,
     anchor_spl::{
         associated_token::AssociatedToken,
@@ -10,7 +10,7 @@ use {
 };
 
 #[derive(Accounts)]
-pub struct InitBountyVault<'info> {
+pub struct InitBounty<'info> {
     pub system_program: Program<'info, System>,
     #[account(address = TokenProgramV0 @ ErrorCode::IncorrectTokenProgram)]
     pub token_program_v0: Interface<'info, TokenInterface>,
@@ -46,8 +46,8 @@ pub struct InitBountyVault<'info> {
     pub bounty_vault: Box<InterfaceAccount<'info, TokenAccount>>,
 }
 
-pub fn handler<'info>(ctx: Context<InitBountyVault>,) -> Result<()> {
-    if ctx.accounts.marketplace.rewards_config.bounty_vaults.len() >= Reward::VAULT_COUNT {
+pub fn handler<'info>(ctx: Context<InitBounty>,) -> Result<()> {
+    if ctx.accounts.marketplace.rewards_config.bounty_vaults.len() >= VAULT_COUNT {
         return Err(ErrorCode::VaultsVectorFull.into());
     }
 
@@ -56,4 +56,3 @@ pub fn handler<'info>(ctx: Context<InitBountyVault>,) -> Result<()> {
     
     Ok(())
 }
-

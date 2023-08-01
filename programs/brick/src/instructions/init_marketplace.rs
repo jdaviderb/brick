@@ -1,8 +1,9 @@
 use {
     crate::state::*,
     anchor_lang::prelude::*,
-    crate::errors::ErrorCode,
-    crate::utils::init_mint,
+    crate::error::ErrorCode,
+    crate::utils::mint_builder,
+    spl_token_2022::extension::ExtensionType,
     anchor_spl::{
         token_interface::{
             Mint, 
@@ -12,7 +13,6 @@ use {
         token::ID as TokenProgramV0,
         token_2022::ID as TokenProgram2022,
     },
-    spl_token_2022::extension::ExtensionType,
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
@@ -22,11 +22,13 @@ pub struct InitMarketplaceParams {
     pub seller_reward: u16,
     pub buyer_reward: u16,
     pub deliver_token: bool,
-    pub rewards_enabled: bool,
-    pub allow_secondary: bool,
+    pub metadata: bool,
+    pub transferable: bool,
+    pub chain_counter: bool,
     pub permissionless: bool,
+    pub rewards_enabled: bool,
     pub access_mint_bump: u8,
-    pub fee_payer: FeePayer,
+    pub fee_payer: PaymentFeePayer,
 }
 
 #[derive(Accounts)]
@@ -43,7 +45,7 @@ pub struct InitMarketplace<'info> {
     #[account(
         init,
         payer = signer,
-        space = Marketplace::SIZE,
+        space = MARKETPLACE_SIZE,
         seeds = [
             b"marketplace".as_ref(),
             signer.key().as_ref(),
@@ -112,7 +114,7 @@ pub fn handler<'info>(ctx: Context<InitMarketplace>, params: InitMarketplacePara
         &[ctx.accounts.marketplace.bumps.bump],
     ];
 
-    init_mint(
+    mint_builder(
         signer_mint_seeds,
         marketplace_seeds.to_vec(),
         vec![ExtensionType::NonTransferable],
@@ -125,16 +127,20 @@ pub fn handler<'info>(ctx: Context<InitMarketplace>, params: InitMarketplacePara
         ctx.accounts.rent.clone(),
     )?;
 
-    let mut bounty_vaults: Vec<Pubkey> = Vec::with_capacity(Marketplace::VAULT_COUNT); 
+    let mut bounty_vaults: Vec<Pubkey> = Vec::with_capacity(VAULT_COUNT); 
     bounty_vaults.push(ctx.accounts.bounty_vault.key());
 
-    let mut vault_bumps: Vec<u8> = Vec::with_capacity(Marketplace::VAULT_COUNT); 
+    let mut vault_bumps: Vec<u8> = Vec::with_capacity(VAULT_COUNT); 
     vault_bumps.push(*ctx.bumps.get("bounty_vault").unwrap());
 
     (*ctx.accounts.marketplace).authority = ctx.accounts.signer.key();
-    (*ctx.accounts.marketplace).deliver_token = params.deliver_token;
+    (*ctx.accounts.marketplace).token_config = TokenConfig {
+        deliver_token: params.deliver_token,
+        metadata: params.metadata,
+        transferable: params.transferable,
+        chain_counter: params.chain_counter,
+    };
     (*ctx.accounts.marketplace).permission_config = PermissionConfig {
-        allow_secondary: params.allow_secondary,
         permissionless: params.permissionless,
         access_mint: ctx.accounts.access_mint.key(),
     };

@@ -1,24 +1,27 @@
 use {
     crate::state::*,
-    crate::errors::ErrorCode,
+    crate::error::ErrorCode,
     anchor_lang::prelude::*,
     anchor_spl::token_interface::Mint,
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
-pub struct EditMarketplaceInfoParams {
+pub struct EditMarketplaceParams {
     pub fee: u16,
     pub fee_reduction: u16,
     pub seller_reward: u16,
     pub buyer_reward: u16,
-    pub rewards_enabled: bool,
-    pub allow_secondary: bool,
+    pub deliver_token: bool,
+    pub metadata: bool,
+    pub transferable: bool,
+    pub chain_counter: bool,
     pub permissionless: bool,
-    pub fee_payer: FeePayer,
+    pub rewards_enabled: bool,
+    pub fee_payer: PaymentFeePayer,
 }
 
 #[derive(Accounts)]
-pub struct EditMarketplaceInfo<'info> {
+pub struct EditMarketplace<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
     #[account(
@@ -38,15 +41,20 @@ pub struct EditMarketplaceInfo<'info> {
 }
 
 pub fn handler<'info>(
-    ctx: Context<EditMarketplaceInfo>, 
-    params: EditMarketplaceInfoParams,
+    ctx: Context<EditMarketplace>, 
+    params: EditMarketplaceParams,
 ) -> Result<()> {
     if params.fee_reduction > 10000 || params.fee > 10000 || params.seller_reward > 10000 || params.buyer_reward > 10000 {
         return Err(ErrorCode::IncorrectFee.into());
     }
 
+    (*ctx.accounts.marketplace).token_config = TokenConfig {
+        deliver_token: params.deliver_token,
+        metadata: params.metadata,
+        transferable: params.transferable,
+        chain_counter: params.chain_counter,
+    };
     (*ctx.accounts.marketplace).permission_config = PermissionConfig {
-        allow_secondary: params.allow_secondary,
         permissionless: params.permissionless,
         access_mint: ctx.accounts.marketplace.permission_config.access_mint,
     };

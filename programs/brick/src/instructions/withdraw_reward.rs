@@ -1,9 +1,9 @@
 use {
     crate::state::*,
-    crate::errors::ErrorCode,
+    crate::error::ErrorCode,
     anchor_lang::prelude::*,
+    anchor_spl::token::{transfer, Transfer},
     anchor_spl::{
-        token::{transfer, Transfer},
         token_interface::{Mint, TokenInterface, TokenAccount},
         token::ID,
     }
@@ -53,7 +53,7 @@ pub struct WithdrawReward<'info> {
             marketplace.key().as_ref(),
             reward_mint.key().as_ref()
         ],
-        bump = Reward::get_bump(
+        bump = get_bump(
             reward_vault.key(), 
             reward.bumps.clone(), 
             reward.reward_vaults.clone()
@@ -95,4 +95,10 @@ pub fn handler<'info>(ctx: Context<WithdrawReward>) -> Result<()> {
     ).map_err(|_| ErrorCode::TransferError)?;
     
     Ok(())
+}
+
+pub fn get_bump(address: Pubkey, reward_bumps: RewardBumps, reward_vaults: Vec<Pubkey>) -> u8 {
+    reward_vaults.iter().position(|&r| r == address)
+        .map(|index| reward_bumps.vault_bumps[index])
+        .unwrap_or(0)
 }

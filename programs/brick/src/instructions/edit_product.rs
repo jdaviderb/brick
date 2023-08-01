@@ -1,12 +1,12 @@
 use {
     crate::state::*,
-    crate::errors::ErrorCode,
+    crate::error::ErrorCode,
     anchor_lang::prelude::*,
     anchor_spl::token_interface::Mint
 };
 
 #[derive(Accounts)]
-pub struct EditProductInfo<'info> {
+pub struct EditProduct<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
     #[account(
@@ -26,7 +26,7 @@ pub struct EditProductInfo<'info> {
     pub payment_mint: Box<InterfaceAccount<'info, Mint>>,
 }
 
-pub fn handler<'info>(ctx: Context<EditProductInfo>, product_price: u64) -> Result<()> {
+pub fn handler<'info>(ctx: Context<EditProduct>, product_price: u64) -> Result<()> {
     (*ctx.accounts.product).seller_config = SellerConfig {
         payment_mint: ctx.accounts.payment_mint.key(),
         product_price,
