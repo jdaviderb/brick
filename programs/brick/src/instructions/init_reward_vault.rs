@@ -49,6 +49,7 @@ pub struct InitRewardVault<'info> {
             b"reward_vault".as_ref(),
             signer.key().as_ref(),
             marketplace.key().as_ref(),
+            reward_mint.key().as_ref(),
         ],
         bump,
         token::mint = reward_mint,

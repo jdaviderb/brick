@@ -9,6 +9,7 @@ use anchor_lang::{
     solana_program::{program_memory::sol_memcmp, pubkey::PUBKEY_BYTES},
 };
 use crate::{state::{MarketplaceBumps, RewardsConfig}, error::ErrorCode};
+use spl_token::native_mint::ID as NativeMint;
 
 pub fn cmp_pubkeys(a: &Pubkey, b: &Pubkey) -> bool {
     sol_memcmp(a.as_ref(), b.as_ref(), PUBKEY_BYTES) == 0
@@ -22,13 +23,14 @@ pub fn get_bounty_bump(address: Pubkey, bumps: MarketplaceBumps, bounty_vaults: 
 
 /// Checks if marketplace reward system is active, is active when:
 /// If reward_mint == null_mint && rewardsEnabled == false -> NO REWARDS
-/// If reward_mint == null_mint && rewardsEnabled == true -> REWARDS (regardless of the payment mint)
+/// If reward_mint == null_mint && rewardsEnabled == true -> REWARDS (regardless of the reward_mint)
 /// If reward_mint == mint && rewardsEnabled == true -> REWARDS only with specific reward_mint
+/// CANT BE NATIVE MINT (ie SOL), a PDA from my program cant transfer SOL because is not owned by SystemProgram
 pub fn is_rewards_active(reward_config: RewardsConfig, payment_mint: Pubkey, program_id: Pubkey) -> bool {
     let null_seeds = &[b"null".as_ref()];
     let account_address = Pubkey::find_program_address(null_seeds, &program_id);
     
-    reward_config.rewards_enabled 
+    reward_config.rewards_enabled && !cmp_pubkeys(&payment_mint, &NativeMint)
         && (cmp_pubkeys(&payment_mint, &reward_config.reward_mint) || cmp_pubkeys(&reward_config.reward_mint, &account_address.0))
 }
 

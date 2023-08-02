@@ -36,7 +36,7 @@ pub struct EditMarketplace<'info> {
     )]
     pub marketplace: Box<Account<'info, Marketplace>>,
     /// CHECK: no need to validate, marketplace auth is the unique wallet who can call this instruction
-    pub reward_mint: Box<InterfaceAccount<'info, Mint>>,
+    pub reward_mint: UncheckedAccount<'info>,
     pub discount_mint: Box<InterfaceAccount<'info, Mint>>,
 }
 

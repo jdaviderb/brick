@@ -6,16 +6,12 @@ use {
     },
     anchor_lang::{
         prelude::*,
-        system_program::{
-            System,
-            transfer as native_transfer,
-            Transfer as NativeTransfer
-        },
+        system_program::System,
     },    
     anchor_spl::{
         token_interface::{MintTo, Mint, TokenInterface, TokenAccount},
         token_2022::{mint_to, ID as TokenProgram2022},
-        token::{transfer, Transfer, ID as TokenProgramV0,},
+        token::{transfer, Transfer, ID as TokenProgramV0},
     },
     spl_token::native_mint::ID as NativeMint
 };
@@ -121,7 +117,7 @@ pub struct RegisterBuyToken<'info> {
     // this account holds the reward tokens
     #[account(mut)]
     pub bounty_vault: Option<Box<InterfaceAccount<'info, TokenAccount>>>,
-    // the validation of these accounts is done in the ix logic
+    // authority checked in ix logic
     #[account(
         mut,
         seeds = [
@@ -132,8 +128,13 @@ pub struct RegisterBuyToken<'info> {
         bump = seller_reward.bumps.bump
     )]
     pub seller_reward: Option<Account<'info, Reward>>,
-    #[account(mut)]
+    #[account(
+        mut,
+        constraint = seller_reward_vault.mint == payment_mint.key() 
+            @ ErrorCode::IncorrectATA,
+    )]
     pub seller_reward_vault: Option<Box<InterfaceAccount<'info, TokenAccount>>>,
+    // authority checked in ix logic
     #[account(
         mut,
         seeds = [
@@ -141,10 +142,14 @@ pub struct RegisterBuyToken<'info> {
             signer.key().as_ref(),
             marketplace.key().as_ref(),
         ],
-        bump = buyer_reward.bumps.bump
+        bump = buyer_reward.bumps.bump,
     )]
     pub buyer_reward: Option<Account<'info, Reward>>,
-    #[account(mut)]
+    #[account(
+        mut,
+        constraint = buyer_reward_vault.mint == payment_mint.key() 
+            @ ErrorCode::IncorrectATA,
+    )]
     pub buyer_reward_vault: Option<Box<InterfaceAccount<'info, TokenAccount>>>,
 }
 
@@ -219,74 +224,44 @@ pub fn handler<'info>(ctx: Context<RegisterBuyToken>, amount: u32) -> Result<()>
             .checked_div(10000)
             .ok_or(ErrorCode::NumericalOverflow)? as u64;
 
-        let bounty_vault = ctx.accounts.bounty_vault.as_ref()
-            .ok_or(ErrorCode::OptionalAccountNotProvided)?;
-
         let marketplace_seeds = &[
             "marketplace".as_ref(),
             marketplace.authority.as_ref(),
             &[marketplace.bumps.bump],
         ];
 
-        if cmp_pubkeys(&ctx.accounts.payment_mint.key(), &NativeMint) {
-            let seller = ctx.accounts.seller.as_ref()
-                .ok_or(ErrorCode::OptionalAccountNotProvided)?;
-            
-            native_transfer(
-                CpiContext::new_with_signer(
-                    ctx.accounts.system_program.to_account_info(), 
-                    NativeTransfer {
-                        from: bounty_vault.to_account_info(),
-                        to: seller.to_account_info(),
-                    },
-                    &[&marketplace_seeds[..]],
-                ),
-                seller_bonus
-            )?;
-            
-            native_transfer(
-                CpiContext::new_with_signer(
-                    ctx.accounts.system_program.to_account_info(), 
-                    NativeTransfer {
-                        from: bounty_vault.to_account_info(),
-                        to: ctx.accounts.signer.to_account_info(),
-                    },
-                    &[&marketplace_seeds[..]],
-                ),
-                seller_bonus
-            )?;
-        } else {
-            let seller_reward_vault = ctx.accounts.seller_reward_vault.as_ref()
-                .ok_or(ErrorCode::OptionalAccountNotProvided)?;
-            let buyer_reward_vault = ctx.accounts.buyer_reward_vault.as_ref()
-                .ok_or(ErrorCode::OptionalAccountNotProvided)?;
+        let seller_reward_vault = ctx.accounts.seller_reward_vault.as_ref()
+            .ok_or(ErrorCode::OptionalAccountNotProvided)?;
+        let buyer_reward_vault = ctx.accounts.buyer_reward_vault.as_ref()
+            .ok_or(ErrorCode::OptionalAccountNotProvided)?;
+        let bounty_vault = ctx.accounts.bounty_vault.as_ref()
+            .ok_or(ErrorCode::OptionalAccountNotProvided)?;
 
-            transfer(
-                CpiContext::new_with_signer(
-                    ctx.accounts.token_program_v0.to_account_info(), 
-                    Transfer {
-                        from: bounty_vault.to_account_info(),
-                        to: seller_reward_vault.to_account_info(),
-                        authority: ctx.accounts.marketplace.to_account_info(),
-                    },
-                    &[&marketplace_seeds[..]],
-                ),
-                seller_bonus,
-            ).map_err(|_| ErrorCode::TransferError)?;
-    
-            transfer(
-                CpiContext::new_with_signer(
-                    ctx.accounts.token_program_v0.to_account_info(), 
-                    Transfer {
-                        from: bounty_vault.to_account_info(),
-                        to: buyer_reward_vault.to_account_info(),
-                        authority: ctx.accounts.marketplace.to_account_info()
-                    },
-                    &[&marketplace_seeds[..]],
-                ),
-                buyer_bonus,
-            ).map_err(|_| ErrorCode::TransferError)?;
-        }
+        transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program_v0.to_account_info(), 
+                Transfer {
+                    from: bounty_vault.to_account_info(),
+                    to: seller_reward_vault.to_account_info(),
+                    authority: marketplace.to_account_info(),
+                },
+                &[&marketplace_seeds[..]],
+            ),
+            seller_bonus,
+        ).map_err(|_| ErrorCode::TransferError)?;
+
+        transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program_v0.to_account_info(), 
+                Transfer {
+                    from: bounty_vault.to_account_info(),
+                    to: buyer_reward_vault.to_account_info(),
+                    authority: ctx.accounts.marketplace.to_account_info()
+                },
+                &[&marketplace_seeds[..]],
+            ),
+            buyer_bonus,
+        ).map_err(|_| ErrorCode::TransferError)?;
     }
 
     let seeds = &[
