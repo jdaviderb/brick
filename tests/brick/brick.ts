@@ -1337,7 +1337,7 @@ describe("brick", () => {
     assert.equal(preBuyerBalance - 1000, postBuyerBalance);
   });
 
-  it("Should allow receiving rewards with different mints (always reward == payment)", async () => {
+  it("Should allow receiving rewards with different mints (always reward == payment), also tests reward enforcement (only one mint)", async () => {
     const rewardMint = await createMint(provider, confirmOptions);
     const vaultBalances = 50000;
     marketplaceVaults.push([
@@ -1397,7 +1397,7 @@ describe("brick", () => {
       .rpc()
       .catch(console.error);
 
-    const productPrice = new BN(500);
+    const productPrice = new BN(5000);
     await program.methods
       .editProduct(productPrice)
       .accounts({
@@ -1542,7 +1542,18 @@ describe("brick", () => {
       .rpc(confirmOptions)
       .catch(console.error);
 
-    // second time doing the same to test another reward mint
+    // check reward vaults
+    const oldsellerPromo = 20;
+    const expectedSellerReward = Math.floor(Number(productPrice) * oldsellerPromo / 10000);
+    const sellerRewardFunds = await getAccount(provider.connection, sellerRewardVaults[1][0]);
+    assert.equal(Number(sellerRewardFunds.amount), expectedSellerReward);
+
+    const oldBuyerPromo = 20;
+    const expectedBuyerReward = Math.floor(Number(productPrice) * oldBuyerPromo / 10000);
+    const buyerRewardFunds = await getAccount(provider.connection, buyerRewardVaults[1][0]);
+    assert.equal(Number(buyerRewardFunds.amount), expectedBuyerReward);
+
+    // second time doing the same to test another reward mint (first change marketplace reward mint to check if can be enforced to not get reward with a different mint)
     const newRewardMint = await createMint(provider, confirmOptions);
     await sleep(2000)
     marketplaceVaults.push([
@@ -1602,17 +1613,6 @@ describe("brick", () => {
       .rpc()
       .catch(console.error);
 
-    await program.methods
-      .editProduct(productPrice)
-      .accounts({
-        signer: seller.publicKey,
-        product: productPubkey,
-        paymentMint: newRewardMint,
-      })
-      .signers([seller])
-      .rpc()
-      .catch(console.error);
-
     await sleep(2000);
     const [newBountyVault] = anchor.web3.PublicKey.findProgramAddressSync(
       [
@@ -1651,7 +1651,6 @@ describe("brick", () => {
       [marketplaceAuth as anchor.web3.Signer]
     );
     bountyVaults.push([bountyVault, 5000]);
-
 
     const [newSellerRewardVault] = anchor.web3.PublicKey.findProgramAddressSync(
       [
@@ -1709,6 +1708,53 @@ describe("brick", () => {
       .catch(console.error);
 
     await sleep(2000)
+    const registerNoRewardBuyAccounts = {
+      systemProgram: SystemProgram.programId,
+      tokenProgramV0: TOKEN_PROGRAM_ID,
+      rent: SYSVAR_RENT_PUBKEY,
+      signer: buyer.publicKey,
+      seller: null,
+      marketplaceAuth: null,
+      marketplace: marketplacePubkey,
+      product: productPubkey,
+      payment: paymentPubkey,
+      paymentMint: rewardMint,
+      buyerTransferVault: buyerVaults[1][0],
+      sellerTransferVault: sellerVaults[1][0],
+      marketplaceTransferVault: marketplaceVaults[1][0],
+      bountyVault: bountyVault,
+      sellerReward: sellerReward,
+      sellerRewardVault: sellerRewardVaults[1][0],
+      buyerReward: buyerReward,
+      buyerRewardVault: buyerRewardVaults[1][0],
+    };
+
+    await program.methods
+      .registerBuy(1)
+      .accounts(registerNoRewardBuyAccounts)
+      .signers([buyer])
+      .rpc(confirmOptions)
+      .catch(console.error);
+
+    // check reward vaults
+    const noSellerRewardFunds = await getAccount(provider.connection, sellerRewardVaults[2][0]);
+    assert.equal(Number(noSellerRewardFunds.amount), 0);
+
+    const noBuyerRewardFunds = await getAccount(provider.connection, buyerRewardVaults[2][0]);
+    assert.equal(Number(noBuyerRewardFunds.amount), 0);
+
+    // now change the product mint to be able to give rewards with that new mint
+    await program.methods
+      .editProduct(productPrice)
+      .accounts({
+        signer: seller.publicKey,
+        product: productPubkey,
+        paymentMint: newRewardMint,
+      })
+      .signers([seller])
+      .rpc()
+      .catch(console.error);
+
     const newRegisterRewardBuyAccounts = {
       systemProgram: SystemProgram.programId,
       tokenProgramV0: TOKEN_PROGRAM_ID,
@@ -1736,6 +1782,224 @@ describe("brick", () => {
       .signers([buyer])
       .rpc(confirmOptions)
       .catch(console.error);
+
+    // check reward vaults
+    const newExpectedSellerReward = Math.floor(Number(productPrice) * oldsellerPromo / 10000);
+    const newSellerRewardFunds = await getAccount(provider.connection, sellerRewardVaults[2][0]);
+    assert.equal(Number(newSellerRewardFunds.amount), newExpectedSellerReward);
+
+    const newExpectedBuyerReward = Math.floor(Number(productPrice) * oldBuyerPromo / 10000);
+    const newBuyerRewardFunds = await getAccount(provider.connection, buyerRewardVaults[2][0]);
+    assert.equal(Number(newBuyerRewardFunds.amount), newExpectedBuyerReward);
+    // withdraw rewards (both mints done before)
+    // promo is finished with rewardsEnable = false
+    rewardsEnabled = false;
+    const changeMarketplaceInfoParams = {
+      fee: fee,
+      feeReduction: feeReduction,
+      sellerReward: sellerRewardMarketplace,
+      buyerReward: buyerRewardMarketplace,
+      deliverToken: deliverToken,
+      metadata: metadata,
+      transferable: transferable,
+      chainCounter: chainCounter,
+      permissionless: permissionless,
+      rewardsEnabled: rewardsEnabled,
+      accessMintBump: accessMintBump,
+      feePayer: FeePayer.Seller,
+    };
+    const changeMarketplaceInfoAccounts = {
+      signer: marketplaceAuth.publicKey,
+      marketplace: marketplacePubkey,
+      rewardMint: rewardMint,
+      discountMint: discountMint,
+    };
+
+    await program.methods
+      .editMarketplace(changeMarketplaceInfoParams)
+      .accounts(changeMarketplaceInfoAccounts)
+      .signers([marketplaceAuth])
+      .rpc()
+      .catch(console.error);
+
+    await sleep(2000);
+
+    const preBuyerVault1Funds = await getAccount(provider.connection, buyerVaults[1][0]);
+    await program.methods
+      .withdrawReward()
+      .accounts({
+        tokenProgramV0: TOKEN_PROGRAM_ID,
+        signer: buyer.publicKey,
+        marketplace: marketplacePubkey,
+        reward: buyerReward,
+        rewardMint: rewardMint,
+        receiverVault: buyerVaults[1][0],
+        rewardVault: buyerRewardVaults[1][0],
+      })
+      .signers([buyer])
+      .rpc()
+      .catch(console.error);
+
+    await sleep(1000);
+    const postBuyerVault1Funds = await getAccount(provider.connection, buyerVaults[1][0]);
+    assert.equal(Number(postBuyerVault1Funds.amount - preBuyerVault1Funds.amount), Number(buyerRewardFunds.amount));
+
+    const preSellerVault1Funds = await getAccount(provider.connection, sellerVaults[1][0]);
+    await program.methods
+      .withdrawReward()
+      .accounts({
+        tokenProgramV0: TOKEN_PROGRAM_ID,
+        signer: seller.publicKey,
+        marketplace: marketplacePubkey,
+        reward: sellerReward,
+        rewardMint: rewardMint,
+        receiverVault: sellerVaults[1][0],
+        rewardVault: sellerRewardVaults[1][0],
+      })
+      .signers([seller])
+      .rpc()
+      .catch(console.error);
+    
+    await sleep(1000);
+    const postSellerVault1Funds = await getAccount(provider.connection, sellerVaults[1][0]);
+    assert.equal(Number(postSellerVault1Funds.amount - preSellerVault1Funds.amount), Number(sellerRewardFunds.amount));
+
+    const preBuyerVault2Funds = await getAccount(provider.connection, buyerVaults[2][0]);
+    await program.methods
+      .withdrawReward()
+      .accounts({
+        tokenProgramV0: TOKEN_PROGRAM_ID,
+        signer: buyer.publicKey,
+        marketplace: marketplacePubkey,
+        reward: buyerReward,
+        rewardMint: newRewardMint,
+        receiverVault: buyerVaults[2][0],
+        rewardVault: buyerRewardVaults[2][0],
+      })
+      .signers([buyer])
+      .rpc()
+      .catch(console.error);
+
+    await sleep(1000);
+    const postBuyerVault2Funds = await getAccount(provider.connection, buyerVaults[2][0]);
+    assert.equal(Number(postBuyerVault2Funds.amount - preBuyerVault2Funds.amount), Number(newBuyerRewardFunds.amount));
+
+    const preSellerVault2Funds = await getAccount(provider.connection, sellerVaults[2][0]);
+    await program.methods
+      .withdrawReward()
+      .accounts({
+        tokenProgramV0: TOKEN_PROGRAM_ID,
+        signer: seller.publicKey,
+        marketplace: marketplacePubkey,
+        reward: sellerReward,
+        rewardMint: newRewardMint,
+        receiverVault: sellerVaults[2][0],
+        rewardVault: sellerRewardVaults[2][0],
+      })
+      .signers([seller])
+      .rpc()
+      .catch(console.error);
+
+    await sleep(1000);
+    const postSellerVault2Funds = await getAccount(provider.connection, sellerVaults[2][0]);
+    assert.equal(Number(postSellerVault2Funds.amount - preSellerVault2Funds.amount), Number(newSellerRewardFunds.amount));
+  });
+
+  it("Should handle correctly FeePayer.Buyer as config (FeePayer.Seller was used in other examples)", async () => {
+    const newPaymentMintPubkey = NATIVE_MINT;
+    const newPrice = new BN(1000);
+
+    const editProductInfoAccounts = {
+      signer: seller.publicKey,
+      product: productPubkey,
+      paymentMint: newPaymentMintPubkey,
+    };
+    await program.methods
+      .editProduct(newPrice)
+      .accounts(editProductInfoAccounts)
+      .signers([seller])
+      .rpc()
+      .catch(console.error);
+
+    const editMarketplaceInfoParams = {
+      fee: 100,
+      feeReduction: 0,
+      sellerReward: 100,
+      buyerReward: 100,
+      deliverToken: false,
+      metadata: false,
+      transferable: false,
+      chainCounter: true,
+      permissionless: true,
+      rewardsEnabled: false,
+      feePayer: FeePayer.Buyer,
+    };
+
+    const editMarketplaceInfoAccounts = {
+      signer: marketplaceAuth.publicKey,
+      marketplace: marketplacePubkey,
+      rewardMint: rewardMint,
+      discountMint: discountMint,
+    };
+
+    await program.methods
+      .editMarketplace(editMarketplaceInfoParams)
+      .accounts(editMarketplaceInfoAccounts)
+      .signers([marketplaceAuth])
+      .rpc()
+      .catch(console.error);
+  
+    const [paymentPubkey, bump] = anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("payment", "utf-8"), 
+        buyer.publicKey.toBuffer(), 
+        productPubkey.toBuffer(),
+      ],
+      program.programId
+    );
+
+    const marketAuthBalance = await provider.connection.getBalance(marketplaceAuth.publicKey, confirmOptions);
+    const sellerBalance = await provider.connection.getBalance(seller.publicKey, confirmOptions);
+    const buyerBalance = await provider.connection.getBalance(buyer.publicKey, confirmOptions);
+
+    const registerBuyAccounts = {
+      systemProgram: SystemProgram.programId,
+      tokenProgramV0: TOKEN_PROGRAM_ID,
+      rent: SYSVAR_RENT_PUBKEY,
+      signer: buyer.publicKey,
+      seller: seller.publicKey,
+      marketplaceAuth: marketplaceAuth.publicKey,
+      marketplace: marketplacePubkey,
+      product: productPubkey,
+      payment: paymentPubkey,
+      paymentMint: newPaymentMintPubkey,
+      buyerTokenVault: null,
+      buyerTransferVault: null,
+      sellerTransferVault: null,
+      marketplaceTransferVault: null,
+      bountyVault: null,
+      sellerReward: null,
+      sellerRewardVault: null,
+      buyerReward: null,
+      buyerRewardVault: null,
+    };
+
+    await program.methods
+      .registerBuy(1)
+      .accounts(registerBuyAccounts)
+      .signers([buyer])
+      .rpc()
+      .catch(console.error);
+
+    await sleep(2000);
+    const postMarketAuthBalance = await provider.connection.getBalance(marketplaceAuth.publicKey, confirmOptions);
+    const postSellerBalance = await provider.connection.getBalance(seller.publicKey, confirmOptions);
+    const postBuyerBalance = await provider.connection.getBalance(buyer.publicKey, confirmOptions);
+    const marketplaceFee = Math.floor((Number(newPrice) * fee) / 10000);
+
+    assert.equal(postMarketAuthBalance, marketAuthBalance + marketplaceFee);
+    assert.equal(postSellerBalance, sellerBalance + Number(newPrice));
+    assert.equal(postBuyerBalance, buyerBalance - Number(newPrice) - marketplaceFee);
   });
 
   it("Should make the marketplace token-gated", async () => {
