@@ -9,3 +9,5 @@ dist
 data
 .vercel
 .env
+app/.next
+app/node_modules

@@ -1,0 +1,28 @@
+.column {
+  max-width: 640px;
+  padding: 75px 0;
+}
+
+.title {
+  font-size: var(--font-m);
+  font-style: italic;
+  color: rgba(var(--color-primary), 1);
+  margin-bottom: var(--spacing-m);
+}
+
+.description {
+  font-size: 28px;
+  color: rgba(var(--color-light), 1);
+  margin-bottom: var(--spacing-l);
+}
+
+.fullWidth {
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.alignRight {
+  margin-left: auto;
+  text-align: right;
+}

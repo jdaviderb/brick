@@ -1,0 +1,65 @@
+@import '../../styles/mixins.scss';
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 750px;
+  padding: 0 0 75px;
+  z-index: 2;
+  position: relative;
+}
+
+.logo2d {
+  margin-bottom: var(--spacing-l);
+  display: block;
+
+  @include medium {
+
+    display: none;
+  }
+}
+
+.logo3d {
+  display: none;
+
+  @include medium {
+
+    display: block;
+  }
+}
+
+.content {
+  margin-top: var(--spacing-m);
+  text-align: center;
+}
+
+.items {
+  display: grid;
+  justify-content: center;
+  grid-template-columns: 100%;
+  gap: var(--spacing-l);
+  width: 100%; 
+  margin: var(--spacing-xl) 0 50px;
+
+  @include medium {
+    grid-template-columns: 32% 32% 32%;
+    margin: 90px 0 40px;
+  }
+}
+
+.description {
+  margin-bottom: var(--spacing-xl);
+}
+
+.layer {
+  position: absolute;
+  top: 140px;
+  z-index: -1;
+  transform: scale(2);
+
+  @include medium {
+    top: 0;
+  }
+}

@@ -1,0 +1,72 @@
+@import "../../styles/mixins.scss";
+
+.cards {
+  background-color: rgba(var(--color-stable-700), 1);
+  border: solid 2px rgba(var(--color-stable-500), 1);
+  border-right: none;
+  border-left: none;
+  margin: 75px 0;
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  padding: var(--spacing-m);
+  
+  @include medium {
+    padding: 0;
+  }
+}
+
+.items {
+  display: grid;
+  justify-content: center;
+  grid-template-columns: 100%;
+  gap: var(--spacing-xl);
+  max-width: var(--global-width);
+  margin: 0 auto;
+  padding: 75px 0;
+
+  @include medium {
+    grid-template-columns: 35% 35%;
+  }
+}
+
+.item {
+  padding: 0;
+  overflow: hidden;
+
+  @include medium {
+    &:nth-child(odd) {
+      transform: translateY(0);
+    }
+  
+    &:nth-child(even) {
+      transform: translateY(40px);
+    }
+  }
+}
+
+.background {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  background-image: url('../../../public/gradient0.svg');
+  background-size: cover;
+  padding: var(--spacing-xxl);
+}
+
+.content {
+  padding: var(--spacing-l);
+}
+
+.description {
+  padding-top: var(--spacing-m);
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+}

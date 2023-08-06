@@ -1,0 +1,20 @@
+@import '../../styles/mixins.scss';
+
+.heading {
+  padding-bottom: 75px;
+  text-align: center;
+}
+
+.items {
+  display: grid;
+  gap: var(--spacing-l);
+  justify-content: center;
+
+  @include medium {
+    grid-template-columns: 20%;
+  }
+}
+
+.item {
+  filter: saturate(0)
+}

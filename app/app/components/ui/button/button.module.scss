@@ -1,0 +1,21 @@
+.button {
+  display: inline-flex;
+  color: rgba(var(--color-light), 1);
+  background-color: rgba(var(--color-dark), 1);
+  padding: 8px var(--spacing-l);
+  border: solid 1px rgba(var(--color-light), 0.05);
+  border-radius: 8px;
+  font-weight: 600;
+  
+  span {
+    color: rgba(var(--color-light), 1);
+  }
+  
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.outline {
+  border: solid 1px rgba(var(--color-light), 1);
+}

@@ -1,0 +1,37 @@
+.progress {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 75px 0;
+}
+
+.heading {
+  padding-bottom: var(--spacing-xl);
+  text-align: left;
+}
+
+.item {
+  padding: var(--spacing-l);
+
+  &:not(:last-child) {
+    margin-bottom: var(--spacing-m);
+  }
+}
+
+.bar {
+  margin: var(--spacing-m) 0 var(--spacing-xs);
+  border-radius: var(--radius-m);
+  width: 100%;
+  height: 8px;
+  background: rgba(var(--color-dark), 0.5);
+}
+
+.percentage {
+  height: 8px;
+  background-color: rgba(var(--color-primary), 1);
+  border-radius: var(--radius-m);
+}
+
+.completed {
+  background-color: rgba(var(--color-positive), 1);
+}
+

@@ -1,0 +1,35 @@
+{
+  "name": "brick-frontend",
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@splinetool/react-spline": "^2.2.6",
+    "@splinetool/runtime": "^0.9.410",
+    "@types/node": "20.4.5",
+    "@types/react": "18.2.18",
+    "@types/react-dom": "18.2.7",
+    "classnames": "^2.3.2",
+    "eslint": "8.46.0",
+    "eslint-config-next": "13.4.12",
+    "glamor": "^2.20.40",
+    "next": "13.4.12",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-reveal": "^1.2.2",
+    "react-slick": "^0.29.0",
+    "react-svg": "^16.1.19",
+    "sass": "^1.64.2",
+    "slick-carousel": "^1.8.1",
+    "typescript": "5.1.6"
+  },
+  "devDependencies": {
+    "eslint-config-prettier": "^8.9.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "prettier": "^3.0.0"
+  }
+}

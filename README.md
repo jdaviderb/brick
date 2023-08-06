@@ -20,3 +20,5 @@ The following customizable features are available:
 - **Secondary Market Support**: Marketplaces can decide whether products or services can be resold, thereby creating a secondary market for items. When users register a purchase, a fungible token is minted to the user, granting them access to the specific product or service.
 
 - **Metadata Support**: Tokens within the marketplace can be enriched with multimedia representations such as images and videos. This feature is particularly useful for video game marketplaces where tokens can represent in-game items like skins, covers, etc.
+
+Shout out to Stefan, he built the amazing brick frontend: https://twitter.com/evalucratie
