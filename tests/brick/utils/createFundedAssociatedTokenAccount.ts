@@ -36,7 +36,8 @@ export const createFundedAssociatedTokenAccount = async (
           amount
         )
       ),
-    [user]
+    [user],
+    { commitment: "confirmed" },
   );
 
   return userAssociatedTokenAccount;

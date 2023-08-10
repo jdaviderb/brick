@@ -16,7 +16,7 @@ use {
 };
 
 #[derive(Accounts)]
-pub struct RegisterBuy<'info> {
+pub struct RegisterBuyCounter<'info> {
     pub system_program: Program<'info, System>,
     #[account(address = TokenProgramV0 @ ErrorCode::IncorrectTokenProgram, executable)]
     pub token_program_v0: Interface<'info, TokenInterface>,
@@ -57,7 +57,9 @@ pub struct RegisterBuy<'info> {
     pub product: Box<Account<'info, Product>>,
     /// CHECK: this account is used as index, not initialized
     #[account(
-        mut,
+        init_if_needed,
+        payer = signer,
+        space = PAYMENT_SIZE,
         seeds = [
             b"payment".as_ref(),
             signer.key().as_ref(),
@@ -126,10 +128,14 @@ pub struct RegisterBuy<'info> {
     pub buyer_reward_vault: Option<Box<InterfaceAccount<'info, TokenAccount>>>,
 }
 
-pub fn handler<'info>(ctx: Context<RegisterBuy>, amount: u32) -> Result<()> {
+pub fn handler<'info>(ctx: Context<RegisterBuyCounter>, amount: u32) -> Result<()> {
     let total_amount = ctx.accounts.product.seller_config.product_price
         .checked_mul(amount.into()).ok_or(ErrorCode::NumericalOverflow)?;
     let marketplace = &ctx.accounts.marketplace;
+
+    if !marketplace.token_config.chain_counter {
+        return Err(ErrorCode::IncorrectInstruction.into());
+    }
 
     // this account its a counter of the times a user has purchased a product 
     (*ctx.accounts.payment).units += amount;

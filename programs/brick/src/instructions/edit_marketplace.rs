@@ -11,8 +11,8 @@ pub struct EditMarketplaceParams {
     pub fee_reduction: u16,
     pub seller_reward: u16,
     pub buyer_reward: u16,
+    pub use_cnfts: bool,
     pub deliver_token: bool,
-    pub metadata: bool,
     pub transferable: bool,
     pub chain_counter: bool,
     pub permissionless: bool,
@@ -49,8 +49,8 @@ pub fn handler<'info>(
     }
 
     (*ctx.accounts.marketplace).token_config = TokenConfig {
+        use_cnfts: params.use_cnfts,
         deliver_token: params.deliver_token,
-        metadata: params.metadata,
         transferable: params.transferable,
         chain_counter: params.chain_counter,
     };

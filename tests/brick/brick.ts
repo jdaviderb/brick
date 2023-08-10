@@ -42,7 +42,6 @@ describe("brick", () => {
   // Mints, vaults and balances:
   let paymentMints: anchor.web3.PublicKey[] = [];
   let productMint: anchor.web3.PublicKey;
-  let buyerTokenVault: anchor.web3.PublicKey;
   let mintBump: number;
   let marketplaceVaults: [anchor.web3.PublicKey, number][] = [];
   let buyerVaults: [anchor.web3.PublicKey, number][] = [];
@@ -64,8 +63,8 @@ describe("brick", () => {
   let rewardMint: anchor.web3.PublicKey;
   let sellerRewardMarketplace: number;
   let buyerRewardMarketplace: number;
+  let useCnfts: boolean;
   let deliverToken: boolean;
-  let metadata: boolean;
   let transferable: boolean;
   let chainCounter: boolean;
   let permissionless: boolean;
@@ -107,7 +106,7 @@ describe("brick", () => {
     bountyVaults.push([bountyVault, 0])
 
     fee = feeReduction = sellerRewardMarketplace = buyerRewardMarketplace = 0;
-    deliverToken = metadata = transferable = rewardsEnabled = false;
+    deliverToken = transferable = rewardsEnabled = useCnfts = false;
     chainCounter = permissionless = true;
 
     [accessMint, accessMintBump] = anchor.web3.PublicKey.findProgramAddressSync(
@@ -123,8 +122,8 @@ describe("brick", () => {
       feeReduction: feeReduction,
       sellerReward: sellerRewardMarketplace,
       buyerReward: buyerRewardMarketplace,
+      useCnfts: useCnfts,
       deliverToken: deliverToken,
-      metadata: metadata,
       transferable: transferable,
       chainCounter: chainCounter,
       permissionless: permissionless,
@@ -154,8 +153,8 @@ describe("brick", () => {
 
     const marketplaceAccount = await program.account.marketplace.fetch(marketplacePubkey);
     assert.equal(marketplaceAccount.authority.toString(), marketplaceAuth.publicKey.toString());
+    assert.equal(marketplaceAccount.tokenConfig.useCnfts, useCnfts);
     assert.equal(marketplaceAccount.tokenConfig.deliverToken, deliverToken);
-    assert.equal(marketplaceAccount.tokenConfig.metadata, metadata);
     assert.equal(marketplaceAccount.tokenConfig.transferable, transferable);
     assert.equal(marketplaceAccount.tokenConfig.chainCounter, chainCounter);
     assert.equal(marketplaceAccount.permissionConfig.accessMint.toString(), accessMint.toString());
@@ -191,8 +190,8 @@ describe("brick", () => {
       feeReduction: 100,
       sellerReward: 100,
       buyerReward: 100,
+      useCnfts: !useCnfts,
       deliverToken: !deliverToken,
-      metadata: !metadata,
       transferable: !transferable,
       chainCounter: !chainCounter,
       permissionless: !permissionless,
@@ -218,7 +217,7 @@ describe("brick", () => {
     assert.isDefined(changedMarketplaceAccount);
     assert.equal(changedMarketplaceAccount.authority.toString(), marketplaceAuth.publicKey.toString());
     assert.equal(changedMarketplaceAccount.tokenConfig.deliverToken, !deliverToken);
-    assert.equal(changedMarketplaceAccount.tokenConfig.metadata, !metadata);
+    assert.equal(changedMarketplaceAccount.tokenConfig.useCnfts, !useCnfts);
     assert.equal(changedMarketplaceAccount.tokenConfig.transferable, !transferable);
     assert.equal(changedMarketplaceAccount.tokenConfig.chainCounter, !chainCounter);
     assert.equal(changedMarketplaceAccount.permissionConfig.accessMint.toString(), accessMint.toString());
@@ -241,8 +240,8 @@ describe("brick", () => {
       feeReduction: feeReduction,
       sellerReward: sellerRewardMarketplace,
       buyerReward: buyerRewardMarketplace,
+      useCnfts: useCnfts,
       deliverToken: deliverToken,
-      metadata: metadata,
       transferable: transferable,
       chainCounter: chainCounter,
       permissionless: permissionless,
@@ -274,8 +273,8 @@ describe("brick", () => {
       feeReduction: feeReduction,
       sellerReward: sellerRewardMarketplace,
       buyerReward: buyerRewardMarketplace,
+      useCnfts: useCnfts,
       deliverToken: deliverToken,
-      metadata: metadata,
       transferable: transferable,
       chainCounter: chainCounter,
       permissionless: permissionless,
@@ -299,7 +298,7 @@ describe("brick", () => {
     assert.isDefined(marketplaceAccount);
     assert.equal(marketplaceAccount.authority.toString(), marketplaceAuth.publicKey.toString());
     assert.equal(marketplaceAccount.tokenConfig.deliverToken, deliverToken);
-    assert.equal(marketplaceAccount.tokenConfig.metadata, metadata);
+    assert.equal(marketplaceAccount.tokenConfig.useCnfts, useCnfts);
     assert.equal(marketplaceAccount.tokenConfig.transferable, transferable);
     assert.equal(marketplaceAccount.tokenConfig.chainCounter, chainCounter);
     assert.equal(marketplaceAccount.permissionConfig.accessMint.toString(), accessMint.toString());
@@ -332,9 +331,7 @@ describe("brick", () => {
     [productMint, mintBump] = anchor.web3.PublicKey.findProgramAddressSync(
       [
         Buffer.from("product_mint", "utf-8"), 
-        firstId, 
-        secondId,
-        marketplacePubkey.toBuffer()
+        productPubkey.toBuffer()
       ],
       program.programId
     );
@@ -344,7 +341,7 @@ describe("brick", () => {
       firstId: [...firstId],
       secondId: [...secondId],
       productPrice: productPrice,
-      mintBump: mintBump,
+      productMintBump: mintBump,
     };
     const initProductAccounts = {
       systemProgram: SystemProgram.programId,
@@ -376,54 +373,6 @@ describe("brick", () => {
     assert.equal(productAccount.sellerConfig.paymentMint.toString(), paymentMints[0].toString());
     assert.equal(Number(productAccount.sellerConfig.productPrice), Number(productPrice));
   });
-/*
-  it("Should create another product and delete it", async () => {
-    const [firstId, secondId] = getSplitId(uuid());
-    const seller = await createFundedWallet(provider, 1000);
-    const [productPubkey] = anchor.web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("product", "utf-8"), firstId, secondId],
-      program.programId
-    );
-    const paymentMintPubkey = await createMint(provider);
-    const productPrice = new BN(200000);
-
-    const createProductParams = {
-      firstId: [...firstId],
-      secondId: [...secondId],
-      productPrice,
-    };
-
-    await program.methods
-      .createProduct(createProductParams)
-      .accounts({
-        systemProgram: SystemProgram.programId,
-        rent: SYSVAR_RENT_PUBKEY,
-        sellerority: seller.publicKey,
-        governance: marketplacePubkey,
-        product: productPubkey,
-        paymentMint: paymentMintPubkey
-      })
-      .signers([seller])
-      .rpc(confirmOptions)
-      .catch(console.error);
-
-    await program.methods
-      .deleteProduct()
-      .accounts({
-        sellerority: seller.publicKey,
-        product: productPubkey,
-      })
-      .signers([seller])
-      .rpc(confirmOptions)
-      .catch(console.error);
-
-    try {
-      await program.account.product.fetch(productPubkey);
-    } catch (e) {
-      assert.isTrue(e.toString().includes("Account does not exist or has no data"))
-    }
-  });
-*/
 
   it("Should edit product data", async () => {
     const newPaymentMintPubkey = await createMint(provider, confirmOptions);
@@ -544,13 +493,13 @@ describe("brick", () => {
     };
 
     const sig = await program.methods
-      .registerBuy(1)
+      .registerBuyCounter(1)
       .accounts(registerBuyAccounts)
       .signers([buyer])
       .postInstructions(
         [
           await program.methods
-            .registerBuy(1)
+            .registerBuyCounter(1)
             .accounts(registerBuyAccounts)
             .instruction()
         ]
@@ -592,42 +541,6 @@ describe("brick", () => {
     assert.equal(Number(sellerVaultAccount.amount), sellerVaults[0][1]);
   });
 
-  /*
-  it("Buyer can not transfer the product token", async () => {
-    const sellerTokenVaultAccount = await getOrCreateAssociatedTokenAccount(
-      provider.connection,
-      buyer as anchor.web3.Signer,
-      productMint,
-      buyer.publicKey,
-      false,
-      "confirmed",
-      confirmOptions,
-      TOKEN_2022_PROGRAM_ID,
-    );
-
-    try {
-      await provider.sendAndConfirm(
-        new Transaction()
-          .add(
-            createTransferInstruction(
-              buyerTokenVault,
-              sellerTokenVaultAccount.address,
-              buyer.publicKey,
-              1,
-              [],
-              TOKEN_2022_PROGRAM_ID
-            )
-          ),
-        [buyer as anchor.web3.Signer]
-      );
-    } catch(e) {
-      // the decimal equivalent of hexadecimal 0x25, it's 37 in decimal 
-      // ie NonTransferable error in the t2022 program 
-      assert.isTrue(e.toString().includes("0x25"));
-    }
-  });
-  */
-
   it("Should register a buy with spl and fees (seller fee payer)", async () => {
     [fee, feeReduction, sellerRewardMarketplace, buyerRewardMarketplace] = [100, 0, 0, 0];
     const editMarketplaceInfoParams = {
@@ -636,7 +549,7 @@ describe("brick", () => {
       sellerReward: sellerRewardMarketplace,
       buyerReward: buyerRewardMarketplace,
       deliverToken: deliverToken,
-      metadata: metadata,
+      useCnfts: useCnfts,
       transferable: transferable,
       chainCounter: chainCounter,
       permissionless: permissionless,
@@ -824,8 +737,8 @@ describe("brick", () => {
       feeReduction: feeReduction,
       sellerReward: sellerRewardMarketplace,
       buyerReward: buyerRewardMarketplace,
+      useCnfts: useCnfts,
       deliverToken: deliverToken,
-      metadata: metadata,
       transferable: transferable,
       chainCounter: chainCounter,
       permissionless: permissionless,
@@ -947,8 +860,8 @@ describe("brick", () => {
       feeReduction: feeReduction,
       sellerReward: sellerRewardMarketplace,
       buyerReward: buyerRewardMarketplace,
+      useCnfts: useCnfts,
       deliverToken: deliverToken,
-      metadata: metadata,
       transferable: transferable,
       chainCounter: chainCounter,
       permissionless: permissionless,
@@ -1127,8 +1040,8 @@ describe("brick", () => {
       feeReduction: feeReduction,
       sellerReward: sellerRewardMarketplace,
       buyerReward: buyerRewardMarketplace,
+      useCnfts: useCnfts,
       deliverToken: deliverToken,
-      metadata: metadata,
       transferable: transferable,
       chainCounter: chainCounter,
       permissionless: permissionless,
@@ -1255,8 +1168,8 @@ describe("brick", () => {
       feeReduction: feeReduction,
       sellerReward: sellerRewardMarketplace,
       buyerReward: buyerRewardMarketplace,
+      useCnfts: useCnfts,
       deliverToken: deliverToken,
-      metadata: metadata,
       transferable: transferable,
       chainCounter: chainCounter,
       permissionless: permissionless,
@@ -1375,8 +1288,8 @@ describe("brick", () => {
       feeReduction: feeReduction,
       sellerReward: sellerRewardMarketplace,
       buyerReward: buyerRewardMarketplace,
+      useCnfts: useCnfts,
       deliverToken: deliverToken,
-      metadata: metadata,
       transferable: transferable,
       chainCounter: chainCounter,
       permissionless: permissionless,
@@ -1591,8 +1504,8 @@ describe("brick", () => {
       feeReduction: feeReduction,
       sellerReward: sellerRewardMarketplace,
       buyerReward: buyerRewardMarketplace,
+      useCnfts: useCnfts,
       deliverToken: deliverToken,
-      metadata: metadata,
       transferable: transferable,
       chainCounter: chainCounter,
       permissionless: permissionless,
@@ -1799,8 +1712,8 @@ describe("brick", () => {
       feeReduction: feeReduction,
       sellerReward: sellerRewardMarketplace,
       buyerReward: buyerRewardMarketplace,
+      useCnfts: useCnfts,
       deliverToken: deliverToken,
-      metadata: metadata,
       transferable: transferable,
       chainCounter: chainCounter,
       permissionless: permissionless,
@@ -1926,8 +1839,8 @@ describe("brick", () => {
       feeReduction: 0,
       sellerReward: 100,
       buyerReward: 100,
+      useCnfts: false,
       deliverToken: false,
-      metadata: false,
       transferable: false,
       chainCounter: true,
       permissionless: true,
@@ -2009,8 +1922,8 @@ describe("brick", () => {
       feeReduction: feeReduction,
       sellerReward: sellerRewardMarketplace,
       buyerReward: buyerRewardMarketplace,
+      useCnfts: useCnfts,
       deliverToken: deliverToken,
-      metadata: metadata,
       transferable: transferable,
       chainCounter: chainCounter,
       permissionless: permissionless,
@@ -2092,9 +2005,7 @@ describe("brick", () => {
     [productMint, mintBump] = anchor.web3.PublicKey.findProgramAddressSync(
       [
         Buffer.from("product_mint", "utf-8"), 
-        firstId, 
-        secondId,
-        marketplacePubkey.toBuffer()
+        productPubkey.toBuffer()
       ],
       program.programId
     );
@@ -2103,7 +2014,7 @@ describe("brick", () => {
       firstId: [...firstId],
       secondId: [...secondId],
       productPrice: productPrice,
-      mintBump: mintBump,
+      productMintBump: mintBump,
     };
     const initProductAccounts = {
       systemProgram: SystemProgram.programId,
@@ -2137,9 +2048,7 @@ describe("brick", () => {
     [productMint, mintBump] = anchor.web3.PublicKey.findProgramAddressSync(
       [
         Buffer.from("product_mint", "utf-8"), 
-        firstId, 
-        secondId,
-        marketplacePubkey.toBuffer()
+        productPubkey.toBuffer()
       ],
       program.programId
     );
@@ -2158,7 +2067,7 @@ describe("brick", () => {
       firstId: [...firstId],
       secondId: [...secondId],
       productPrice: productPrice,
-      mintBump: mintBump,
+      productMintBump: mintBump,
     };
     const initErrorProductAccounts = {
       systemProgram: SystemProgram.programId,
@@ -2182,7 +2091,28 @@ describe("brick", () => {
       if (e as anchor.AnchorError)
         assert.equal(e.error.errorCode.code, "NotInWithelist");
     }
-  });    
+
+    try {
+      await provider.sendAndConfirm(
+        new Transaction()
+          .add(
+            createTransferInstruction(
+              receiverVault,
+              buyerVault.address,
+              seller.publicKey,
+              1,
+              [],
+              TOKEN_2022_PROGRAM_ID
+            )
+          ),
+        [seller]
+      );
+    } catch(e) {
+      // the decimal equivalent of hexadecimal 0x25, it's 37 in decimal 
+      // ie NonTransferable error in the t2022 program 
+      assert.isTrue(e.toString().includes("0x25"));
+    }
+  });
 })
 
 function sleep(ms: number): Promise<void> {

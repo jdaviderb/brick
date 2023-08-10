@@ -1,7 +1,7 @@
 use {
     crate::state::*,
     crate::error::ErrorCode,
-    crate::utils::mint_builder,
+    crate::utils::{assert_derivation, mint_builder},
     anchor_lang::prelude::*,
     spl_token_2022::extension::ExtensionType,
     anchor_lang::system_program::System,
@@ -20,7 +20,7 @@ pub struct InitProductParams {
     pub first_id: [u8; 32],
     pub second_id: [u8; 32],
     pub product_price: u64,
-    pub mint_bump: u8
+    pub product_mint_bump: u8
 }
 
 #[derive(Accounts)]
@@ -59,11 +59,9 @@ pub struct InitProduct<'info> {
         mut,
         seeds = [
             b"product_mint".as_ref(),
-            params.first_id.as_ref(),
-            params.second_id.as_ref(),
-            marketplace.key().as_ref(),
+            product.key().as_ref(),
         ],
-        bump = params.mint_bump,
+        bump = params.product_mint_bump,
     )]    
     pub product_mint: AccountInfo<'info>,
     pub payment_mint: Box<InterfaceAccount<'info, Mint>>,
@@ -95,47 +93,39 @@ pub fn handler<'info>(ctx: Context<InitProduct>, params: InitProductParams) -> R
             return Err(ErrorCode::NotInWithelist.into());
         }
     }
-    let marketplace_key = ctx.accounts.marketplace.key();
 
+    let marketplace_key = ctx.accounts.marketplace.key();
+    let product_key = ctx.accounts.product.key();
+    
     (*ctx.accounts.product).authority = ctx.accounts.signer.key();
     (*ctx.accounts.product).first_id = params.first_id;
     (*ctx.accounts.product).second_id = params.second_id; 
     (*ctx.accounts.product).marketplace = marketplace_key;
     (*ctx.accounts.product).product_mint = ctx.accounts.product_mint.key();
-
     (*ctx.accounts.product).seller_config = SellerConfig {
         payment_mint: ctx.accounts.payment_mint.key(),
         product_price: params.product_price,
     };
     (*ctx.accounts.product).bumps = ProductBumps {
         bump: *ctx.bumps.get("product").unwrap(),
-        mint_bump: params.mint_bump,
+        mint_bump: params.product_mint_bump,
     };
 
-    // validate product_mint pda
-    let mint_seeds = &[
-        b"product_mint".as_ref(),
-        ctx.accounts.product.first_id.as_ref(),
-        ctx.accounts.product.second_id.as_ref(),
-        marketplace_key.as_ref(),
+    let mint_seeds: &[&[u8]] = &[
+        b"product_mint",
+        product_key.as_ref(),
     ];
-    let (account_address, nonce) = Pubkey::find_program_address(mint_seeds, &ctx.program_id.key());
-    if account_address != ctx.accounts.product_mint.key() {
-        msg!(
-            "Create account with PDA: {:?} was requested while PDA: {:?} was expected",
-            ctx.accounts.product_mint.key(),
-            account_address,
-        );
-        return Err(ErrorCode::IncorrectSeeds.into());
-    }
 
+    assert_derivation(&ctx.program_id,&ctx.accounts.product_mint.to_account_info(),  mint_seeds.clone())?;
     let mut signer_mint_seeds = mint_seeds.to_vec();
-    let bump = &[nonce];
+    let bump = &[params.product_mint_bump];
     signer_mint_seeds.push(bump);
 
     let product_seeds = &[
         b"product".as_ref(),
-        ctx.accounts.product.product_mint.as_ref(),
+        ctx.accounts.product.first_id.as_ref(),
+        ctx.accounts.product.second_id.as_ref(),
+        marketplace_key.as_ref(),
         &[ctx.accounts.product.bumps.bump],
     ];
 

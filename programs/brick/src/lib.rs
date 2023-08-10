@@ -18,6 +18,11 @@ pub mod brick {
         accept_access::handler(ctx)
     }
 
+    /// airdrop a token that allows users to create products in a specific marketplace
+    pub fn airdrop_access(ctx: Context<AirdropAccess>) -> Result<()> {
+        airdrop_access::handler(ctx)
+    }
+
     /// seller can edit payment_mint and product_price
     pub fn edit_product(ctx: Context<EditProduct>, product_price: u64) -> Result<()> {
         edit_product::handler(ctx, product_price)
@@ -39,6 +44,11 @@ pub mod brick {
     }
 
     /// recommeded to read the Product state code to understand the meaning of this data structure 
+    pub fn init_product_tree(ctx: Context<InitProductTree>, params: InitProductTreeParams) -> Result<()> {
+        init_product_tree::handler(ctx, params)
+    }
+
+    /// recommeded to read the Product state code to understand the meaning of this data structure 
     pub fn init_product(ctx: Context<InitProduct>, params: InitProductParams) -> Result<()> {
         init_product::handler(ctx, params)
     }
@@ -53,13 +63,24 @@ pub mod brick {
         init_reward::handler(ctx)
     }
     
+    pub fn register_buy_cnft(ctx: Context<RegisterBuyCnft>, params: RegisterBuyCnftParams) -> Result<()> {
+        register_buy_cnft::handler(ctx, params)
+    }
+
+    /// manages the transfers (buyer -> seller and fees to marketplace authority)
+    /// initializes the payment account to get the number of purchases
+    pub fn register_buy_counter(ctx: Context<RegisterBuyCounter>, amount: u32) -> Result<()> {
+        register_buy_counter::handler(ctx, amount)
+    }
+
     /// manages the transfers (buyer -> seller and fees to marketplace authority) 
     /// and buyers receive a token as a proof of payment (each product has its own tokenc)
     pub fn register_buy_token(ctx: Context<RegisterBuyToken>, amount: u32) -> Result<()> {
         register_buy_token::handler(ctx, amount)
     }
 
-    /// manages the transfers (buyer -> seller and fees to marketplace authority) 
+    /// manages the transfers (buyer -> seller and fees to marketplace authority)
+    /// uses payment pda to index transactions, but it does not initilize it
     pub fn register_buy(ctx: Context<RegisterBuy>, amount: u32) -> Result<()> {
         register_buy::handler(ctx, amount)
     }
@@ -67,6 +88,11 @@ pub mod brick {
     /// creates on chain request to get access to sell products in a specific marketplace
     pub fn request_access(ctx: Context<RequestAccess>) -> Result<()> {
         request_access::handler(ctx)
+    }
+
+    /// creates on chain request to get access to sell products in a specific marketplace
+    pub fn update_tree(ctx: Context<UpdateProductTree>, params: UpdateProductTreeParams) -> Result<()> {
+        update_tree::handler(ctx, params)
     }
     
     /// when promotion is ended users can withdraw the funds stored in the vaults and managed by the reward PFA

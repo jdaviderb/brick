@@ -19,14 +19,16 @@ pub struct Marketplace {
 }
 
 /// Marketplace permission configs, gives flexibility to this program, marketplace auth decides.
+/// All properties = false, buyer can call only register_buy instruction
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Clone)]
 pub struct TokenConfig {
-    /// If true when someone buys a product, he receives a token as proof of payment (bill, in-game item)
+    /// If true seller inits the tree and buyers receives a cnft as a proof of payment
+    /// ie: seller calls init_product_tree to list a product and buyer calls register_buy_cnft
+    pub use_cnfts: bool,
+    /// If true when someone buys a product, he receives a fungible token as proof of payment
     /// false, payment account (just a counter) its created to keep track of amount of units bought
     pub deliver_token: bool,
-    /// If true the fungible token will have a metadata account
-    pub metadata: bool,
-    /// Token mint can be transferable, ie: a user can sell it
+    /// If true the fungible token can be transferable, ie: a user can sell it
     pub transferable: bool,
     /// If true payment account is created (pda used to index ALL transactions), init that account means having
     /// a counter of the times a user has bought a specific product (should be cheaper vs using a token)
@@ -103,7 +105,6 @@ pub const MARKETPLACE_SIZE: usize = 8  // discriminator
     + 32  // authority
     // TokenConfig
     + 1   // deliver_token
-    + 1   // metadata
     + 1   // transferable
     + 1   // chain_counter
     // PermissionConfig
@@ -132,14 +133,19 @@ pub const MARKETPLACE_SIZE: usize = 8  // discriminator
 pub struct Product {
     /// The seller's public key, who owns the product.
     pub authority: Pubkey,
-    /// Identifier of the product, split across two arrays due to a limit on
+    /// Off chain identifier of the product, split across two arrays due to a limit on
     /// the maximum size of a seed component and with the goal of use 64 byte id
     pub first_id: [u8; 32], 
     pub second_id: [u8; 32],
     // Where the product come from
     pub marketplace: Pubkey,
-    /// Mint that represents the product. Owning this token implies having paid for the product.
+    /// Two options:
+    /// - Collection address
+    /// - Mint (fungible) that represents the product. Owning this token implies having paid for the product.
     pub product_mint: Pubkey,
+    /// Active merkle tree, a seller has a limited sells so when the tree is full it is needed to update this address
+    /// can be null in case the product is created with create_product, to create a new one it is needed to call update_tree
+    pub merkle_tree: Pubkey,
     /// Seller-defined product configurations.
     pub seller_config: SellerConfig,
     /// Seed bump parameters used for deterministic address derivation.
@@ -166,6 +172,7 @@ pub const PRODUCT_SIZE: usize = 8 // discriminator
     + 32 // second_id
     + 32 // marketplace
     + 32 // product_mint
+    + 32 // merkle_tree
     // SellerConfig
     + 32 // payment_mint
     + 8  // product_price

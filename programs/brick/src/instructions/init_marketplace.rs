@@ -1,5 +1,6 @@
 use {
     crate::state::*,
+    crate::utils::assert_derivation,
     anchor_lang::prelude::*,
     crate::error::ErrorCode,
     crate::utils::mint_builder,
@@ -21,8 +22,8 @@ pub struct InitMarketplaceParams {
     pub fee_reduction: u16,
     pub seller_reward: u16,
     pub buyer_reward: u16,
+    pub use_cnfts: bool,
     pub deliver_token: bool,
-    pub metadata: bool,
     pub transferable: bool,
     pub chain_counter: bool,
     pub permissionless: bool,
@@ -86,31 +87,21 @@ pub fn handler<'info>(ctx: Context<InitMarketplace>, params: InitMarketplacePara
         return Err(ErrorCode::IncorrectFee.into());
     }
 
-    // validate access_mint pda
-    let marketplace_key: Pubkey = ctx.accounts.marketplace.key();
-    let mint_seeds = &[
-        b"access_mint".as_ref(),
+    let signer_key = ctx.accounts.signer.key();
+    let marketplace_key = ctx.accounts.marketplace.key();
+    let mint_seeds: &[&[u8]] = &[
+        b"access_mint",
         marketplace_key.as_ref(),
     ];
 
-    let (account_address, nonce) = Pubkey::find_program_address(mint_seeds, &ctx.program_id.key());
-    if account_address != ctx.accounts.access_mint.key() {
-        msg!(
-            "Create account with PDA: {:?} was requested while PDA: {:?} was expected",
-            ctx.accounts.access_mint.key(),
-            account_address,
-        );
-        return Err(ErrorCode::IncorrectSeeds.into());
-    }
-
+    assert_derivation(&ctx.program_id,&&ctx.accounts.access_mint.to_account_info(),  mint_seeds.clone())?;
     let mut signer_mint_seeds = mint_seeds.to_vec();
-    let bump = &[nonce];
+    let bump = &[params.access_mint_bump];
     signer_mint_seeds.push(bump);
 
-    let signer: Pubkey = ctx.accounts.signer.key();
     let marketplace_seeds = &[
         b"marketplace".as_ref(),
-        signer.as_ref(),
+        signer_key.as_ref(),
         &[ctx.accounts.marketplace.bumps.bump],
     ];
 
@@ -135,10 +126,10 @@ pub fn handler<'info>(ctx: Context<InitMarketplace>, params: InitMarketplacePara
 
     (*ctx.accounts.marketplace).authority = ctx.accounts.signer.key();
     (*ctx.accounts.marketplace).token_config = TokenConfig {
+        use_cnfts: params.use_cnfts,
         deliver_token: params.deliver_token,
-        metadata: params.metadata,
         transferable: params.transferable,
-        chain_counter: params.chain_counter,
+        chain_counter: params.chain_counter
     };
     (*ctx.accounts.marketplace).permission_config = PermissionConfig {
         permissionless: params.permissionless,
@@ -160,7 +151,7 @@ pub fn handler<'info>(ctx: Context<InitMarketplace>, params: InitMarketplacePara
     (*ctx.accounts.marketplace).bumps = MarketplaceBumps {
         bump: *ctx.bumps.get("marketplace").unwrap(),
         vault_bumps,
-        access_mint_bump: nonce,
+        access_mint_bump: params.access_mint_bump,
     };
     
     Ok(())

@@ -61,9 +61,7 @@ pub struct RegisterBuyToken<'info> {
         mut,
         seeds = [
             b"product_mint".as_ref(),
-            product.first_id.as_ref(),
-            product.second_id.as_ref(),
-            marketplace.key().as_ref(),
+            product.key().as_ref(),
         ],
         bump = product.bumps.mint_bump,
         constraint = product_mint.key() == product.product_mint
@@ -75,12 +73,6 @@ pub struct RegisterBuyToken<'info> {
             @ ErrorCode::IncorrectMint,
     )]
     pub payment_mint: InterfaceAccount<'info, Mint>,
-    /// init_if_needed PR fix t2022: https://github.com/coral-xyz/anchor/pull/2541
-    /// init_if_needed,
-    /// payer = signer,
-    /// associated_token::mint = product_mint,
-    /// associated_token::authority = signer,
-    /// associated_token::token_program = token_program_22,
     #[account(
         mut,
         constraint = buyer_token_vault.owner == signer.key()
