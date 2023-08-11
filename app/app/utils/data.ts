@@ -37,28 +37,24 @@ const dataSteps = {
   heading: "Follow these steps",
   items: [
     {
-      title: "Create an on-chain marketplace",
-      description: "Start building a token-gated marketplace for beta testers and then expand it to the wider market. Choose the best configuration for your use case using the provided documentation.",
+      title: "Build an on-chain marketplace",
+      description: "Create a secure token-gated marketplace, initially catering to beta testers before expanding to a broader audience. Utilize the provided documentation to tailor the marketplace configuration to your specific needs.",
     },
     {
-      title: "Set fees",
-      description:
-        "Enable fee settings for your marketplace to monetize the market you create.",
+      title: "Set marketplace fees",
+      description: "Monetize your marketplace by enabling fee settings, allowing you to generate revenue from the market you've established.",
     },
     {
-      title: "Set Rewards",
-      description:
-        "Offer cashback promotions to users who make purchases on your platform by adjusting the marketplace configuration.",
+      title: "Offer cashback rewards",
+      description: "Enhance user engagement by providing enticing cashback promotions to those who make purchases on your platform. Adjust the marketplace configuration to implement these rewards effectively.",
     },
     {
-      title: "Create products",
-      description:
-        "Configure payment options with specific tokens and prices for your products or services. Open up your platform to others in a permissionless marketplace setup.",
+      title: "Configure products with token-based payments",
+      description: "Customize payment options for your products or services, specifying tokens and prices. Foster a permissionless marketplace environment by opening your platform to external contributors.",
     },
     {
-      title: "Start accepting payments with Brick!",
-      description:
-        "Integrate our Solana program using our Typescript SDK.",
+      title: "Integrate Solana payments using our Typescript SDK",
+      description: "Effortlessly integrate our Solana program into your platform using our dedicated Typescript SDK, enabling seamless and efficient payment processing.",
     },
   ],
 };
@@ -127,12 +123,12 @@ const dataProgress = {
   heading: "Feature progress",
   items: [
     {
-      title: "Public indexer",
-      percentage: 80,
+      title: "Compressed NFT support",
+      percentage: 100,
     },
     {
-      title: "Compressed NFTs support",
-      percentage: 60,
+      title: "Public indexer",
+      percentage: 80,
     },
     {
       title: "TypeScript framework",
@@ -179,7 +175,7 @@ const dataColumn1 = {
 const dataColumn2 = {
   title: "Tokenizing",
   description:
-    "Think of a flight ticket: it represents a promise that you will enter the plane when you check in. The ticket is the token and the check-in is using the token.",
+    "Consider a flight ticket as a promise to board the plane upon check-in. The ticket is the token, and the check-in the use of this token.",
   icon: "ticket",
 };
 
