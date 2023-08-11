@@ -318,13 +318,38 @@ createErrorFromNameLookup.set(
 )
 
 /**
+ * IncorrectInstruction: 'You are trying to sign an incorrect instruction based on marketplace configuration'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class IncorrectInstructionError extends Error {
+  readonly code: number = 0x177e
+  readonly name: string = 'IncorrectInstruction'
+  constructor() {
+    super(
+      'You are trying to sign an incorrect instruction based on marketplace configuration',
+    )
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, IncorrectInstructionError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x177e, () => new IncorrectInstructionError())
+createErrorFromNameLookup.set(
+  'IncorrectInstruction',
+  () => new IncorrectInstructionError(),
+)
+
+/**
  * ConversionError: 'Failed to convert data'
  *
  * @category Errors
  * @category generated
  */
 export class ConversionErrorError extends Error {
-  readonly code: number = 0x177e
+  readonly code: number = 0x177f
   readonly name: string = 'ConversionError'
   constructor() {
     super('Failed to convert data')
@@ -334,7 +359,7 @@ export class ConversionErrorError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x177e, () => new ConversionErrorError())
+createErrorFromCodeLookup.set(0x177f, () => new ConversionErrorError())
 createErrorFromNameLookup.set(
   'ConversionError',
   () => new ConversionErrorError(),
@@ -347,7 +372,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class TransferErrorError extends Error {
-  readonly code: number = 0x177f
+  readonly code: number = 0x1780
   readonly name: string = 'TransferError'
   constructor() {
     super('Transfer error')
@@ -357,7 +382,7 @@ export class TransferErrorError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x177f, () => new TransferErrorError())
+createErrorFromCodeLookup.set(0x1780, () => new TransferErrorError())
 createErrorFromNameLookup.set('TransferError', () => new TransferErrorError())
 
 /**
@@ -367,7 +392,7 @@ createErrorFromNameLookup.set('TransferError', () => new TransferErrorError())
  * @category generated
  */
 export class MintToErrorError extends Error {
-  readonly code: number = 0x1780
+  readonly code: number = 0x1781
   readonly name: string = 'MintToError'
   constructor() {
     super('Error during the mint_to CPI')
@@ -377,7 +402,7 @@ export class MintToErrorError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1780, () => new MintToErrorError())
+createErrorFromCodeLookup.set(0x1781, () => new MintToErrorError())
 createErrorFromNameLookup.set('MintToError', () => new MintToErrorError())
 
 /**
@@ -387,7 +412,7 @@ createErrorFromNameLookup.set('MintToError', () => new MintToErrorError())
  * @category generated
  */
 export class BurnErrorError extends Error {
-  readonly code: number = 0x1781
+  readonly code: number = 0x1782
   readonly name: string = 'BurnError'
   constructor() {
     super('Error during the burn CPI')
@@ -397,7 +422,7 @@ export class BurnErrorError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1781, () => new BurnErrorError())
+createErrorFromCodeLookup.set(0x1782, () => new BurnErrorError())
 createErrorFromNameLookup.set('BurnError', () => new BurnErrorError())
 
 /**
@@ -407,7 +432,7 @@ createErrorFromNameLookup.set('BurnError', () => new BurnErrorError())
  * @category generated
  */
 export class CloseAccountErrorError extends Error {
-  readonly code: number = 0x1782
+  readonly code: number = 0x1783
   readonly name: string = 'CloseAccountError'
   constructor() {
     super('Error during the close account CPI')
@@ -417,7 +442,7 @@ export class CloseAccountErrorError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1782, () => new CloseAccountErrorError())
+createErrorFromCodeLookup.set(0x1783, () => new CloseAccountErrorError())
 createErrorFromNameLookup.set(
   'CloseAccountError',
   () => new CloseAccountErrorError(),
@@ -430,7 +455,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class ClosedPromotionError extends Error {
-  readonly code: number = 0x1783
+  readonly code: number = 0x1784
   readonly name: string = 'ClosedPromotion'
   constructor() {
     super('Currently we do not offer any promotion')
@@ -440,7 +465,7 @@ export class ClosedPromotionError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1783, () => new ClosedPromotionError())
+createErrorFromCodeLookup.set(0x1784, () => new ClosedPromotionError())
 createErrorFromNameLookup.set(
   'ClosedPromotion',
   () => new ClosedPromotionError(),
@@ -453,7 +478,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class OpenPromotionError extends Error {
-  readonly code: number = 0x1784
+  readonly code: number = 0x1785
   readonly name: string = 'OpenPromotion'
   constructor() {
     super(
@@ -465,8 +490,166 @@ export class OpenPromotionError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1784, () => new OpenPromotionError())
+createErrorFromCodeLookup.set(0x1785, () => new OpenPromotionError())
 createErrorFromNameLookup.set('OpenPromotion', () => new OpenPromotionError())
+
+/**
+ * VaultsVectorFull: 'The max size of reward vaults are set at 5'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class VaultsVectorFullError extends Error {
+  readonly code: number = 0x1786
+  readonly name: string = 'VaultsVectorFull'
+  constructor() {
+    super('The max size of reward vaults are set at 5')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, VaultsVectorFullError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1786, () => new VaultsVectorFullError())
+createErrorFromNameLookup.set(
+  'VaultsVectorFull',
+  () => new VaultsVectorFullError(),
+)
+
+/**
+ * ExtensionNotSupported: 'Currently this extension is not supported'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class ExtensionNotSupportedError extends Error {
+  readonly code: number = 0x1787
+  readonly name: string = 'ExtensionNotSupported'
+  constructor() {
+    super('Currently this extension is not supported')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, ExtensionNotSupportedError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1787, () => new ExtensionNotSupportedError())
+createErrorFromNameLookup.set(
+  'ExtensionNotSupported',
+  () => new ExtensionNotSupportedError(),
+)
+
+/**
+ * CreateAccountError: 'Error creating mint account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CreateAccountErrorError extends Error {
+  readonly code: number = 0x1788
+  readonly name: string = 'CreateAccountError'
+  constructor() {
+    super('Error creating mint account')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CreateAccountErrorError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1788, () => new CreateAccountErrorError())
+createErrorFromNameLookup.set(
+  'CreateAccountError',
+  () => new CreateAccountErrorError(),
+)
+
+/**
+ * MintExtensionError: 'Error extension init'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MintExtensionErrorError extends Error {
+  readonly code: number = 0x1789
+  readonly name: string = 'MintExtensionError'
+  constructor() {
+    super('Error extension init')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MintExtensionErrorError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1789, () => new MintExtensionErrorError())
+createErrorFromNameLookup.set(
+  'MintExtensionError',
+  () => new MintExtensionErrorError(),
+)
+
+/**
+ * InitMintError: 'Error mint init'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InitMintErrorError extends Error {
+  readonly code: number = 0x178a
+  readonly name: string = 'InitMintError'
+  constructor() {
+    super('Error mint init')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InitMintErrorError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178a, () => new InitMintErrorError())
+createErrorFromNameLookup.set('InitMintError', () => new InitMintErrorError())
+
+/**
+ * OptionalAccountNotProvided: 'Optional account not provided'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class OptionalAccountNotProvidedError extends Error {
+  readonly code: number = 0x178b
+  readonly name: string = 'OptionalAccountNotProvided'
+  constructor() {
+    super('Optional account not provided')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, OptionalAccountNotProvidedError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(
+  0x178b,
+  () => new OptionalAccountNotProvidedError(),
+)
+createErrorFromNameLookup.set(
+  'OptionalAccountNotProvided',
+  () => new OptionalAccountNotProvidedError(),
+)
+
+/**
+ * NotInWithelist: 'You dont have the token that allows you to create products'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NotInWithelistError extends Error {
+  readonly code: number = 0x178c
+  readonly name: string = 'NotInWithelist'
+  constructor() {
+    super('You dont have the token that allows you to create products')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NotInWithelistError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178c, () => new NotInWithelistError())
+createErrorFromNameLookup.set('NotInWithelist', () => new NotInWithelistError())
 
 /**
  * Attempts to resolve a custom program error from the provided error code.

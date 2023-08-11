@@ -5,65 +5,65 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as splToken from '@solana/spl-token'
 import * as beet from '@metaplex-foundation/beet'
 import * as web3 from '@solana/web3.js'
 
 /**
  * @category Instructions
- * @category InitBonus
+ * @category AirdropAccess
  * @category generated
  */
-export const initBonusStruct = new beet.BeetArgsStruct<{
+export const airdropAccessStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number[] /* size: 8 */
 }>(
   [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
-  'InitBonusInstructionArgs',
+  'AirdropAccessInstructionArgs',
 )
 /**
- * Accounts required by the _initBonus_ instruction
+ * Accounts required by the _airdropAccess_ instruction
  *
+ * @property [] tokenProgram2022
  * @property [] associatedTokenProgram
  * @property [_writable_, **signer**] signer
- * @property [] governance
- * @property [_writable_] bonus
- * @property [_writable_] bonusVault
- * @property [] governanceMint
+ * @property [_writable_] receiver
+ * @property [_writable_] marketplace
+ * @property [_writable_] accessMint
+ * @property [_writable_] accessVault
  * @category Instructions
- * @category InitBonus
+ * @category AirdropAccess
  * @category generated
  */
-export type InitBonusInstructionAccounts = {
+export type AirdropAccessInstructionAccounts = {
   systemProgram?: web3.PublicKey
-  tokenProgram?: web3.PublicKey
+  tokenProgram2022: web3.PublicKey
   associatedTokenProgram: web3.PublicKey
   rent?: web3.PublicKey
   signer: web3.PublicKey
-  governance: web3.PublicKey
-  bonus: web3.PublicKey
-  bonusVault: web3.PublicKey
-  governanceMint: web3.PublicKey
+  receiver: web3.PublicKey
+  marketplace: web3.PublicKey
+  accessMint: web3.PublicKey
+  accessVault: web3.PublicKey
   anchorRemainingAccounts?: web3.AccountMeta[]
 }
 
-export const initBonusInstructionDiscriminator = [
-  234, 68, 252, 216, 66, 1, 25, 244,
+export const airdropAccessInstructionDiscriminator = [
+  161, 35, 117, 107, 167, 139, 80, 126,
 ]
 
 /**
- * Creates a _InitBonus_ instruction.
+ * Creates a _AirdropAccess_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @category Instructions
- * @category InitBonus
+ * @category AirdropAccess
  * @category generated
  */
-export function createInitBonusInstruction(
-  accounts: InitBonusInstructionAccounts,
-  programId = new web3.PublicKey('PROGRAM PUBKEY'),
+export function createAirdropAccessInstruction(
+  accounts: AirdropAccessInstructionAccounts,
+  programId = new web3.PublicKey('brick5uEiJqSkfuAvMtKmq7kiuEVmbjVMiigyV51GRF'),
 ) {
-  const [data] = initBonusStruct.serialize({
-    instructionDiscriminator: initBonusInstructionDiscriminator,
+  const [data] = airdropAccessStruct.serialize({
+    instructionDiscriminator: airdropAccessInstructionDiscriminator,
   })
   const keys: web3.AccountMeta[] = [
     {
@@ -72,7 +72,7 @@ export function createInitBonusInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
+      pubkey: accounts.tokenProgram2022,
       isWritable: false,
       isSigner: false,
     },
@@ -92,23 +92,23 @@ export function createInitBonusInstruction(
       isSigner: true,
     },
     {
-      pubkey: accounts.governance,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.bonus,
+      pubkey: accounts.receiver,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: accounts.bonusVault,
+      pubkey: accounts.marketplace,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: accounts.governanceMint,
-      isWritable: false,
+      pubkey: accounts.accessMint,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.accessVault,
+      isWritable: true,
       isSigner: false,
     },
   ]

@@ -1,11 +1,4 @@
-import { BrickEvent, IX_KEY_ACCOUNTS, InstructionType, RawInstruction } from '../utils/layouts/index.js'
-import { BrickAccountStats, BrickAccountInfo } from '../types.js'
-import { eventParser as eParser } from '../parsers/event.js'
-import { createAccountStats } from './stats/timeSeries.js'
-import { StorageStream } from '@aleph-indexer/core'
-import { BRICK_PROGRAM_ID } from '../constants.js'
-import { createEventDAL } from '../dal/event.js'
-import { AccountDomain } from './account.js'
+import { StorageStream, Utils } from '@aleph-indexer/core'
 import {
   IndexerDomainContext,
   AccountIndexerConfigWithMeta,
@@ -23,13 +16,20 @@ import {
   SolanaIndexerWorkerDomainI,
   SolanaParsedInstructionContext,
 } from '@aleph-indexer/solana'
+import { eventParser as eParser } from '../parsers/event.js'
+import { createEventDAL } from '../dal/event.js'
+import { BrickEvent } from '../utils/layouts/index.js'
+import { BrickAccountStats, BrickAccountInfo } from '../types.js'
+import { AccountDomain } from './account.js'
+import { createAccountStats } from './stats/timeSeries.js'
+import { BRICK_PROGRAM_ID } from '../constants.js'
 
 export default class WorkerDomain
   extends IndexerWorkerDomain
   implements SolanaIndexerWorkerDomainI, IndexerWorkerDomainWithStats
 {
   protected accounts: Record<string, AccountDomain> = {}
-  
+
   constructor(
     protected context: IndexerDomainContext,
     protected eventParser = eParser,
@@ -97,22 +97,17 @@ export default class WorkerDomain
     context: ParserContext,
     ixsContext: SolanaParsedInstructionContext[],
   ): Promise<void> {
-    console.log(`indexing ${ixsContext.length} parsed ixs`)
-  
-    const parsedIxs = await Promise.all(ixsContext.map(
-      async (ix: SolanaParsedInstructionContext) => {
-        const parsed = (ix.instruction as RawInstruction).parsed
-        return await this.eventParser.parse(
-          ix, 
-          parsed.type === InstructionType.RegisterBuy || parsed.type === InstructionType.RegisterPromoBuy 
-            ? await this.getAccountInfo(parsed.info.product) : undefined
-        )
-      }
-    ))
-    console.log('parsedIxs', parsedIxs)
-    await this.eventDAL.save(parsedIxs)
+    if ('account' in context) {
+      const parsedIxs = ixsContext.map((ix) =>
+        this.eventParser.parse(ix, context.account),
+      )
+
+      console.log(`indexing ${ixsContext.length} parsed ixs`)
+
+      await this.eventDAL.save(parsedIxs)
+    }
   }
-  
+
   // ------------- Custom impl methods -------------------
 
   async getAccountInfo(actual: string): Promise<BrickAccountInfo> {

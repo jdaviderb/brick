@@ -6,22 +6,23 @@
  */
 
 import * as beet from '@metaplex-foundation/beet'
-export type CreateProductParams = {
+export type InitProductParams = {
   firstId: number[] /* size: 32 */
   secondId: number[] /* size: 32 */
   productPrice: beet.bignum
+  productMintBump: number
 }
 
 /**
  * @category userTypes
  * @category generated
  */
-export const createProductParamsBeet =
-  new beet.BeetArgsStruct<CreateProductParams>(
-    [
-      ['firstId', beet.uniformFixedSizeArray(beet.u8, 32)],
-      ['secondId', beet.uniformFixedSizeArray(beet.u8, 32)],
-      ['productPrice', beet.u64],
-    ],
-    'CreateProductParams',
-  )
+export const initProductParamsBeet = new beet.BeetArgsStruct<InitProductParams>(
+  [
+    ['firstId', beet.uniformFixedSizeArray(beet.u8, 32)],
+    ['secondId', beet.uniformFixedSizeArray(beet.u8, 32)],
+    ['productPrice', beet.u64],
+    ['productMintBump', beet.u8],
+  ],
+  'InitProductParams',
+)

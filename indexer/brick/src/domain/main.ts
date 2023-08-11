@@ -173,9 +173,11 @@ export default class MainDomain
     return {
       totalAccesses: 0,
       totalAccounts: {
-        [AccountType.Bonus]: 0,
-        [AccountType.Governance]: 0,
+        [AccountType.Marketplace]: 0,
         [AccountType.Product]: 0,
+        [AccountType.Reward]: 0,
+        [AccountType.Access]: 0,
+        [AccountType.Payment]: 0,
       },
       totalAccessesByProgramId: {},
       startTimestamp: undefined,

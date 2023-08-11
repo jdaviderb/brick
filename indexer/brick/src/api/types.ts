@@ -13,32 +13,136 @@ import { InstructionType } from '../utils/layouts/index.js'
 
 // ------------------- TYPES ---------------------------
 
-export const CreateGovernanceParams = new GraphQLObjectType({
-  name: 'CreateGovernanceParams',
-  fields: {
-    fee: { type: new GraphQLNonNull(GraphQLInt) },
-    feeReduction: { type: new GraphQLNonNull(GraphQLInt) },
-    sellerPromo: { type: new GraphQLNonNull(GraphQLInt) },
-    buyerPromo: { type: new GraphQLNonNull(GraphQLInt) },
+export const PaymentFeePayer = new GraphQLEnumType({
+  name: 'PaymentFeePayer',
+  values: {
+    Buyer: { value: 0 },
+    Seller: { value: 1 },
   },
 })
 
-export const CreateProductParams = new GraphQLObjectType({
-  name: 'CreateProductParams',
+export const EditMarketplaceParams = new GraphQLObjectType({
+  name: 'EditMarketplaceParams',
+  fields: {
+    fee: { type: new GraphQLNonNull(GraphQLInt) },
+    feeReduction: { type: new GraphQLNonNull(GraphQLInt) },
+    sellerReward: { type: new GraphQLNonNull(GraphQLInt) },
+    buyerReward: { type: new GraphQLNonNull(GraphQLInt) },
+    useCnfts: { type: new GraphQLNonNull(GraphQLBoolean) },
+    deliverToken: { type: new GraphQLNonNull(GraphQLBoolean) },
+    transferable: { type: new GraphQLNonNull(GraphQLBoolean) },
+    chainCounter: { type: new GraphQLNonNull(GraphQLBoolean) },
+    permissionless: { type: new GraphQLNonNull(GraphQLBoolean) },
+    rewardsEnabled: { type: new GraphQLNonNull(GraphQLBoolean) },
+    feePayer: { type: new GraphQLNonNull(PaymentFeePayer) },
+  },
+})
+
+export const InitMarketplaceParams = new GraphQLObjectType({
+  name: 'InitMarketplaceParams',
+  fields: {
+    fee: { type: new GraphQLNonNull(GraphQLInt) },
+    feeReduction: { type: new GraphQLNonNull(GraphQLInt) },
+    sellerReward: { type: new GraphQLNonNull(GraphQLInt) },
+    buyerReward: { type: new GraphQLNonNull(GraphQLInt) },
+    useCnfts: { type: new GraphQLNonNull(GraphQLBoolean) },
+    deliverToken: { type: new GraphQLNonNull(GraphQLBoolean) },
+    transferable: { type: new GraphQLNonNull(GraphQLBoolean) },
+    chainCounter: { type: new GraphQLNonNull(GraphQLBoolean) },
+    permissionless: { type: new GraphQLNonNull(GraphQLBoolean) },
+    rewardsEnabled: { type: new GraphQLNonNull(GraphQLBoolean) },
+    accessMintBump: { type: new GraphQLNonNull(GraphQLInt) },
+    feePayer: { type: new GraphQLNonNull(PaymentFeePayer) },
+  },
+})
+
+export const InitProductTreeParams = new GraphQLObjectType({
+  name: 'InitProductTreeParams',
   fields: {
     firstId: { type: new GraphQLNonNull(GraphQLString) },
     secondId: { type: new GraphQLNonNull(GraphQLString) },
     productPrice: { type: new GraphQLNonNull(GraphQLBigNumber) },
+    maxDepth: { type: new GraphQLNonNull(GraphQLInt) },
+    maxBufferSize: { type: new GraphQLNonNull(GraphQLInt) },
+    name: { type: new GraphQLNonNull(GraphQLString) },
+    metadataUrl: { type: new GraphQLNonNull(GraphQLString) },
+    feeBasisPoints: { type: new GraphQLNonNull(GraphQLInt) },
   },
 })
 
-export const EditPointsParams = new GraphQLObjectType({
-  name: 'EditPointsParams',
+export const InitProductParams = new GraphQLObjectType({
+  name: 'InitProductParams',
   fields: {
+    firstId: { type: new GraphQLNonNull(GraphQLString) },
+    secondId: { type: new GraphQLNonNull(GraphQLString) },
+    productPrice: { type: new GraphQLNonNull(GraphQLBigNumber) },
+    productMintBump: { type: new GraphQLNonNull(GraphQLInt) },
+  },
+})
+
+export const RegisterBuyCnftParams = new GraphQLObjectType({
+  name: 'RegisterBuyCnftParams',
+  fields: {
+    amount: { type: new GraphQLNonNull(GraphQLInt) },
+    name: { type: new GraphQLNonNull(GraphQLString) },
+    symbol: { type: new GraphQLNonNull(GraphQLString) },
+    uri: { type: new GraphQLNonNull(GraphQLString) },
+  },
+})
+
+export const UpdateProductTreeParams = new GraphQLObjectType({
+  name: 'UpdateProductTreeParams',
+  fields: {
+    maxDepth: { type: new GraphQLNonNull(GraphQLInt) },
+    maxBufferSize: { type: new GraphQLNonNull(GraphQLInt) },
+  },
+})
+
+export const TokenConfig = new GraphQLObjectType({
+  name: 'TokenConfig',
+  fields: {
+    useCnfts: { type: new GraphQLNonNull(GraphQLBoolean) },
+    deliverToken: { type: new GraphQLNonNull(GraphQLBoolean) },
+    transferable: { type: new GraphQLNonNull(GraphQLBoolean) },
+    chainCounter: { type: new GraphQLNonNull(GraphQLBoolean) },
+  },
+})
+
+export const PermissionConfig = new GraphQLObjectType({
+  name: 'PermissionConfig',
+  fields: {
+    accessMint: { type: new GraphQLNonNull(GraphQLString) },
+    permissionless: { type: new GraphQLNonNull(GraphQLBoolean) },
+  },
+})
+
+export const FeesConfig = new GraphQLObjectType({
+  name: 'FeesConfig',
+  fields: {
+    discountMint: { type: new GraphQLNonNull(GraphQLString) },
     fee: { type: new GraphQLNonNull(GraphQLInt) },
     feeReduction: { type: new GraphQLNonNull(GraphQLInt) },
-    sellerPromo: { type: new GraphQLNonNull(GraphQLInt) },
-    buyerPromo: { type: new GraphQLNonNull(GraphQLInt) },
+    feePayer: { type: new GraphQLNonNull(PaymentFeePayer) },
+  },
+})
+
+export const RewardsConfig = new GraphQLObjectType({
+  name: 'RewardsConfig',
+  fields: {
+    rewardMint: { type: new GraphQLNonNull(GraphQLString) },
+    bountyVaults: { type: new GraphQLNonNull(GraphQLList(GraphQLString)) },
+    sellerReward: { type: new GraphQLNonNull(GraphQLInt) },
+    buyerReward: { type: new GraphQLNonNull(GraphQLInt) },
+    rewardsEnabled: { type: new GraphQLNonNull(GraphQLBoolean) },
+  },
+})
+
+export const MarketplaceBumps = new GraphQLObjectType({
+  name: 'MarketplaceBumps',
+  fields: {
+    bump: { type: new GraphQLNonNull(GraphQLInt) },
+    vaultBumps: { type: new GraphQLNonNull(GraphQLString) },
+    accessMintBump: { type: new GraphQLNonNull(GraphQLInt) },
   },
 })
 
@@ -50,10 +154,26 @@ export const SellerConfig = new GraphQLObjectType({
   },
 })
 
+export const ProductBumps = new GraphQLObjectType({
+  name: 'ProductBumps',
+  fields: {
+    bump: { type: new GraphQLNonNull(GraphQLInt) },
+    mintBump: { type: new GraphQLNonNull(GraphQLInt) },
+  },
+})
+
+export const RewardBumps = new GraphQLObjectType({
+  name: 'RewardBumps',
+  fields: {
+    bump: { type: new GraphQLNonNull(GraphQLInt) },
+    vaultBumps: { type: new GraphQLNonNull(GraphQLString) },
+  },
+})
+
 // ------------------- STATS ---------------------------
 
 export const AccessTimeStats = new GraphQLObjectType({
-  name: 'MarinadeFinanceInfo',
+  name: 'AccessTimeStats',
   fields: {
     accesses: { type: new GraphQLNonNull(GraphQLInt) },
     accessesByProgramId: { type: new GraphQLNonNull(GraphQLJSON) },
@@ -65,9 +185,11 @@ export const AccessTimeStats = new GraphQLObjectType({
 export const TotalAccounts = new GraphQLObjectType({
   name: 'TotalAccounts',
   fields: {
-    Bonus: { type: new GraphQLNonNull(GraphQLInt) },
-    Governance: { type: new GraphQLNonNull(GraphQLInt) },
+    Marketplace: { type: new GraphQLNonNull(GraphQLInt) },
     Product: { type: new GraphQLNonNull(GraphQLInt) },
+    Reward: { type: new GraphQLNonNull(GraphQLInt) },
+    Access: { type: new GraphQLNonNull(GraphQLInt) },
+    Payment: { type: new GraphQLNonNull(GraphQLInt) },
   },
 })
 
@@ -97,60 +219,86 @@ export const BrickStats = new GraphQLObjectType({
 export const AccountsEnum = new GraphQLEnumType({
   name: 'AccountsEnum',
   values: {
-    Bonus: { value: 'Bonus' },
-    Governance: { value: 'Governance' },
+    Marketplace: { value: 'Marketplace' },
     Product: { value: 'Product' },
+    Reward: { value: 'Reward' },
+    Access: { value: 'Access' },
+    Payment: { value: 'Payment' },
   },
 })
 
-export const Bonus = new GraphQLObjectType({
-  name: 'Bonus',
+export const Marketplace = new GraphQLObjectType({
+  name: 'Marketplace',
   fields: {
     authority: { type: new GraphQLNonNull(GraphQLString) },
-    bump: { type: new GraphQLNonNull(GraphQLInt) },
-    vaultBump: { type: new GraphQLNonNull(GraphQLInt) },
-  },
-})
-
-export const Governance = new GraphQLObjectType({
-  name: 'Governance',
-  fields: {
-    governanceAuthority: { type: new GraphQLNonNull(GraphQLString) },
-    governanceMint: { type: new GraphQLNonNull(GraphQLString) },
-    governanceBonusVault: { type: new GraphQLNonNull(GraphQLString) },
-    feeReduction: { type: new GraphQLNonNull(GraphQLInt) },
-    fee: { type: new GraphQLNonNull(GraphQLInt) },
-    sellerPromo: { type: new GraphQLNonNull(GraphQLInt) },
-    buyerPromo: { type: new GraphQLNonNull(GraphQLInt) },
-    bump: { type: new GraphQLNonNull(GraphQLInt) },
-    vaultBump: { type: new GraphQLNonNull(GraphQLInt) },
+    tokenConfig: { type: new GraphQLNonNull(TokenConfig) },
+    permissionConfig: { type: new GraphQLNonNull(PermissionConfig) },
+    feesConfig: { type: new GraphQLNonNull(FeesConfig) },
+    rewardsConfig: { type: new GraphQLNonNull(RewardsConfig) },
+    bumps: { type: new GraphQLNonNull(MarketplaceBumps) },
   },
 })
 
 export const Product = new GraphQLObjectType({
   name: 'Product',
   fields: {
+    authority: { type: new GraphQLNonNull(GraphQLString) },
     firstId: { type: new GraphQLNonNull(GraphQLString) },
     secondId: { type: new GraphQLNonNull(GraphQLString) },
-    productAuthority: { type: new GraphQLNonNull(GraphQLString) },
+    marketplace: { type: new GraphQLNonNull(GraphQLString) },
+    productMint: { type: new GraphQLNonNull(GraphQLString) },
+    merkleTree: { type: new GraphQLNonNull(GraphQLString) },
     sellerConfig: { type: new GraphQLNonNull(SellerConfig) },
+    bumps: { type: new GraphQLNonNull(ProductBumps) },
+  },
+})
+
+export const Reward = new GraphQLObjectType({
+  name: 'Reward',
+  fields: {
+    authority: { type: new GraphQLNonNull(GraphQLString) },
+    marketplace: { type: new GraphQLNonNull(GraphQLString) },
+    rewardVaults: { type: new GraphQLNonNull(GraphQLString) },
+    bumps: { type: new GraphQLNonNull(RewardBumps) },
+  },
+})
+
+export const Access = new GraphQLObjectType({
+  name: 'Access',
+  fields: {
+    authority: { type: new GraphQLNonNull(GraphQLString) },
+    marketplace: { type: new GraphQLNonNull(GraphQLString) },
+    bump: { type: new GraphQLNonNull(GraphQLInt) },
+  },
+})
+
+export const Payment = new GraphQLObjectType({
+  name: 'Payment',
+  fields: {
+    units: { type: new GraphQLNonNull(GraphQLInt) },
     bump: { type: new GraphQLNonNull(GraphQLInt) },
   },
 })
 
 export const ParsedAccountsData = new GraphQLUnionType({
   name: 'ParsedAccountsData',
-  types: [Bonus, Governance, Product],
+  types: [Marketplace, Product, Reward, Access, Payment],
   resolveType: (obj) => {
     // here is selected a unique property of each account to discriminate between types
-    if (obj.authority) {
-      return 'Bonus'
+    if (obj.bumps) {
+      return 'Marketplace'
     }
-    if (obj.governanceAuthority) {
-      return 'Governance'
-    }
-    if (obj.firstId) {
+    if (obj.bumps) {
       return 'Product'
+    }
+    if (obj.bumps) {
+      return 'Reward'
+    }
+    if (obj.bump) {
+      return 'Access'
+    }
+    if (obj.bump) {
+      return 'Payment'
     }
   },
 })
@@ -182,26 +330,33 @@ export const AccountsInfo = new GraphQLList(BrickAccountsInfo)
 
 // ------------------- EVENTS --------------------------
 
-export const ParsedEvents = new GraphQLEnumType({
-  name: 'ParsedEvents',
+export const BrickEvent = new GraphQLEnumType({
+  name: 'BrickEvent',
   values: {
-    CreateGovernanceEvent: { value: 'CreateGovernanceEvent' },
-    CreateProductEvent: { value: 'CreateProductEvent' },
-    DeleteProductEvent: { value: 'DeleteProductEvent' },
-    EditPointsEvent: { value: 'EditPointsEvent' },
-    EditPaymentMintEvent: { value: 'EditPaymentMintEvent' },
-    EditPriceEvent: { value: 'EditPriceEvent' },
-    InitBonusEvent: { value: 'InitBonusEvent' },
-    RegisterBuyEvent: { value: 'RegisterBuyEvent' },
-    RegisterPromoBuyEvent: { value: 'RegisterPromoBuyEvent' },
-    WithdrawBonusEvent: { value: 'WithdrawBonusEvent' },
+    AcceptAccess: { value: 'AcceptAccess' },
+    AirdropAccess: { value: 'AirdropAccess' },
+    EditProduct: { value: 'EditProduct' },
+    EditMarketplace: { value: 'EditMarketplace' },
+    InitBounty: { value: 'InitBounty' },
+    InitMarketplace: { value: 'InitMarketplace' },
+    InitProductTree: { value: 'InitProductTree' },
+    InitProduct: { value: 'InitProduct' },
+    InitRewardVault: { value: 'InitRewardVault' },
+    InitReward: { value: 'InitReward' },
+    RegisterBuyCnft: { value: 'RegisterBuyCnft' },
+    RegisterBuyCounter: { value: 'RegisterBuyCounter' },
+    RegisterBuyToken: { value: 'RegisterBuyToken' },
+    RegisterBuy: { value: 'RegisterBuy' },
+    RequestAccess: { value: 'RequestAccess' },
+    UpdateTree: { value: 'UpdateTree' },
+    WithdrawReward: { value: 'WithdrawReward' },
   },
 })
 
 const commonEventFields = {
   id: { type: new GraphQLNonNull(GraphQLString) },
   timestamp: { type: GraphQLLong },
-  type: { type: new GraphQLNonNull(ParsedEvents) },
+  type: { type: new GraphQLNonNull(BrickEvent) },
   account: { type: new GraphQLNonNull(GraphQLString) },
   signer: { type: new GraphQLNonNull(GraphQLString) },
 }
@@ -215,100 +370,425 @@ const Event = new GraphQLInterfaceType({
 
 /*-----------------------* CUSTOM EVENTS TYPES *-----------------------*/
 
-export const CreateGovernanceEvent = new GraphQLObjectType({
-  name: 'CreateGovernanceEvent',
-  interfaces: [Event],
-  isTypeOf: (item) => item.type === InstructionType.CreateGovernance,
+export const AcceptAccessInfo = new GraphQLObjectType({
+  name: 'AcceptAccessInfo',
   fields: {
-    ...commonEventFields,
     systemProgram: { type: new GraphQLNonNull(GraphQLString) },
-    tokenProgram: { type: new GraphQLNonNull(GraphQLString) },
-    rent: { type: new GraphQLNonNull(GraphQLString) },
-    governanceAuthority: { type: new GraphQLNonNull(GraphQLString) },
-    governance: { type: new GraphQLNonNull(GraphQLString) },
-    governanceMint: { type: new GraphQLNonNull(GraphQLString) },
-    governanceBonusVault: { type: new GraphQLNonNull(GraphQLString) },
-  },
-})
-
-export const CreateProductEvent = new GraphQLObjectType({
-  name: 'CreateProductEvent',
-  interfaces: [Event],
-  isTypeOf: (item) => item.type === InstructionType.CreateProduct,
-  fields: {
-    ...commonEventFields,
-    systemProgram: { type: new GraphQLNonNull(GraphQLString) },
-    rent: { type: new GraphQLNonNull(GraphQLString) },
-    productAuthority: { type: new GraphQLNonNull(GraphQLString) },
-    governance: { type: new GraphQLNonNull(GraphQLString) },
-    product: { type: new GraphQLNonNull(GraphQLString) },
-    paymentMint: { type: new GraphQLNonNull(GraphQLString) },
-  },
-})
-
-
-export const DeleteProductEvent = new GraphQLObjectType({
-  name: 'DeleteProductEvent',
-  interfaces: [Event],
-  isTypeOf: (item) => item.type === InstructionType.DeleteProduct,
-  fields: {
-    ...commonEventFields,
-    productAuthority: { type: new GraphQLNonNull(GraphQLString) },
-    product: { type: new GraphQLNonNull(GraphQLString) },
-  },
-})
-
-
-export const EditPointsEvent = new GraphQLObjectType({
-  name: 'EditPointsEvent',
-  interfaces: [Event],
-  isTypeOf: (item) => item.type === InstructionType.EditPoints,
-  fields: {
-    ...commonEventFields,
-    governanceAuthority: { type: new GraphQLNonNull(GraphQLString) },
-    governance: { type: new GraphQLNonNull(GraphQLString) },
-  },
-})
-
-export const EditPaymentMintEvent = new GraphQLObjectType({
-  name: 'EditPaymentMintEvent',
-  interfaces: [Event],
-  isTypeOf: (item) => item.type === InstructionType.EditPaymentMint,
-  fields: {
-    ...commonEventFields,
-    productAuthority: { type: new GraphQLNonNull(GraphQLString) },
-    product: { type: new GraphQLNonNull(GraphQLString) },
-    paymentMint: { type: new GraphQLNonNull(GraphQLString) },
-  },
-})
-
-export const EditPriceEvent = new GraphQLObjectType({
-  name: 'EditPriceEvent',
-  interfaces: [Event],
-  isTypeOf: (item) => item.type === InstructionType.EditPrice,
-  fields: {
-    ...commonEventFields,
-    productPrice: { type: new GraphQLNonNull(GraphQLBigNumber) },
-    productAuthority: { type: new GraphQLNonNull(GraphQLString) },
-    product: { type: new GraphQLNonNull(GraphQLString) },
-  },
-})
-
-export const InitBonusEvent = new GraphQLObjectType({
-  name: 'InitBonusEvent',
-  interfaces: [Event],
-  isTypeOf: (item) => item.type === InstructionType.InitBonus,
-  fields: {
-    ...commonEventFields,
-    systemProgram: { type: new GraphQLNonNull(GraphQLString) },
-    tokenProgram: { type: new GraphQLNonNull(GraphQLString) },
+    tokenProgram2022: { type: new GraphQLNonNull(GraphQLString) },
     associatedTokenProgram: { type: new GraphQLNonNull(GraphQLString) },
     rent: { type: new GraphQLNonNull(GraphQLString) },
     signer: { type: new GraphQLNonNull(GraphQLString) },
-    governance: { type: new GraphQLNonNull(GraphQLString) },
-    bonus: { type: new GraphQLNonNull(GraphQLString) },
-    bonusVault: { type: new GraphQLNonNull(GraphQLString) },
-    governanceMint: { type: new GraphQLNonNull(GraphQLString) },
+    receiver: { type: new GraphQLNonNull(GraphQLString) },
+    marketplace: { type: new GraphQLNonNull(GraphQLString) },
+    request: { type: new GraphQLNonNull(GraphQLString) },
+    accessMint: { type: new GraphQLNonNull(GraphQLString) },
+    accessVault: { type: new GraphQLNonNull(GraphQLString) },
+  },
+})
+
+export const AcceptAccessEvent = new GraphQLObjectType({
+  name: 'AcceptAccessEvent',
+  interfaces: [Event],
+  isTypeOf: (item) => item.type === InstructionType.AcceptAccess,
+  fields: {
+    ...commonEventFields,
+    info: { type: new GraphQLNonNull(AcceptAccessInfo) },
+  },
+})
+
+/*----------------------------------------------------------------------*/
+
+export const AirdropAccessInfo = new GraphQLObjectType({
+  name: 'AirdropAccessInfo',
+  fields: {
+    systemProgram: { type: new GraphQLNonNull(GraphQLString) },
+    tokenProgram2022: { type: new GraphQLNonNull(GraphQLString) },
+    associatedTokenProgram: { type: new GraphQLNonNull(GraphQLString) },
+    rent: { type: new GraphQLNonNull(GraphQLString) },
+    signer: { type: new GraphQLNonNull(GraphQLString) },
+    receiver: { type: new GraphQLNonNull(GraphQLString) },
+    marketplace: { type: new GraphQLNonNull(GraphQLString) },
+    accessMint: { type: new GraphQLNonNull(GraphQLString) },
+    accessVault: { type: new GraphQLNonNull(GraphQLString) },
+  },
+})
+
+export const AirdropAccessEvent = new GraphQLObjectType({
+  name: 'AirdropAccessEvent',
+  interfaces: [Event],
+  isTypeOf: (item) => item.type === InstructionType.AirdropAccess,
+  fields: {
+    ...commonEventFields,
+    info: { type: new GraphQLNonNull(AirdropAccessInfo) },
+  },
+})
+
+/*----------------------------------------------------------------------*/
+
+export const EditProductInfo = new GraphQLObjectType({
+  name: 'EditProductInfo',
+  fields: {
+    signer: { type: new GraphQLNonNull(GraphQLString) },
+    product: { type: new GraphQLNonNull(GraphQLString) },
+    paymentMint: { type: new GraphQLNonNull(GraphQLString) },
+    productPrice: { type: new GraphQLNonNull(GraphQLBigNumber) },
+  },
+})
+
+export const EditProductEvent = new GraphQLObjectType({
+  name: 'EditProductEvent',
+  interfaces: [Event],
+  isTypeOf: (item) => item.type === InstructionType.EditProduct,
+  fields: {
+    ...commonEventFields,
+    info: { type: new GraphQLNonNull(EditProductInfo) },
+  },
+})
+
+/*----------------------------------------------------------------------*/
+
+export const EditMarketplaceInfo = new GraphQLObjectType({
+  name: 'EditMarketplaceInfo',
+  fields: {
+    signer: { type: new GraphQLNonNull(GraphQLString) },
+    marketplace: { type: new GraphQLNonNull(GraphQLString) },
+    rewardMint: { type: new GraphQLNonNull(GraphQLString) },
+    discountMint: { type: new GraphQLNonNull(GraphQLString) },
+    params: { type: new GraphQLNonNull(EditMarketplaceParams) },
+  },
+})
+
+export const EditMarketplaceEvent = new GraphQLObjectType({
+  name: 'EditMarketplaceEvent',
+  interfaces: [Event],
+  isTypeOf: (item) => item.type === InstructionType.EditMarketplace,
+  fields: {
+    ...commonEventFields,
+    info: { type: new GraphQLNonNull(EditMarketplaceInfo) },
+  },
+})
+
+/*----------------------------------------------------------------------*/
+
+export const InitBountyInfo = new GraphQLObjectType({
+  name: 'InitBountyInfo',
+  fields: {
+    systemProgram: { type: new GraphQLNonNull(GraphQLString) },
+    tokenProgramV0: { type: new GraphQLNonNull(GraphQLString) },
+    associatedTokenProgram: { type: new GraphQLNonNull(GraphQLString) },
+    rent: { type: new GraphQLNonNull(GraphQLString) },
+    signer: { type: new GraphQLNonNull(GraphQLString) },
+    marketplace: { type: new GraphQLNonNull(GraphQLString) },
+    rewardMint: { type: new GraphQLNonNull(GraphQLString) },
+    bountyVault: { type: new GraphQLNonNull(GraphQLString) },
+  },
+})
+
+export const InitBountyEvent = new GraphQLObjectType({
+  name: 'InitBountyEvent',
+  interfaces: [Event],
+  isTypeOf: (item) => item.type === InstructionType.InitBounty,
+  fields: {
+    ...commonEventFields,
+    info: { type: new GraphQLNonNull(InitBountyInfo) },
+  },
+})
+
+/*----------------------------------------------------------------------*/
+
+export const InitMarketplaceInfo = new GraphQLObjectType({
+  name: 'InitMarketplaceInfo',
+  fields: {
+    systemProgram: { type: new GraphQLNonNull(GraphQLString) },
+    tokenProgram2022: { type: new GraphQLNonNull(GraphQLString) },
+    tokenProgramV0: { type: new GraphQLNonNull(GraphQLString) },
+    rent: { type: new GraphQLNonNull(GraphQLString) },
+    signer: { type: new GraphQLNonNull(GraphQLString) },
+    marketplace: { type: new GraphQLNonNull(GraphQLString) },
+    accessMint: { type: new GraphQLNonNull(GraphQLString) },
+    rewardMint: { type: new GraphQLNonNull(GraphQLString) },
+    discountMint: { type: new GraphQLNonNull(GraphQLString) },
+    bountyVault: { type: new GraphQLNonNull(GraphQLString) },
+    params: { type: new GraphQLNonNull(InitMarketplaceParams) },
+  },
+})
+
+export const InitMarketplaceEvent = new GraphQLObjectType({
+  name: 'InitMarketplaceEvent',
+  interfaces: [Event],
+  isTypeOf: (item) => item.type === InstructionType.InitMarketplace,
+  fields: {
+    ...commonEventFields,
+    info: { type: new GraphQLNonNull(InitMarketplaceInfo) },
+  },
+})
+
+/*----------------------------------------------------------------------*/
+
+export const InitProductTreeInfo = new GraphQLObjectType({
+  name: 'InitProductTreeInfo',
+  fields: {
+    tokenMetadataProgram: { type: new GraphQLNonNull(GraphQLString) },
+    logWrapper: { type: new GraphQLNonNull(GraphQLString) },
+    systemProgram: { type: new GraphQLNonNull(GraphQLString) },
+    bubblegumProgram: { type: new GraphQLNonNull(GraphQLString) },
+    compressionProgram: { type: new GraphQLNonNull(GraphQLString) },
+    tokenProgramV0: { type: new GraphQLNonNull(GraphQLString) },
+    associatedTokenProgram: { type: new GraphQLNonNull(GraphQLString) },
+    rent: { type: new GraphQLNonNull(GraphQLString) },
+    signer: { type: new GraphQLNonNull(GraphQLString) },
+    marketplace: { type: new GraphQLNonNull(GraphQLString) },
+    product: { type: new GraphQLNonNull(GraphQLString) },
+    productMint: { type: new GraphQLNonNull(GraphQLString) },
+    paymentMint: { type: new GraphQLNonNull(GraphQLString) },
+    accessMint: { type: new GraphQLNonNull(GraphQLString) },
+    productMintVault: { type: new GraphQLNonNull(GraphQLString) },
+    accessVault: { type: new GraphQLNonNull(GraphQLString) },
+    masterEdition: { type: new GraphQLNonNull(GraphQLString) },
+    metadata: { type: new GraphQLNonNull(GraphQLString) },
+    merkleTree: { type: new GraphQLNonNull(GraphQLString) },
+    treeAuthority: { type: new GraphQLNonNull(GraphQLString) },
+    params: { type: new GraphQLNonNull(InitProductTreeParams) },
+  },
+})
+
+export const InitProductTreeEvent = new GraphQLObjectType({
+  name: 'InitProductTreeEvent',
+  interfaces: [Event],
+  isTypeOf: (item) => item.type === InstructionType.InitProductTree,
+  fields: {
+    ...commonEventFields,
+    info: { type: new GraphQLNonNull(InitProductTreeInfo) },
+  },
+})
+
+/*----------------------------------------------------------------------*/
+
+export const InitProductInfo = new GraphQLObjectType({
+  name: 'InitProductInfo',
+  fields: {
+    systemProgram: { type: new GraphQLNonNull(GraphQLString) },
+    tokenProgram2022: { type: new GraphQLNonNull(GraphQLString) },
+    rent: { type: new GraphQLNonNull(GraphQLString) },
+    signer: { type: new GraphQLNonNull(GraphQLString) },
+    marketplace: { type: new GraphQLNonNull(GraphQLString) },
+    product: { type: new GraphQLNonNull(GraphQLString) },
+    productMint: { type: new GraphQLNonNull(GraphQLString) },
+    paymentMint: { type: new GraphQLNonNull(GraphQLString) },
+    accessMint: { type: new GraphQLNonNull(GraphQLString) },
+    accessVault: { type: new GraphQLNonNull(GraphQLString) },
+    params: { type: new GraphQLNonNull(InitProductParams) },
+  },
+})
+
+export const InitProductEvent = new GraphQLObjectType({
+  name: 'InitProductEvent',
+  interfaces: [Event],
+  isTypeOf: (item) => item.type === InstructionType.InitProduct,
+  fields: {
+    ...commonEventFields,
+    info: { type: new GraphQLNonNull(InitProductInfo) },
+  },
+})
+
+/*----------------------------------------------------------------------*/
+
+export const InitRewardVaultInfo = new GraphQLObjectType({
+  name: 'InitRewardVaultInfo',
+  fields: {
+    systemProgram: { type: new GraphQLNonNull(GraphQLString) },
+    tokenProgramV0: { type: new GraphQLNonNull(GraphQLString) },
+    associatedTokenProgram: { type: new GraphQLNonNull(GraphQLString) },
+    rent: { type: new GraphQLNonNull(GraphQLString) },
+    signer: { type: new GraphQLNonNull(GraphQLString) },
+    marketplace: { type: new GraphQLNonNull(GraphQLString) },
+    reward: { type: new GraphQLNonNull(GraphQLString) },
+    rewardMint: { type: new GraphQLNonNull(GraphQLString) },
+    rewardVault: { type: new GraphQLNonNull(GraphQLString) },
+  },
+})
+
+export const InitRewardVaultEvent = new GraphQLObjectType({
+  name: 'InitRewardVaultEvent',
+  interfaces: [Event],
+  isTypeOf: (item) => item.type === InstructionType.InitRewardVault,
+  fields: {
+    ...commonEventFields,
+    info: { type: new GraphQLNonNull(InitRewardVaultInfo) },
+  },
+})
+
+/*----------------------------------------------------------------------*/
+
+export const InitRewardInfo = new GraphQLObjectType({
+  name: 'InitRewardInfo',
+  fields: {
+    systemProgram: { type: new GraphQLNonNull(GraphQLString) },
+    tokenProgramV0: { type: new GraphQLNonNull(GraphQLString) },
+    rent: { type: new GraphQLNonNull(GraphQLString) },
+    signer: { type: new GraphQLNonNull(GraphQLString) },
+    marketplace: { type: new GraphQLNonNull(GraphQLString) },
+    reward: { type: new GraphQLNonNull(GraphQLString) },
+    rewardMint: { type: new GraphQLNonNull(GraphQLString) },
+    rewardVault: { type: new GraphQLNonNull(GraphQLString) },
+  },
+})
+
+export const InitRewardEvent = new GraphQLObjectType({
+  name: 'InitRewardEvent',
+  interfaces: [Event],
+  isTypeOf: (item) => item.type === InstructionType.InitReward,
+  fields: {
+    ...commonEventFields,
+    info: { type: new GraphQLNonNull(InitRewardInfo) },
+  },
+})
+
+/*----------------------------------------------------------------------*/
+
+export const RegisterBuyCnftInfo = new GraphQLObjectType({
+  name: 'RegisterBuyCnftInfo',
+  fields: {
+    systemProgram: { type: new GraphQLNonNull(GraphQLString) },
+    tokenProgramV0: { type: new GraphQLNonNull(GraphQLString) },
+    rent: { type: new GraphQLNonNull(GraphQLString) },
+    logWrapper: { type: new GraphQLNonNull(GraphQLString) },
+    bubblegumProgram: { type: new GraphQLNonNull(GraphQLString) },
+    compressionProgram: { type: new GraphQLNonNull(GraphQLString) },
+    tokenMetadataProgram: { type: new GraphQLNonNull(GraphQLString) },
+    signer: { type: new GraphQLNonNull(GraphQLString) },
+    seller: { type: new GraphQLNonNull(GraphQLString) },
+    marketplaceAuth: { type: new GraphQLNonNull(GraphQLString) },
+    marketplace: { type: new GraphQLNonNull(GraphQLString) },
+    product: { type: new GraphQLNonNull(GraphQLString) },
+    paymentMint: { type: new GraphQLNonNull(GraphQLString) },
+    productMint: { type: new GraphQLNonNull(GraphQLString) },
+    buyerTransferVault: { type: new GraphQLNonNull(GraphQLString) },
+    sellerTransferVault: { type: new GraphQLNonNull(GraphQLString) },
+    marketplaceTransferVault: { type: new GraphQLNonNull(GraphQLString) },
+    bountyVault: { type: new GraphQLNonNull(GraphQLString) },
+    sellerReward: { type: new GraphQLNonNull(GraphQLString) },
+    sellerRewardVault: { type: new GraphQLNonNull(GraphQLString) },
+    buyerReward: { type: new GraphQLNonNull(GraphQLString) },
+    buyerRewardVault: { type: new GraphQLNonNull(GraphQLString) },
+    metadata: { type: new GraphQLNonNull(GraphQLString) },
+    masterEdition: { type: new GraphQLNonNull(GraphQLString) },
+    treeAuthority: { type: new GraphQLNonNull(GraphQLString) },
+    bubblegumSigner: { type: new GraphQLNonNull(GraphQLString) },
+    merkleTree: { type: new GraphQLNonNull(GraphQLString) },
+    params: { type: new GraphQLNonNull(RegisterBuyCnftParams) },
+  },
+})
+
+export const RegisterBuyCnftEvent = new GraphQLObjectType({
+  name: 'RegisterBuyCnftEvent',
+  interfaces: [Event],
+  isTypeOf: (item) => item.type === InstructionType.RegisterBuyCnft,
+  fields: {
+    ...commonEventFields,
+    info: { type: new GraphQLNonNull(RegisterBuyCnftInfo) },
+  },
+})
+
+/*----------------------------------------------------------------------*/
+
+export const RegisterBuyCounterInfo = new GraphQLObjectType({
+  name: 'RegisterBuyCounterInfo',
+  fields: {
+    systemProgram: { type: new GraphQLNonNull(GraphQLString) },
+    tokenProgramV0: { type: new GraphQLNonNull(GraphQLString) },
+    rent: { type: new GraphQLNonNull(GraphQLString) },
+    signer: { type: new GraphQLNonNull(GraphQLString) },
+    seller: { type: new GraphQLNonNull(GraphQLString) },
+    marketplaceAuth: { type: new GraphQLNonNull(GraphQLString) },
+    marketplace: { type: new GraphQLNonNull(GraphQLString) },
+    product: { type: new GraphQLNonNull(GraphQLString) },
+    payment: { type: new GraphQLNonNull(GraphQLString) },
+    paymentMint: { type: new GraphQLNonNull(GraphQLString) },
+    buyerTransferVault: { type: new GraphQLNonNull(GraphQLString) },
+    sellerTransferVault: { type: new GraphQLNonNull(GraphQLString) },
+    marketplaceTransferVault: { type: new GraphQLNonNull(GraphQLString) },
+    bountyVault: { type: new GraphQLNonNull(GraphQLString) },
+    sellerReward: { type: new GraphQLNonNull(GraphQLString) },
+    sellerRewardVault: { type: new GraphQLNonNull(GraphQLString) },
+    buyerReward: { type: new GraphQLNonNull(GraphQLString) },
+    buyerRewardVault: { type: new GraphQLNonNull(GraphQLString) },
+    amount: { type: new GraphQLNonNull(GraphQLInt) },
+  },
+})
+
+export const RegisterBuyCounterEvent = new GraphQLObjectType({
+  name: 'RegisterBuyCounterEvent',
+  interfaces: [Event],
+  isTypeOf: (item) => item.type === InstructionType.RegisterBuyCounter,
+  fields: {
+    ...commonEventFields,
+    info: { type: new GraphQLNonNull(RegisterBuyCounterInfo) },
+  },
+})
+
+/*----------------------------------------------------------------------*/
+
+export const RegisterBuyTokenInfo = new GraphQLObjectType({
+  name: 'RegisterBuyTokenInfo',
+  fields: {
+    systemProgram: { type: new GraphQLNonNull(GraphQLString) },
+    tokenProgramV0: { type: new GraphQLNonNull(GraphQLString) },
+    tokenProgram2022: { type: new GraphQLNonNull(GraphQLString) },
+    signer: { type: new GraphQLNonNull(GraphQLString) },
+    seller: { type: new GraphQLNonNull(GraphQLString) },
+    marketplaceAuth: { type: new GraphQLNonNull(GraphQLString) },
+    marketplace: { type: new GraphQLNonNull(GraphQLString) },
+    product: { type: new GraphQLNonNull(GraphQLString) },
+    productMint: { type: new GraphQLNonNull(GraphQLString) },
+    paymentMint: { type: new GraphQLNonNull(GraphQLString) },
+    buyerTokenVault: { type: new GraphQLNonNull(GraphQLString) },
+    buyerTransferVault: { type: new GraphQLNonNull(GraphQLString) },
+    sellerTransferVault: { type: new GraphQLNonNull(GraphQLString) },
+    marketplaceTransferVault: { type: new GraphQLNonNull(GraphQLString) },
+    bountyVault: { type: new GraphQLNonNull(GraphQLString) },
+    sellerReward: { type: new GraphQLNonNull(GraphQLString) },
+    sellerRewardVault: { type: new GraphQLNonNull(GraphQLString) },
+    buyerReward: { type: new GraphQLNonNull(GraphQLString) },
+    buyerRewardVault: { type: new GraphQLNonNull(GraphQLString) },
+    amount: { type: new GraphQLNonNull(GraphQLInt) },
+  },
+})
+
+export const RegisterBuyTokenEvent = new GraphQLObjectType({
+  name: 'RegisterBuyTokenEvent',
+  interfaces: [Event],
+  isTypeOf: (item) => item.type === InstructionType.RegisterBuyToken,
+  fields: {
+    ...commonEventFields,
+    info: { type: new GraphQLNonNull(RegisterBuyTokenInfo) },
+  },
+})
+
+/*----------------------------------------------------------------------*/
+
+export const RegisterBuyInfo = new GraphQLObjectType({
+  name: 'RegisterBuyInfo',
+  fields: {
+    systemProgram: { type: new GraphQLNonNull(GraphQLString) },
+    tokenProgramV0: { type: new GraphQLNonNull(GraphQLString) },
+    rent: { type: new GraphQLNonNull(GraphQLString) },
+    signer: { type: new GraphQLNonNull(GraphQLString) },
+    seller: { type: new GraphQLNonNull(GraphQLString) },
+    marketplaceAuth: { type: new GraphQLNonNull(GraphQLString) },
+    marketplace: { type: new GraphQLNonNull(GraphQLString) },
+    product: { type: new GraphQLNonNull(GraphQLString) },
+    payment: { type: new GraphQLNonNull(GraphQLString) },
+    paymentMint: { type: new GraphQLNonNull(GraphQLString) },
+    buyerTransferVault: { type: new GraphQLNonNull(GraphQLString) },
+    sellerTransferVault: { type: new GraphQLNonNull(GraphQLString) },
+    marketplaceTransferVault: { type: new GraphQLNonNull(GraphQLString) },
+    bountyVault: { type: new GraphQLNonNull(GraphQLString) },
+    sellerReward: { type: new GraphQLNonNull(GraphQLString) },
+    sellerRewardVault: { type: new GraphQLNonNull(GraphQLString) },
+    buyerReward: { type: new GraphQLNonNull(GraphQLString) },
+    buyerRewardVault: { type: new GraphQLNonNull(GraphQLString) },
+    amount: { type: new GraphQLNonNull(GraphQLInt) },
   },
 })
 
@@ -318,62 +798,84 @@ export const RegisterBuyEvent = new GraphQLObjectType({
   isTypeOf: (item) => item.type === InstructionType.RegisterBuy,
   fields: {
     ...commonEventFields,
-    systemProgram: { type: new GraphQLNonNull(GraphQLString) },
-    messagesProgram: { type: new GraphQLNonNull(GraphQLString) },
-    tokenProgram: { type: new GraphQLNonNull(GraphQLString) },
-    rent: { type: new GraphQLNonNull(GraphQLString) },
-    governanceAuthority: { type: new GraphQLNonNull(GraphQLString) },
-    signer: { type: new GraphQLNonNull(GraphQLString) },
-    governance: { type: new GraphQLNonNull(GraphQLString) },
-    product: { type: new GraphQLNonNull(GraphQLString) },
-    paymentMint: { type: new GraphQLNonNull(GraphQLString) },
-    governanceMint: { type: new GraphQLNonNull(GraphQLString) },
-    buyerTransferVault: { type: new GraphQLNonNull(GraphQLString) },
-    productAuthorityTransferVault: { type: new GraphQLNonNull(GraphQLString) },
-    governanceTransferVault: { type: new GraphQLNonNull(GraphQLString) },
+    info: { type: new GraphQLNonNull(RegisterBuyInfo) },
   },
 })
 
-export const RegisterPromoBuyEvent = new GraphQLObjectType({
-  name: 'RegisterPromoBuyEvent',
-  interfaces: [Event],
-  isTypeOf: (item) => item.type === InstructionType.RegisterPromoBuy,
+/*----------------------------------------------------------------------*/
+
+export const RequestAccessInfo = new GraphQLObjectType({
+  name: 'RequestAccessInfo',
   fields: {
-    ...commonEventFields,
     systemProgram: { type: new GraphQLNonNull(GraphQLString) },
-    messagesProgram: { type: new GraphQLNonNull(GraphQLString) },
-    tokenProgram: { type: new GraphQLNonNull(GraphQLString) },
     rent: { type: new GraphQLNonNull(GraphQLString) },
-    governanceAuthority: { type: new GraphQLNonNull(GraphQLString) },
     signer: { type: new GraphQLNonNull(GraphQLString) },
-    governance: { type: new GraphQLNonNull(GraphQLString) },
-    product: { type: new GraphQLNonNull(GraphQLString) },
-    governanceMint: { type: new GraphQLNonNull(GraphQLString) },
-    buyerTransferVault: { type: new GraphQLNonNull(GraphQLString) },
-    productAuthorityTransferVault: { type: new GraphQLNonNull(GraphQLString) },
-    governanceTransferVault: { type: new GraphQLNonNull(GraphQLString) },
-    governanceBonusVault: { type: new GraphQLNonNull(GraphQLString) },
-    productAuthorityBonus: { type: new GraphQLNonNull(GraphQLString) },
-    productAuthorityBonusVault: { type: new GraphQLNonNull(GraphQLString) },
-    buyerBonus: { type: new GraphQLNonNull(GraphQLString) },
-    buyerBonusVault: { type: new GraphQLNonNull(GraphQLString) },
+    marketplace: { type: new GraphQLNonNull(GraphQLString) },
+    request: { type: new GraphQLNonNull(GraphQLString) },
   },
 })
 
-export const WithdrawBonusEvent = new GraphQLObjectType({
-  name: 'WithdrawBonusEvent',
+export const RequestAccessEvent = new GraphQLObjectType({
+  name: 'RequestAccessEvent',
   interfaces: [Event],
-  isTypeOf: (item) => item.type === InstructionType.WithdrawBonus,
+  isTypeOf: (item) => item.type === InstructionType.RequestAccess,
   fields: {
     ...commonEventFields,
-    tokenProgram: { type: new GraphQLNonNull(GraphQLString) },
+    info: { type: new GraphQLNonNull(RequestAccessInfo) },
+  },
+})
+
+/*----------------------------------------------------------------------*/
+
+export const UpdateTreeInfo = new GraphQLObjectType({
+  name: 'UpdateTreeInfo',
+  fields: {
+    payer: { type: new GraphQLNonNull(GraphQLString) },
     signer: { type: new GraphQLNonNull(GraphQLString) },
-    governance: { type: new GraphQLNonNull(GraphQLString) },
-    bonus: { type: new GraphQLNonNull(GraphQLString) },
-    governanceMint: { type: new GraphQLNonNull(GraphQLString) },
-    governanceBonusVault: { type: new GraphQLNonNull(GraphQLString) },
+    marketplace: { type: new GraphQLNonNull(GraphQLString) },
+    product: { type: new GraphQLNonNull(GraphQLString) },
+    treeAuthority: { type: new GraphQLNonNull(GraphQLString) },
+    merkleTree: { type: new GraphQLNonNull(GraphQLString) },
+    logWrapper: { type: new GraphQLNonNull(GraphQLString) },
+    systemProgram: { type: new GraphQLNonNull(GraphQLString) },
+    bubblegumProgram: { type: new GraphQLNonNull(GraphQLString) },
+    compressionProgram: { type: new GraphQLNonNull(GraphQLString) },
+    params: { type: new GraphQLNonNull(UpdateProductTreeParams) },
+  },
+})
+
+export const UpdateTreeEvent = new GraphQLObjectType({
+  name: 'UpdateTreeEvent',
+  interfaces: [Event],
+  isTypeOf: (item) => item.type === InstructionType.UpdateTree,
+  fields: {
+    ...commonEventFields,
+    info: { type: new GraphQLNonNull(UpdateTreeInfo) },
+  },
+})
+
+/*----------------------------------------------------------------------*/
+
+export const WithdrawRewardInfo = new GraphQLObjectType({
+  name: 'WithdrawRewardInfo',
+  fields: {
+    tokenProgramV0: { type: new GraphQLNonNull(GraphQLString) },
+    signer: { type: new GraphQLNonNull(GraphQLString) },
+    marketplace: { type: new GraphQLNonNull(GraphQLString) },
+    reward: { type: new GraphQLNonNull(GraphQLString) },
+    rewardMint: { type: new GraphQLNonNull(GraphQLString) },
     receiverVault: { type: new GraphQLNonNull(GraphQLString) },
-    bonusVault: { type: new GraphQLNonNull(GraphQLString) },
+    rewardVault: { type: new GraphQLNonNull(GraphQLString) },
+  },
+})
+
+export const WithdrawRewardEvent = new GraphQLObjectType({
+  name: 'WithdrawRewardEvent',
+  interfaces: [Event],
+  isTypeOf: (item) => item.type === InstructionType.WithdrawReward,
+  fields: {
+    ...commonEventFields,
+    info: { type: new GraphQLNonNull(WithdrawRewardInfo) },
   },
 })
 
@@ -382,14 +884,21 @@ export const WithdrawBonusEvent = new GraphQLObjectType({
 export const Events = new GraphQLList(Event)
 
 export const types = [
-  CreateGovernanceEvent,
-  CreateProductEvent,
-  DeleteProductEvent,
-  EditPointsEvent,
-  EditPaymentMintEvent,
-  EditPriceEvent,
-  InitBonusEvent,
+  AcceptAccessEvent,
+  AirdropAccessEvent,
+  EditProductEvent,
+  EditMarketplaceEvent,
+  InitBountyEvent,
+  InitMarketplaceEvent,
+  InitProductTreeEvent,
+  InitProductEvent,
+  InitRewardVaultEvent,
+  InitRewardEvent,
+  RegisterBuyCnftEvent,
+  RegisterBuyCounterEvent,
+  RegisterBuyTokenEvent,
   RegisterBuyEvent,
-  RegisterPromoBuyEvent,
-  WithdrawBonusEvent,
+  RequestAccessEvent,
+  UpdateTreeEvent,
+  WithdrawRewardEvent,
 ]

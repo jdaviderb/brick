@@ -5,57 +5,52 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
+import * as beet from '@metaplex-foundation/beet'
 import * as web3 from '@solana/web3.js'
 import * as beetSolana from '@metaplex-foundation/beet-solana'
-import * as beet from '@metaplex-foundation/beet'
 
 /**
- * Arguments used to create {@link Bonus}
+ * Arguments used to create {@link Payment}
  * @category Accounts
  * @category generated
  */
-export type BonusArgs = {
-  authority: web3.PublicKey
+export type PaymentArgs = {
+  units: number
   bump: number
-  vaultBump: number
 }
 
-export const bonusDiscriminator = [198, 155, 31, 171, 113, 36, 189, 12]
+export const paymentDiscriminator = [227, 231, 51, 26, 244, 88, 4, 148]
 /**
- * Holds the data for the {@link Bonus} Account and provides de/serialization
+ * Holds the data for the {@link Payment} Account and provides de/serialization
  * functionality for that data
  *
  * @category Accounts
  * @category generated
  */
-export class Bonus implements BonusArgs {
-  private constructor(
-    readonly authority: web3.PublicKey,
-    readonly bump: number,
-    readonly vaultBump: number,
-  ) {}
+export class Payment implements PaymentArgs {
+  private constructor(readonly units: number, readonly bump: number) {}
 
   /**
-   * Creates a {@link Bonus} instance from the provided args.
+   * Creates a {@link Payment} instance from the provided args.
    */
-  static fromArgs(args: BonusArgs) {
-    return new Bonus(args.authority, args.bump, args.vaultBump)
+  static fromArgs(args: PaymentArgs) {
+    return new Payment(args.units, args.bump)
   }
 
   /**
-   * Deserializes the {@link Bonus} from the data of the provided {@link web3.AccountInfo}.
+   * Deserializes the {@link Payment} from the data of the provided {@link web3.AccountInfo}.
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static fromAccountInfo(
     accountInfo: web3.AccountInfo<Buffer>,
     offset = 0,
-  ): [Bonus, number] {
-    return Bonus.deserialize(accountInfo.data, offset)
+  ): [Payment, number] {
+    return Payment.deserialize(accountInfo.data, offset)
   }
 
   /**
    * Retrieves the account info from the provided address and deserializes
-   * the {@link Bonus} from its data.
+   * the {@link Payment} from its data.
    *
    * @throws Error if no account info is found at the address or if deserialization fails
    */
@@ -63,15 +58,15 @@ export class Bonus implements BonusArgs {
     connection: web3.Connection,
     address: web3.PublicKey,
     commitmentOrConfig?: web3.Commitment | web3.GetAccountInfoConfig,
-  ): Promise<Bonus> {
+  ): Promise<Payment> {
     const accountInfo = await connection.getAccountInfo(
       address,
       commitmentOrConfig,
     )
     if (accountInfo == null) {
-      throw new Error(`Unable to find Bonus account at ${address}`)
+      throw new Error(`Unable to find Payment account at ${address}`)
     }
-    return Bonus.fromAccountInfo(accountInfo, 0)[0]
+    return Payment.fromAccountInfo(accountInfo, 0)[0]
   }
 
   /**
@@ -81,41 +76,43 @@ export class Bonus implements BonusArgs {
    * @param programId - the program that owns the accounts we are filtering
    */
   static gpaBuilder(
-    programId: web3.PublicKey = new web3.PublicKey('PROGRAM PUBKEY'),
+    programId: web3.PublicKey = new web3.PublicKey(
+      'brick5uEiJqSkfuAvMtKmq7kiuEVmbjVMiigyV51GRF',
+    ),
   ) {
-    return beetSolana.GpaBuilder.fromStruct(programId, bonusBeet)
+    return beetSolana.GpaBuilder.fromStruct(programId, paymentBeet)
   }
 
   /**
-   * Deserializes the {@link Bonus} from the provided data Buffer.
+   * Deserializes the {@link Payment} from the provided data Buffer.
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
-  static deserialize(buf: Buffer, offset = 0): [Bonus, number] {
-    return bonusBeet.deserialize(buf, offset)
+  static deserialize(buf: Buffer, offset = 0): [Payment, number] {
+    return paymentBeet.deserialize(buf, offset)
   }
 
   /**
-   * Serializes the {@link Bonus} into a Buffer.
+   * Serializes the {@link Payment} into a Buffer.
    * @returns a tuple of the created Buffer and the offset up to which the buffer was written to store it.
    */
   serialize(): [Buffer, number] {
-    return bonusBeet.serialize({
-      accountDiscriminator: bonusDiscriminator,
+    return paymentBeet.serialize({
+      accountDiscriminator: paymentDiscriminator,
       ...this,
     })
   }
 
   /**
    * Returns the byteSize of a {@link Buffer} holding the serialized data of
-   * {@link Bonus}
+   * {@link Payment}
    */
   static get byteSize() {
-    return bonusBeet.byteSize
+    return paymentBeet.byteSize
   }
 
   /**
    * Fetches the minimum balance needed to exempt an account holding
-   * {@link Bonus} data from rent
+   * {@link Payment} data from rent
    *
    * @param connection used to retrieve the rent exemption information
    */
@@ -124,28 +121,27 @@ export class Bonus implements BonusArgs {
     commitment?: web3.Commitment,
   ): Promise<number> {
     return connection.getMinimumBalanceForRentExemption(
-      Bonus.byteSize,
+      Payment.byteSize,
       commitment,
     )
   }
 
   /**
    * Determines if the provided {@link Buffer} has the correct byte size to
-   * hold {@link Bonus} data.
+   * hold {@link Payment} data.
    */
   static hasCorrectByteSize(buf: Buffer, offset = 0) {
-    return buf.byteLength - offset === Bonus.byteSize
+    return buf.byteLength - offset === Payment.byteSize
   }
 
   /**
-   * Returns a readable version of {@link Bonus} properties
+   * Returns a readable version of {@link Payment} properties
    * and can be used to convert to JSON and/or logging
    */
   pretty() {
     return {
-      authority: this.authority.toBase58(),
+      units: this.units,
       bump: this.bump,
-      vaultBump: this.vaultBump,
     }
   }
 }
@@ -154,18 +150,17 @@ export class Bonus implements BonusArgs {
  * @category Accounts
  * @category generated
  */
-export const bonusBeet = new beet.BeetStruct<
-  Bonus,
-  BonusArgs & {
+export const paymentBeet = new beet.BeetStruct<
+  Payment,
+  PaymentArgs & {
     accountDiscriminator: number[] /* size: 8 */
   }
 >(
   [
     ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['authority', beetSolana.publicKey],
+    ['units', beet.u32],
     ['bump', beet.u8],
-    ['vaultBump', beet.u8],
   ],
-  Bonus.fromArgs,
-  'Bonus',
+  Payment.fromArgs,
+  'Payment',
 )

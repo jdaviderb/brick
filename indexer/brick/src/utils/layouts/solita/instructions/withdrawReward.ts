@@ -5,69 +5,67 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as splToken from '@solana/spl-token'
 import * as beet from '@metaplex-foundation/beet'
 import * as web3 from '@solana/web3.js'
 
 /**
  * @category Instructions
- * @category WithdrawBonus
+ * @category WithdrawReward
  * @category generated
  */
-export const withdrawBonusStruct = new beet.BeetArgsStruct<{
+export const withdrawRewardStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number[] /* size: 8 */
 }>(
   [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
-  'WithdrawBonusInstructionArgs',
+  'WithdrawRewardInstructionArgs',
 )
 /**
- * Accounts required by the _withdrawBonus_ instruction
+ * Accounts required by the _withdrawReward_ instruction
  *
+ * @property [] tokenProgramV0
  * @property [_writable_, **signer**] signer
- * @property [] governance
- * @property [_writable_] bonus
- * @property [] governanceMint
- * @property [_writable_] governanceBonusVault
+ * @property [_writable_] marketplace
+ * @property [_writable_] reward
+ * @property [] rewardMint
  * @property [_writable_] receiverVault
- * @property [_writable_] bonusVault
+ * @property [_writable_] rewardVault
  * @category Instructions
- * @category WithdrawBonus
+ * @category WithdrawReward
  * @category generated
  */
-export type WithdrawBonusInstructionAccounts = {
-  tokenProgram?: web3.PublicKey
+export type WithdrawRewardInstructionAccounts = {
+  tokenProgramV0: web3.PublicKey
   signer: web3.PublicKey
-  governance: web3.PublicKey
-  bonus: web3.PublicKey
-  governanceMint: web3.PublicKey
-  governanceBonusVault: web3.PublicKey
+  marketplace: web3.PublicKey
+  reward: web3.PublicKey
+  rewardMint: web3.PublicKey
   receiverVault: web3.PublicKey
-  bonusVault: web3.PublicKey
+  rewardVault: web3.PublicKey
   anchorRemainingAccounts?: web3.AccountMeta[]
 }
 
-export const withdrawBonusInstructionDiscriminator = [
-  112, 110, 149, 206, 101, 110, 1, 232,
+export const withdrawRewardInstructionDiscriminator = [
+  191, 187, 176, 137, 9, 25, 187, 244,
 ]
 
 /**
- * Creates a _WithdrawBonus_ instruction.
+ * Creates a _WithdrawReward_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @category Instructions
- * @category WithdrawBonus
+ * @category WithdrawReward
  * @category generated
  */
-export function createWithdrawBonusInstruction(
-  accounts: WithdrawBonusInstructionAccounts,
-  programId = new web3.PublicKey('PROGRAM PUBKEY'),
+export function createWithdrawRewardInstruction(
+  accounts: WithdrawRewardInstructionAccounts,
+  programId = new web3.PublicKey('brick5uEiJqSkfuAvMtKmq7kiuEVmbjVMiigyV51GRF'),
 ) {
-  const [data] = withdrawBonusStruct.serialize({
-    instructionDiscriminator: withdrawBonusInstructionDiscriminator,
+  const [data] = withdrawRewardStruct.serialize({
+    instructionDiscriminator: withdrawRewardInstructionDiscriminator,
   })
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
+      pubkey: accounts.tokenProgramV0,
       isWritable: false,
       isSigner: false,
     },
@@ -77,23 +75,18 @@ export function createWithdrawBonusInstruction(
       isSigner: true,
     },
     {
-      pubkey: accounts.governance,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.bonus,
+      pubkey: accounts.marketplace,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: accounts.governanceMint,
-      isWritable: false,
+      pubkey: accounts.reward,
+      isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: accounts.governanceBonusVault,
-      isWritable: true,
+      pubkey: accounts.rewardMint,
+      isWritable: false,
       isSigner: false,
     },
     {
@@ -102,7 +95,7 @@ export function createWithdrawBonusInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.bonusVault,
+      pubkey: accounts.rewardVault,
       isWritable: true,
       isSigner: false,
     },

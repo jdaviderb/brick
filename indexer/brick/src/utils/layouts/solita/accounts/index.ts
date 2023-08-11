@@ -1,9 +1,19 @@
-export * from './Bonus.js'
-export * from './Governance.js'
+export * from './Access.js'
+export * from './Marketplace.js'
+export * from './Payment.js'
 export * from './Product.js'
+export * from './Reward.js'
 
-import { Bonus } from './Bonus.js'
-import { Governance } from './Governance.js'
+import { Marketplace } from './Marketplace.js'
 import { Product } from './Product.js'
+import { Reward } from './Reward.js'
+import { Access } from './Access.js'
+import { Payment } from './Payment.js'
 
-export const accountProviders = { Bonus, Governance, Product }
+export const accountProviders = {
+  Marketplace,
+  Product,
+  Reward,
+  Access,
+  Payment,
+}

@@ -4,104 +4,302 @@ export * from './instructions/index.js'
 export * from './types/index.js'
 
 import {
-  Bonus,
-  BonusArgs,
-  Governance,
-  GovernanceArgs,
+  Marketplace,
+  MarketplaceArgs,
   Product,
   ProductArgs,
+  Reward,
+  RewardArgs,
+  Access,
+  AccessArgs,
+  Payment,
+  PaymentArgs,
 } from './accounts/index.js'
 
 import {
-  CreateGovernanceParams,
-  CreateProductParams,
-  EditPointsParams,
+  EditMarketplaceParams,
+  InitMarketplaceParams,
+  InitProductTreeParams,
+  InitProductParams,
+  RegisterBuyCnftParams,
+  UpdateProductTreeParams,
+  TokenConfig,
+  PermissionConfig,
+  FeesConfig,
+  RewardsConfig,
+  MarketplaceBumps,
   SellerConfig,
+  ProductBumps,
+  RewardBumps,
+  PaymentFeePayer,
 } from './types/index.js'
 
-export type CreateGovernanceInstruction = {
+export type AcceptAccessInstruction = {
   programId: PublicKey
   keys: AccountMeta[]
   data: Buffer
 }
 
-export const CreateGovernanceAccounts = [
+export const AcceptAccessAccounts = [
   'systemProgram',
-  'tokenProgram',
-  'rent',
-  'governanceAuthority',
-  'governance',
-  'governanceMint',
-  'governanceBonusVault',
-]
-
-export type CreateProductInstruction = {
-  programId: PublicKey
-  keys: AccountMeta[]
-  data: Buffer
-}
-
-export const CreateProductAccounts = [
-  'systemProgram',
-  'rent',
-  'productAuthority',
-  'governance',
-  'product',
-  'paymentMint',
-]
-
-export type DeleteProductInstruction = {
-  programId: PublicKey
-  keys: AccountMeta[]
-  data: Buffer
-}
-
-export const DeleteProductAccounts = ['productAuthority', 'product']
-
-export type EditPointsInstruction = {
-  programId: PublicKey
-  keys: AccountMeta[]
-  data: Buffer
-}
-
-export const EditPointsAccounts = ['governanceAuthority', 'governance']
-
-export type EditPaymentMintInstruction = {
-  programId: PublicKey
-  keys: AccountMeta[]
-  data: Buffer
-}
-
-export const EditPaymentMintAccounts = [
-  'productAuthority',
-  'product',
-  'paymentMint',
-]
-
-export type EditPriceInstruction = {
-  programId: PublicKey
-  keys: AccountMeta[]
-  data: Buffer
-}
-
-export const EditPriceAccounts = ['productAuthority', 'product']
-
-export type InitBonusInstruction = {
-  programId: PublicKey
-  keys: AccountMeta[]
-  data: Buffer
-}
-
-export const InitBonusAccounts = [
-  'systemProgram',
-  'tokenProgram',
+  'tokenProgram2022',
   'associatedTokenProgram',
   'rent',
   'signer',
-  'governance',
-  'bonus',
-  'bonusVault',
-  'governanceMint',
+  'receiver',
+  'marketplace',
+  'request',
+  'accessMint',
+  'accessVault',
+]
+
+export type AirdropAccessInstruction = {
+  programId: PublicKey
+  keys: AccountMeta[]
+  data: Buffer
+}
+
+export const AirdropAccessAccounts = [
+  'systemProgram',
+  'tokenProgram2022',
+  'associatedTokenProgram',
+  'rent',
+  'signer',
+  'receiver',
+  'marketplace',
+  'accessMint',
+  'accessVault',
+]
+
+export type EditProductInstruction = {
+  programId: PublicKey
+  keys: AccountMeta[]
+  data: Buffer
+}
+
+export const EditProductAccounts = ['signer', 'product', 'paymentMint']
+
+export type EditMarketplaceInstruction = {
+  programId: PublicKey
+  keys: AccountMeta[]
+  data: Buffer
+}
+
+export const EditMarketplaceAccounts = [
+  'signer',
+  'marketplace',
+  'rewardMint',
+  'discountMint',
+]
+
+export type InitBountyInstruction = {
+  programId: PublicKey
+  keys: AccountMeta[]
+  data: Buffer
+}
+
+export const InitBountyAccounts = [
+  'systemProgram',
+  'tokenProgramV0',
+  'associatedTokenProgram',
+  'rent',
+  'signer',
+  'marketplace',
+  'rewardMint',
+  'bountyVault',
+]
+
+export type InitMarketplaceInstruction = {
+  programId: PublicKey
+  keys: AccountMeta[]
+  data: Buffer
+}
+
+export const InitMarketplaceAccounts = [
+  'systemProgram',
+  'tokenProgram2022',
+  'tokenProgramV0',
+  'rent',
+  'signer',
+  'marketplace',
+  'accessMint',
+  'rewardMint',
+  'discountMint',
+  'bountyVault',
+]
+
+export type InitProductTreeInstruction = {
+  programId: PublicKey
+  keys: AccountMeta[]
+  data: Buffer
+}
+
+export const InitProductTreeAccounts = [
+  'tokenMetadataProgram',
+  'logWrapper',
+  'systemProgram',
+  'bubblegumProgram',
+  'compressionProgram',
+  'tokenProgramV0',
+  'associatedTokenProgram',
+  'rent',
+  'signer',
+  'marketplace',
+  'product',
+  'productMint',
+  'paymentMint',
+  'accessMint',
+  'productMintVault',
+  'accessVault',
+  'masterEdition',
+  'metadata',
+  'merkleTree',
+  'treeAuthority',
+]
+
+export type InitProductInstruction = {
+  programId: PublicKey
+  keys: AccountMeta[]
+  data: Buffer
+}
+
+export const InitProductAccounts = [
+  'systemProgram',
+  'tokenProgram2022',
+  'rent',
+  'signer',
+  'marketplace',
+  'product',
+  'productMint',
+  'paymentMint',
+  'accessMint',
+  'accessVault',
+]
+
+export type InitRewardVaultInstruction = {
+  programId: PublicKey
+  keys: AccountMeta[]
+  data: Buffer
+}
+
+export const InitRewardVaultAccounts = [
+  'systemProgram',
+  'tokenProgramV0',
+  'associatedTokenProgram',
+  'rent',
+  'signer',
+  'marketplace',
+  'reward',
+  'rewardMint',
+  'rewardVault',
+]
+
+export type InitRewardInstruction = {
+  programId: PublicKey
+  keys: AccountMeta[]
+  data: Buffer
+}
+
+export const InitRewardAccounts = [
+  'systemProgram',
+  'tokenProgramV0',
+  'rent',
+  'signer',
+  'marketplace',
+  'reward',
+  'rewardMint',
+  'rewardVault',
+]
+
+export type RegisterBuyCnftInstruction = {
+  programId: PublicKey
+  keys: AccountMeta[]
+  data: Buffer
+}
+
+export const RegisterBuyCnftAccounts = [
+  'systemProgram',
+  'tokenProgramV0',
+  'rent',
+  'logWrapper',
+  'bubblegumProgram',
+  'compressionProgram',
+  'tokenMetadataProgram',
+  'signer',
+  'seller',
+  'marketplaceAuth',
+  'marketplace',
+  'product',
+  'paymentMint',
+  'productMint',
+  'buyerTransferVault',
+  'sellerTransferVault',
+  'marketplaceTransferVault',
+  'bountyVault',
+  'sellerReward',
+  'sellerRewardVault',
+  'buyerReward',
+  'buyerRewardVault',
+  'metadata',
+  'masterEdition',
+  'treeAuthority',
+  'bubblegumSigner',
+  'merkleTree',
+]
+
+export type RegisterBuyCounterInstruction = {
+  programId: PublicKey
+  keys: AccountMeta[]
+  data: Buffer
+}
+
+export const RegisterBuyCounterAccounts = [
+  'systemProgram',
+  'tokenProgramV0',
+  'rent',
+  'signer',
+  'seller',
+  'marketplaceAuth',
+  'marketplace',
+  'product',
+  'payment',
+  'paymentMint',
+  'buyerTransferVault',
+  'sellerTransferVault',
+  'marketplaceTransferVault',
+  'bountyVault',
+  'sellerReward',
+  'sellerRewardVault',
+  'buyerReward',
+  'buyerRewardVault',
+]
+
+export type RegisterBuyTokenInstruction = {
+  programId: PublicKey
+  keys: AccountMeta[]
+  data: Buffer
+}
+
+export const RegisterBuyTokenAccounts = [
+  'systemProgram',
+  'tokenProgramV0',
+  'tokenProgram2022',
+  'signer',
+  'seller',
+  'marketplaceAuth',
+  'marketplace',
+  'product',
+  'productMint',
+  'paymentMint',
+  'buyerTokenVault',
+  'buyerTransferVault',
+  'sellerTransferVault',
+  'marketplaceTransferVault',
+  'bountyVault',
+  'sellerReward',
+  'sellerRewardVault',
+  'buyerReward',
+  'buyerRewardVault',
 ]
 
 export type RegisterBuyInstruction = {
@@ -112,80 +310,114 @@ export type RegisterBuyInstruction = {
 
 export const RegisterBuyAccounts = [
   'systemProgram',
-  'messagesProgram',
-  'tokenProgram',
+  'tokenProgramV0',
   'rent',
-  'governanceAuthority',
   'signer',
-  'governance',
+  'seller',
+  'marketplaceAuth',
+  'marketplace',
   'product',
+  'payment',
   'paymentMint',
-  'governanceMint',
   'buyerTransferVault',
-  'productAuthorityTransferVault',
-  'governanceTransferVault',
+  'sellerTransferVault',
+  'marketplaceTransferVault',
+  'bountyVault',
+  'sellerReward',
+  'sellerRewardVault',
+  'buyerReward',
+  'buyerRewardVault',
 ]
 
-export type RegisterPromoBuyInstruction = {
+export type RequestAccessInstruction = {
   programId: PublicKey
   keys: AccountMeta[]
   data: Buffer
 }
 
-export const RegisterPromoBuyAccounts = [
+export const RequestAccessAccounts = [
   'systemProgram',
-  'messagesProgram',
-  'tokenProgram',
   'rent',
-  'governanceAuthority',
   'signer',
-  'governance',
-  'product',
-  'governanceMint',
-  'buyerTransferVault',
-  'productAuthorityTransferVault',
-  'governanceTransferVault',
-  'governanceBonusVault',
-  'productAuthorityBonus',
-  'productAuthorityBonusVault',
-  'buyerBonus',
-  'buyerBonusVault',
+  'marketplace',
+  'request',
 ]
 
-export type WithdrawBonusInstruction = {
+export type UpdateTreeInstruction = {
   programId: PublicKey
   keys: AccountMeta[]
   data: Buffer
 }
 
-export const WithdrawBonusAccounts = [
-  'tokenProgram',
+export const UpdateTreeAccounts = [
+  'payer',
   'signer',
-  'governance',
-  'bonus',
-  'governanceMint',
-  'governanceBonusVault',
+  'marketplace',
+  'product',
+  'treeAuthority',
+  'merkleTree',
+  'logWrapper',
+  'systemProgram',
+  'bubblegumProgram',
+  'compressionProgram',
+]
+
+export type WithdrawRewardInstruction = {
+  programId: PublicKey
+  keys: AccountMeta[]
+  data: Buffer
+}
+
+export const WithdrawRewardAccounts = [
+  'tokenProgramV0',
+  'signer',
+  'marketplace',
+  'reward',
+  'rewardMint',
   'receiverVault',
-  'bonusVault',
+  'rewardVault',
 ]
 
 export type ParsedInstructions =
-  | CreateGovernanceInstruction
-  | CreateProductInstruction
-  | DeleteProductInstruction
-  | EditPointsInstruction
-  | EditPaymentMintInstruction
-  | EditPriceInstruction
-  | InitBonusInstruction
+  | AcceptAccessInstruction
+  | AirdropAccessInstruction
+  | EditProductInstruction
+  | EditMarketplaceInstruction
+  | InitBountyInstruction
+  | InitMarketplaceInstruction
+  | InitProductTreeInstruction
+  | InitProductInstruction
+  | InitRewardVaultInstruction
+  | InitRewardInstruction
+  | RegisterBuyCnftInstruction
+  | RegisterBuyCounterInstruction
+  | RegisterBuyTokenInstruction
   | RegisterBuyInstruction
-  | RegisterPromoBuyInstruction
-  | WithdrawBonusInstruction
-export type ParsedAccounts = Bonus | Governance | Product
+  | RequestAccessInstruction
+  | UpdateTreeInstruction
+  | WithdrawRewardInstruction
+export type ParsedAccounts = Marketplace | Product | Reward | Access | Payment
 
-export type ParsedAccountsData = BonusArgs | GovernanceArgs | ProductArgs
+export type ParsedAccountsData =
+  | MarketplaceArgs
+  | ProductArgs
+  | RewardArgs
+  | AccessArgs
+  | PaymentArgs
 
 export type ParsedTypes =
-  | CreateGovernanceParams
-  | CreateProductParams
-  | EditPointsParams
+  | PaymentFeePayer
+  | EditMarketplaceParams
+  | InitMarketplaceParams
+  | InitProductTreeParams
+  | InitProductParams
+  | RegisterBuyCnftParams
+  | UpdateProductTreeParams
+  | TokenConfig
+  | PermissionConfig
+  | FeesConfig
+  | RewardsConfig
+  | MarketplaceBumps
   | SellerConfig
+  | ProductBumps
+  | RewardBumps

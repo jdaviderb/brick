@@ -10,54 +10,71 @@ import * as web3 from '@solana/web3.js'
 
 /**
  * @category Instructions
- * @category EditPaymentMint
+ * @category EditProduct
  * @category generated
  */
-export const editPaymentMintStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number[] /* size: 8 */
-}>(
-  [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
-  'EditPaymentMintInstructionArgs',
+export type EditProductInstructionArgs = {
+  productPrice: beet.bignum
+}
+/**
+ * @category Instructions
+ * @category EditProduct
+ * @category generated
+ */
+export const editProductStruct = new beet.BeetArgsStruct<
+  EditProductInstructionArgs & {
+    instructionDiscriminator: number[] /* size: 8 */
+  }
+>(
+  [
+    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
+    ['productPrice', beet.u64],
+  ],
+  'EditProductInstructionArgs',
 )
 /**
- * Accounts required by the _editPaymentMint_ instruction
+ * Accounts required by the _editProduct_ instruction
  *
- * @property [_writable_, **signer**] productAuthority
+ * @property [_writable_, **signer**] signer
  * @property [_writable_] product
  * @property [] paymentMint
  * @category Instructions
- * @category EditPaymentMint
+ * @category EditProduct
  * @category generated
  */
-export type EditPaymentMintInstructionAccounts = {
-  productAuthority: web3.PublicKey
+export type EditProductInstructionAccounts = {
+  signer: web3.PublicKey
   product: web3.PublicKey
   paymentMint: web3.PublicKey
   anchorRemainingAccounts?: web3.AccountMeta[]
 }
 
-export const editPaymentMintInstructionDiscriminator = [
-  52, 180, 55, 241, 212, 97, 221, 173,
+export const editProductInstructionDiscriminator = [
+  23, 24, 155, 17, 230, 236, 1, 188,
 ]
 
 /**
- * Creates a _EditPaymentMint_ instruction.
+ * Creates a _EditProduct_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
+ * @param args to provide as instruction data to the program
+ *
  * @category Instructions
- * @category EditPaymentMint
+ * @category EditProduct
  * @category generated
  */
-export function createEditPaymentMintInstruction(
-  accounts: EditPaymentMintInstructionAccounts,
-  programId = new web3.PublicKey('PROGRAM PUBKEY'),
+export function createEditProductInstruction(
+  accounts: EditProductInstructionAccounts,
+  args: EditProductInstructionArgs,
+  programId = new web3.PublicKey('brick5uEiJqSkfuAvMtKmq7kiuEVmbjVMiigyV51GRF'),
 ) {
-  const [data] = editPaymentMintStruct.serialize({
-    instructionDiscriminator: editPaymentMintInstructionDiscriminator,
+  const [data] = editProductStruct.serialize({
+    instructionDiscriminator: editProductInstructionDiscriminator,
+    ...args,
   })
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.productAuthority,
+      pubkey: accounts.signer,
       isWritable: true,
       isSigner: true,
     },

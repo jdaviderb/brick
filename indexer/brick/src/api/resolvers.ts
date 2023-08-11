@@ -88,6 +88,13 @@ export class APIResolvers {
   }
 
   // -------------------------------- PROTECTED --------------------------------
+  /*protected async getAccountByAddress(address: string): Promise<AccountStats> {
+    const add: string[] = [address]
+    const account = await this.domain.getAccountStats(add)
+    if (!account) throw new Error(`Account ${address} does not exist`)
+    return account[0]
+  }*/
+
   protected async filterAccounts({
     types,
     accounts,

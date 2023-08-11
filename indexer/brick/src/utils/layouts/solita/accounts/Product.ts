@@ -6,9 +6,10 @@
  */
 
 import * as web3 from '@solana/web3.js'
-import * as beet from '@metaplex-foundation/beet'
 import * as beetSolana from '@metaplex-foundation/beet-solana'
+import * as beet from '@metaplex-foundation/beet'
 import { SellerConfig, sellerConfigBeet } from '../types/SellerConfig.js'
+import { ProductBumps, productBumpsBeet } from '../types/ProductBumps.js'
 
 /**
  * Arguments used to create {@link Product}
@@ -16,11 +17,14 @@ import { SellerConfig, sellerConfigBeet } from '../types/SellerConfig.js'
  * @category generated
  */
 export type ProductArgs = {
+  authority: web3.PublicKey
   firstId: number[] /* size: 32 */
   secondId: number[] /* size: 32 */
-  productAuthority: web3.PublicKey
+  marketplace: web3.PublicKey
+  productMint: web3.PublicKey
+  merkleTree: web3.PublicKey
   sellerConfig: SellerConfig
-  bump: number
+  bumps: ProductBumps
 }
 
 export const productDiscriminator = [102, 76, 55, 251, 38, 73, 224, 229]
@@ -33,11 +37,14 @@ export const productDiscriminator = [102, 76, 55, 251, 38, 73, 224, 229]
  */
 export class Product implements ProductArgs {
   private constructor(
+    readonly authority: web3.PublicKey,
     readonly firstId: number[] /* size: 32 */,
     readonly secondId: number[] /* size: 32 */,
-    readonly productAuthority: web3.PublicKey,
+    readonly marketplace: web3.PublicKey,
+    readonly productMint: web3.PublicKey,
+    readonly merkleTree: web3.PublicKey,
     readonly sellerConfig: SellerConfig,
-    readonly bump: number,
+    readonly bumps: ProductBumps,
   ) {}
 
   /**
@@ -45,11 +52,14 @@ export class Product implements ProductArgs {
    */
   static fromArgs(args: ProductArgs) {
     return new Product(
+      args.authority,
       args.firstId,
       args.secondId,
-      args.productAuthority,
+      args.marketplace,
+      args.productMint,
+      args.merkleTree,
       args.sellerConfig,
-      args.bump,
+      args.bumps,
     )
   }
 
@@ -92,7 +102,9 @@ export class Product implements ProductArgs {
    * @param programId - the program that owns the accounts we are filtering
    */
   static gpaBuilder(
-    programId: web3.PublicKey = new web3.PublicKey('PROGRAM PUBKEY'),
+    programId: web3.PublicKey = new web3.PublicKey(
+      'brick5uEiJqSkfuAvMtKmq7kiuEVmbjVMiigyV51GRF',
+    ),
   ) {
     return beetSolana.GpaBuilder.fromStruct(programId, productBeet)
   }
@@ -154,11 +166,14 @@ export class Product implements ProductArgs {
    */
   pretty() {
     return {
+      authority: this.authority.toBase58(),
       firstId: this.firstId,
       secondId: this.secondId,
-      productAuthority: this.productAuthority.toBase58(),
+      marketplace: this.marketplace.toBase58(),
+      productMint: this.productMint.toBase58(),
+      merkleTree: this.merkleTree.toBase58(),
       sellerConfig: this.sellerConfig,
-      bump: this.bump,
+      bumps: this.bumps,
     }
   }
 }
@@ -175,11 +190,14 @@ export const productBeet = new beet.BeetStruct<
 >(
   [
     ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
+    ['authority', beetSolana.publicKey],
     ['firstId', beet.uniformFixedSizeArray(beet.u8, 32)],
     ['secondId', beet.uniformFixedSizeArray(beet.u8, 32)],
-    ['productAuthority', beetSolana.publicKey],
+    ['marketplace', beetSolana.publicKey],
+    ['productMint', beetSolana.publicKey],
+    ['merkleTree', beetSolana.publicKey],
     ['sellerConfig', sellerConfigBeet],
-    ['bump', beet.u8],
+    ['bumps', productBumpsBeet],
   ],
   Product.fromArgs,
   'Product',

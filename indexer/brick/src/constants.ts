@@ -12,5 +12,5 @@ export const DOMAIN_CACHE_START_DATE = config.INDEX_START_DATE
   ? Number(config.INDEX_START_DATE)
   : SINCE_DATE
 
-export const BRICK_PROGRAM_ID = 'brick5DMMWvdRZQU9tsnyeHBNsY9hbyH2NhFRH1wjkB'
+export const BRICK_PROGRAM_ID = 'brick5uEiJqSkfuAvMtKmq7kiuEVmbjVMiigyV51GRF'
 export const BRICK_PROGRAM_ID_PK = new PublicKey(BRICK_PROGRAM_ID)

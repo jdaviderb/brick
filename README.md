@@ -21,4 +21,5 @@ The following customizable features are available:
 
 - **Metadata Support**: Tokens within the marketplace can be enriched with multimedia representations such as images and videos. This feature is particularly useful for video game marketplaces where tokens can represent in-game items like skins, covers, etc.
 
+To run the indexer locally you have to set the RPC url in indexer/brick/.env.defaults
 Shout out to Stefan, he built the amazing brick frontend: https://twitter.com/evalucratie

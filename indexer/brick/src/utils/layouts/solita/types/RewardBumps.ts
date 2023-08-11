@@ -6,23 +6,19 @@
  */
 
 import * as beet from '@metaplex-foundation/beet'
-export type EditPointsParams = {
-  fee: number
-  feeReduction: number
-  sellerPromo: number
-  buyerPromo: number
+export type RewardBumps = {
+  bump: number
+  vaultBumps: Uint8Array
 }
 
 /**
  * @category userTypes
  * @category generated
  */
-export const editPointsParamsBeet = new beet.BeetArgsStruct<EditPointsParams>(
+export const rewardBumpsBeet = new beet.FixableBeetArgsStruct<RewardBumps>(
   [
-    ['fee', beet.u16],
-    ['feeReduction', beet.u16],
-    ['sellerPromo', beet.u16],
-    ['buyerPromo', beet.u16],
+    ['bump', beet.u8],
+    ['vaultBumps', beet.bytes],
   ],
-  'EditPointsParams',
+  'RewardBumps',
 )

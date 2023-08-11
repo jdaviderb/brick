@@ -74,7 +74,7 @@ export default class BrickDiscoverer {
     const address = resp.pubkey.toBase58()
     // Parsing names from on-chain account data can be complicated at times...
     let name: string = address
-    if (data.hasOwnProperty('name')) {
+    if (Object.hasOwn(data, 'name')) {
       if ((data as any).name instanceof Uint8Array)
         name = ((data as any).name as Uint8Array).toString()
       if ((data as any).name instanceof String) name = (data as any).name
