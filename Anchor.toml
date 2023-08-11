@@ -2,7 +2,7 @@
 seeds = true
 skip-lint = false
 [programs.localnet]
-brick = "brick5DMMWvdRZQU9tsnyeHBNsY9hbyH2NhFRH1wjkB"
+brick = "brick5uEiJqSkfuAvMtKmq7kiuEVmbjVMiigyV51GRF"
 
 [registry]
 url = "https://api.apr.dev"

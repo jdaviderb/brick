@@ -7,7 +7,7 @@ use {
     instructions::*,
 };
 
-declare_id!("brick5DMMWvdRZQU9tsnyeHBNsY9hbyH2NhFRH1wjkB");
+declare_id!("brick5uEiJqSkfuAvMtKmq7kiuEVmbjVMiigyV51GRF");
 
 #[program]
 pub mod brick {
