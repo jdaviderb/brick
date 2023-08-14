@@ -2,19 +2,17 @@
 
 .heading {
   padding-bottom: 75px;
-  text-align: center;
 }
 
 .items {
   display: grid;
-  gap: var(--spacing-l);
+  grid-template-columns: repeat(auto-fit, minmax(50px, 0.5fr));
   justify-content: center;
-
-  @include medium {
-    grid-template-columns: 20%;
-  }
+  white-space: nowrap;
 }
 
 .item {
-  filter: saturate(0)
+  display: flex;
+  justify-content: center;
+  cursor: pointer;
 }

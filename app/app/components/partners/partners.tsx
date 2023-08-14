@@ -25,14 +25,16 @@ const Partners = ({ className, heading, items }: IProps) => {
     <div className={classes}>
       {heading && <h3 className={styles.heading}>{heading}</h3>}
       {items && (
-        <div className={styles.items}>
-          {items.map((item, index) => (
-            <Link key={index} href={item?.href}>
-              <Icon name={item?.icon} className={styles.item} width={200} />
-            </Link>
-          ))}
-        </div>
-      )}
+      <div className={styles.items}>
+        {items.map((item, index) => (
+          <Link key={index} href={item?.href}>
+            {item?.icon && (
+              <Icon name={item.icon} className={styles.item} height={160} width={160} />
+            )}
+          </Link>
+        ))}
+      </div>
+    )}
     </div>
   );
 };

@@ -164,6 +164,10 @@ const dataPartners = {
       icon: "fishnet",
       href: "https://fishnet.tech/",
     },
+    {
+      icon: "heavyDuty",
+      href: "https://heavyduty.builders/",
+    },
   ],
 };
 
