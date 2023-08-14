@@ -59,8 +59,8 @@ export const InitMarketplaceParams = new GraphQLObjectType({
 export const InitProductTreeParams = new GraphQLObjectType({
   name: 'InitProductTreeParams',
   fields: {
-    firstId: { type: new GraphQLNonNull(GraphQLString) },
-    secondId: { type: new GraphQLNonNull(GraphQLString) },
+    firstId: { type: new GraphQLNonNull(GraphQLList(GraphQLString)) },
+    secondId: { type: new GraphQLNonNull(GraphQLList(GraphQLString)) },
     productPrice: { type: new GraphQLNonNull(GraphQLBigNumber) },
     maxDepth: { type: new GraphQLNonNull(GraphQLInt) },
     maxBufferSize: { type: new GraphQLNonNull(GraphQLInt) },
@@ -73,8 +73,8 @@ export const InitProductTreeParams = new GraphQLObjectType({
 export const InitProductParams = new GraphQLObjectType({
   name: 'InitProductParams',
   fields: {
-    firstId: { type: new GraphQLNonNull(GraphQLString) },
-    secondId: { type: new GraphQLNonNull(GraphQLString) },
+    firstId: { type: new GraphQLNonNull(GraphQLList(GraphQLString)) },
+    secondId: { type: new GraphQLNonNull(GraphQLList(GraphQLString)) },
     productPrice: { type: new GraphQLNonNull(GraphQLBigNumber) },
     productMintBump: { type: new GraphQLNonNull(GraphQLInt) },
   },
@@ -141,7 +141,7 @@ export const MarketplaceBumps = new GraphQLObjectType({
   name: 'MarketplaceBumps',
   fields: {
     bump: { type: new GraphQLNonNull(GraphQLInt) },
-    vaultBumps: { type: new GraphQLNonNull(GraphQLString) },
+    vaultBumps: { type: new GraphQLNonNull(GraphQLList(GraphQLInt)) },
     accessMintBump: { type: new GraphQLNonNull(GraphQLInt) },
   },
 })
@@ -166,7 +166,7 @@ export const RewardBumps = new GraphQLObjectType({
   name: 'RewardBumps',
   fields: {
     bump: { type: new GraphQLNonNull(GraphQLInt) },
-    vaultBumps: { type: new GraphQLNonNull(GraphQLString) },
+    vaultBumps: { type: new GraphQLNonNull(GraphQLList(GraphQLInt)) },
   },
 })
 
@@ -243,8 +243,8 @@ export const Product = new GraphQLObjectType({
   name: 'Product',
   fields: {
     authority: { type: new GraphQLNonNull(GraphQLString) },
-    firstId: { type: new GraphQLNonNull(GraphQLString) },
-    secondId: { type: new GraphQLNonNull(GraphQLString) },
+    firstId: { type: new GraphQLNonNull(GraphQLList(GraphQLInt)) },
+    secondId: { type: new GraphQLNonNull(GraphQLList(GraphQLInt)) },
     marketplace: { type: new GraphQLNonNull(GraphQLString) },
     productMint: { type: new GraphQLNonNull(GraphQLString) },
     merkleTree: { type: new GraphQLNonNull(GraphQLString) },
@@ -258,7 +258,7 @@ export const Reward = new GraphQLObjectType({
   fields: {
     authority: { type: new GraphQLNonNull(GraphQLString) },
     marketplace: { type: new GraphQLNonNull(GraphQLString) },
-    rewardVaults: { type: new GraphQLNonNull(GraphQLString) },
+    rewardVaults: { type: new GraphQLNonNull(GraphQLList(GraphQLString)) },
     bumps: { type: new GraphQLNonNull(RewardBumps) },
   },
 })
@@ -275,7 +275,7 @@ export const Access = new GraphQLObjectType({
 export const Payment = new GraphQLObjectType({
   name: 'Payment',
   fields: {
-    units: { type: new GraphQLNonNull(GraphQLInt) },
+    units: { type: GraphQLInt },
     bump: { type: new GraphQLNonNull(GraphQLInt) },
   },
 })
@@ -284,24 +284,21 @@ export const ParsedAccountsData = new GraphQLUnionType({
   name: 'ParsedAccountsData',
   types: [Marketplace, Product, Reward, Access, Payment],
   resolveType: (obj) => {
-    // here is selected a unique property of each account to discriminate between types
-    if (obj.bumps) {
-      return 'Marketplace'
-    }
-    if (obj.bumps) {
-      return 'Product'
-    }
-    if (obj.bumps) {
-      return 'Reward'
-    }
-    if (obj.bump) {
-      return 'Access'
-    }
-    if (obj.bump) {
-      return 'Payment'
+    switch (true) {
+      case 'tokenConfig' in obj:
+        return 'Marketplace';
+      case 'sellerConfig' in obj:
+        return 'Product';
+      case 'rewardVaults' in obj:
+        return 'Reward';
+      case 'marketplace' in obj:
+      case 'units' in obj:
+        return 'Payment';
+      default:
+        return 'Access';
     }
   },
-})
+});
 
 const commonAccountInfoFields = {
   name: { type: new GraphQLNonNull(GraphQLString) },
