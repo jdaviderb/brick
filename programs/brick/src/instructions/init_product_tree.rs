@@ -162,6 +162,7 @@ pub fn handler<'info>(ctx: Context<InitProductTree>, params: InitProductTreePara
     (*ctx.accounts.product).second_id = params.second_id;
     (*ctx.accounts.product).product_mint = ctx.accounts.product_mint.key();
     (*ctx.accounts.product).marketplace = marketplace_key;
+    (*ctx.accounts.product).merkle_tree = ctx.accounts.merkle_tree.key();
     (*ctx.accounts.product).seller_config = SellerConfig {
         payment_mint: ctx.accounts.payment_mint.key(),
         product_price: params.product_price,
