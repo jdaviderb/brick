@@ -36,6 +36,7 @@ export default class APISchema extends IndexerAPISchema {
             args: {
               types: { type: new GraphQLList(GraphQLString) },
               accounts: { type: new GraphQLList(GraphQLString) },
+              authorities: { type: new GraphQLList(GraphQLString) }
             },
             resolve: (_, ctx, __, info) => {
               ctx.includeStats =
@@ -53,6 +54,7 @@ export default class APISchema extends IndexerAPISchema {
             args: {
               account: { type: new GraphQLNonNull(GraphQLString) },
               types: { type: new GraphQLList(Types.BrickEvent) },
+              signer: { type: GraphQLString },
               startDate: { type: GraphQLFloat },
               endDate: { type: GraphQLFloat },
               limit: { type: GraphQLInt },

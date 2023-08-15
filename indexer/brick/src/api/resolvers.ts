@@ -13,12 +13,14 @@ import {
 export type AccountsFilters = {
   types?: AccountType[]
   accounts?: string[]
+  authorities?: string[]
   includeStats?: boolean
 }
 
 export type EventsFilters = {
   account: string
   types?: InstructionType[]
+  signer?: string
   startDate?: number
   endDate?: number
   limit?: number
@@ -39,6 +41,7 @@ export class APIResolvers {
   async getEvents({
     account,
     types,
+    signer,
     startDate = 0,
     endDate = Date.now(),
     limit = 1000,
@@ -65,6 +68,9 @@ export class APIResolvers {
     for await (const { value } of accountEvents) {
       // @note: Filter by type
       if (typesMap && !typesMap.has(value.type)) continue
+
+      // @note: Check signer
+      if (signer && value.signer !== signer) continue;
 
       // @note: Skip first N events
       if (--skip >= 0) continue
@@ -98,6 +104,7 @@ export class APIResolvers {
   protected async filterAccounts({
     types,
     accounts,
+    authorities,
     includeStats,
   }: AccountsFilters): Promise<BrickAccountData[]> {
     const accountMap = await this.domain.getAccounts(includeStats)
@@ -114,6 +121,15 @@ export class APIResolvers {
       accountsData = accountsData.filter(({ info }) =>
         types!.includes(info.type),
       )
+    }
+
+    if (authorities !== undefined) {
+      accountsData = accountsData.filter(({ info }) => {
+        if ('authority' in info.data) {
+          const accountAuthority = info.data.authority.toString();
+          return authorities.includes(accountAuthority); 
+        }
+      });
     }
 
     return accountsData
