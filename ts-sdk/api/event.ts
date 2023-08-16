@@ -352,9 +352,7 @@ export async function queryEvents(url: string, filters: EventsFilters): Promise<
     `;
     const response = await fetch(url + '/graphql', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ query }),
     });
 
@@ -362,5 +360,6 @@ export async function queryEvents(url: string, filters: EventsFilters): Promise<
         throw new Error(`GraphQL request failed with status ${response.status}`);
     }
 
-    return await response.json();
+    const responseBody = await response.json();
+    return responseBody.data.events;
 }

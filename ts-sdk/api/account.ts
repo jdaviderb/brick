@@ -86,9 +86,7 @@ export async function queryAccounts(url: string, filters: AccountsFilters): Prom
     `;
     const response = await fetch(url + '/graphql', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ query }),
     });
 
@@ -96,5 +94,6 @@ export async function queryAccounts(url: string, filters: AccountsFilters): Prom
         throw new Error(`GraphQL request failed with status ${response.status}`);
     }
 
-    return await response.json();
+    const responseBody = await response.json();
+    return responseBody.data.accounts;
 }
