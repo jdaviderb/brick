@@ -4,11 +4,18 @@ import {
 } from '@aleph-indexer/solana'
 import {
   BrickEvent,
+  InstructionType,
   RawInstruction,
   RawInstructionsInfo,
 } from '../utils/layouts/index.js'
 
 export class EventParser {
+  protected registerBuySet = new Set([
+    InstructionType.RegisterBuy, 
+    InstructionType.RegisterBuyCnft, 
+    InstructionType.RegisterBuyCounter, 
+    InstructionType.RegisterBuyToken
+  ])
   parse(ixCtx: SolanaParsedInstructionContext, account: string): BrickEvent {
     const { instruction, parentInstruction, parentTransaction } = ixCtx
     const parsed = (instruction as RawInstruction).parsed
@@ -27,14 +34,26 @@ export class EventParser {
       (acc: RawMessageAccount) => acc.signer,
     )?.pubkey
 
-    return {
+    const { type, info } = parsed;
+    const commonEventData = {
       id,
       timestamp,
-      type: parsed.type,
-      signer: signer,
-      info: parsed.info as RawInstructionsInfo,
-      account: account,
-    } as BrickEvent
+      type,
+      signer,
+      info,
+    }
+
+    if (this.registerBuySet.has(type) && 'product' in info) {
+      return {
+          ...commonEventData,
+          account: info.product,
+      } as BrickEvent
+    } else {
+      return {
+          ...commonEventData,
+          account,
+      } as BrickEvent
+    }
   }
 }
 

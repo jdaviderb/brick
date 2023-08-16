@@ -28,9 +28,24 @@ export type EventsFilters = {
   reverse?: boolean
 }
 
+export type SalesFilters = {
+  seller: string
+  startDate?: number
+  endDate?: number
+  limit?: number
+  skip?: number
+  reverse?: boolean
+}
+
 export type GlobalStatsFilters = AccountsFilters
 
 export class APIResolvers {
+  protected registerBuyInstructions = [
+    InstructionType.RegisterBuy, 
+    InstructionType.RegisterBuyCnft, 
+    InstructionType.RegisterBuyCounter, 
+    InstructionType.RegisterBuyToken
+  ]
   constructor(protected domain: MainDomain) {}
 
   async getAccounts(args: AccountsFilters): Promise<BrickAccountInfo[]> {
@@ -82,6 +97,39 @@ export class APIResolvers {
     }
 
     return events
+  }
+
+  async getSales({
+    seller,
+    startDate = 0,
+    endDate = Date.now(),
+    limit = 1000,
+    skip = 0,
+    reverse = true,
+  }: SalesFilters): Promise<BrickEvent[]> {
+    if (limit < 1 || limit > 1000)
+      throw new Error('400 Bad Request: 1 <= limit <= 1000')
+
+    const events: BrickEvent[] = [];
+    const products = await this.getAccounts({  
+      types: [AccountType.Product],
+      authorities: [seller],
+    })
+
+    for (const product of products) {
+      const productEvents = await this.getEvents({
+        account: product.address,
+        types: this.registerBuyInstructions,
+        startDate,
+        endDate,
+        skip,
+        reverse,
+      });
+
+      events.push(...productEvents);
+    }
+
+    return events;
   }
 
   public async getGlobalStats(
