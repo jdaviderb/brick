@@ -442,3 +442,22 @@ export type WithdrawRewardEvent = EventBase<InstructionType> & {
   signer: string
   account: string
 }
+
+export type BrickEvent =
+  | AcceptAccessEvent
+  | AirdropAccessEvent
+  | EditProductEvent
+  | EditMarketplaceEvent
+  | InitBountyEvent
+  | InitMarketplaceEvent
+  | InitProductTreeEvent
+  | InitProductEvent
+  | InitRewardVaultEvent
+  | InitRewardEvent
+  | RegisterBuyCnftEvent
+  | RegisterBuyCounterEvent
+  | RegisterBuyTokenEvent
+  | RegisterBuyEvent
+  | RequestAccessEvent
+  | UpdateTreeEvent
+  | WithdrawRewardEvent

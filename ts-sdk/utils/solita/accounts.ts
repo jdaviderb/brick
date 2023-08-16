@@ -60,3 +60,11 @@ export enum AccountType {
   Access = 'Access',
   Payment = 'Payment',
 }
+
+export type BrickAccountInfo = {
+  name: string
+  programId: string
+  address: string
+  type: AccountType
+  data: ParsedAccountsData
+}
