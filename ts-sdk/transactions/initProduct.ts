@@ -1,6 +1,7 @@
-import { BRICK_PROGRAM_ID_PK, InitProductInstructionAccounts, createInitProductInstruction, InitProductInstructionArgs as InitProductParamsIx, splitId } from "../utils";
+import { InitProductInstructionAccounts, createInitProductInstruction, InitProductInstructionArgs as InitProductParamsIx, splitId } from "../utils";
 import { Connection, PublicKey, SYSVAR_RENT_PUBKEY, SystemProgram, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import { TOKEN_2022_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/spl-token";
+import { BRICK_PROGRAM_ID_PK } from "../constants";
 import BN from "bn.js";
 
 type InitProductAccounts = {

@@ -11,7 +11,7 @@ import {
   RegisterBuyCnftParams,
   registerBuyCnftParamsBeet,
 } from '../types/RegisterBuyCnftParams'
-import { BRICK_PROGRAM_ID_PK } from '../../constants'
+import { BRICK_PROGRAM_ID_PK } from '../../../constants'
 
 /**
  * @category Instructions

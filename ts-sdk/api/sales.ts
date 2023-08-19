@@ -1,4 +1,4 @@
-import { BrickEvent } from "../utils"
+import { BrickEvent } from "../types"
 
 export type SalesFilters = {
     seller: string

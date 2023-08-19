@@ -1,6 +1,7 @@
 import { Connection, PublicKey, SYSVAR_RENT_PUBKEY, SystemProgram, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/spl-token";
-import { BRICK_PROGRAM_ID_PK, AcceptAccessInstructionAccounts, createAcceptAccessInstruction } from "../utils";
+import { AcceptAccessInstructionAccounts, createAcceptAccessInstruction } from "../utils";
+import { BRICK_PROGRAM_ID_PK } from "../constants";
 
 export async function createAcceptAccessTransaction(connection: Connection, signer: PublicKey, receiver: PublicKey): Promise<VersionedTransaction> {
   const [marketplace] = PublicKey.findProgramAddressSync(

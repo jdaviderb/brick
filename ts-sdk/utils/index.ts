@@ -1,5 +1,5 @@
 export * from './solita'
-export * from './constants'
+export * from './compression'
 
 export function splitId(str: string): [Buffer, Buffer]{
     const bytes = new TextEncoder().encode(str);

@@ -1,7 +1,7 @@
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { InitRewardInstructionAccounts, createInitRewardInstruction } from "../utils/solita"
 import { Connection, PublicKey, SYSVAR_RENT_PUBKEY, SystemProgram, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
-import { BRICK_PROGRAM_ID_PK } from "../utils";
+import { BRICK_PROGRAM_ID_PK } from "../constants";
 
 type InitRewardAccounts = {
     signer: PublicKey

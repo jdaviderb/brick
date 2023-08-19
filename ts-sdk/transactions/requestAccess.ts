@@ -1,6 +1,6 @@
 import { Connection, PublicKey, SYSVAR_RENT_PUBKEY, SystemProgram, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import { RequestAccessInstructionAccounts, createRequestAccessInstruction } from "../utils/solita";
-import { BRICK_PROGRAM_ID_PK } from "../utils/constants";
+import { BRICK_PROGRAM_ID_PK } from "../constants";
 
 type RequestAccessAccounts = {
   signer: PublicKey

@@ -7,7 +7,7 @@
 
 import * as beet from '@metaplex-foundation/beet'
 import * as web3 from '@solana/web3.js'
-import { BRICK_PROGRAM_ID_PK } from '../../constants'
+import { BRICK_PROGRAM_ID_PK } from '../../../constants'
 
 /**
  * @category Instructions

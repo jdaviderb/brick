@@ -1,4 +1,4 @@
-import { BrickEvent, InstructionType } from "../utils"
+import { BrickEvent, InstructionType } from "../types"
 
 export type EventsFilters = {
     account: string

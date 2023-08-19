@@ -1,6 +1,6 @@
 import { EditMarketplaceInstructionAccounts, EditMarketplaceParams, createEditMarketplaceInstruction } from "../utils/solita"
 import { Connection, PublicKey, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
-import { BRICK_PROGRAM_ID_PK } from "../utils/constants";
+import { BRICK_PROGRAM_ID_PK } from "../constants";
 
 type EditMarketplaceAccounts = {
     signer: PublicKey,

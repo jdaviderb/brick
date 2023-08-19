@@ -1,4 +1,4 @@
-import { BRICK_PROGRAM_ID_PK } from "../utils/constants";
+import { BRICK_PROGRAM_ID_PK } from "../constants";
 import { RegisterBuyTokenInstructionAccounts, createRegisterBuyTokenInstruction } from "../utils/solita"
 import { Connection, PublicKey, SystemProgram, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import { NATIVE_MINT, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/spl-token";

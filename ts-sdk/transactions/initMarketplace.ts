@@ -1,7 +1,7 @@
 import { InitMarketplaceInstructionAccounts, PaymentFeePayer, createInitMarketplaceInstruction, InitMarketplaceParams as InitMarketplaceParamsBump } from "../utils";
 import { Connection, PublicKey, SYSVAR_RENT_PUBKEY, SystemProgram, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { BRICK_PROGRAM_ID_PK } from "../utils/constants";
+import { BRICK_PROGRAM_ID_PK } from "../constants";
 
 type InitMarketplaceAccounts = {
     signer: PublicKey

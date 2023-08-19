@@ -1,4 +1,5 @@
-import { IX_DATA_LAYOUT, InstructionType } from '../utils/solita/instructions';
+import { InstructionType } from '../types';
+import { IX_DATA_LAYOUT } from '../utils/solita/instructions';
 import { Connection } from '@solana/web3.js';
 
 export async function getAccesses(url: string, owner: string, productMint: string): Promise<number> {
