@@ -28,8 +28,8 @@ export type EventsFilters = {
   reverse?: boolean
 }
 
-export type SalesFilters = {
-  seller: string
+export type UserTranasctionFilters = {
+  user: string
   startDate?: number
   endDate?: number
   limit?: number
@@ -99,21 +99,21 @@ export class APIResolvers {
     return events
   }
 
-  async getSales({
-    seller,
+  async getTransactions({
+    user,
     startDate = 0,
     endDate = Date.now(),
     limit = 1000,
     skip = 0,
     reverse = true,
-  }: SalesFilters): Promise<BrickEvent[]> {
+  }: UserTranasctionFilters): Promise<BrickEvent[]> {
     if (limit < 1 || limit > 1000)
       throw new Error('400 Bad Request: 1 <= limit <= 1000')
 
     const events: BrickEvent[] = [];
     const products = await this.getAccounts({  
       types: [AccountType.Product],
-      authorities: [seller],
+      authorities: [user],
     })
 
     for (const product of products) {
@@ -128,6 +128,10 @@ export class APIResolvers {
 
       events.push(...productEvents);
     }
+
+    const purchases = await this.getEvents({ account: user })
+    events.push(...purchases)
+    events.sort((a, b) => b.timestamp - a.timestamp)
 
     return events;
   }

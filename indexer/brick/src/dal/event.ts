@@ -15,6 +15,7 @@ const mappedPublicKeyProps: string[] = ['programId']
 
 export enum EventDALIndex {
   AccountTimestamp = 'account_timestamp',
+  UserTimestamp = 'user_timestamp',
   AccountTypeTimestamp = 'account_type_timestamp',
 }
 
@@ -38,6 +39,11 @@ const timestampKey = {
   length: EntityStorage.TimestampLength,
 }
 
+const signer = {
+  get: (e: BrickEvent) => e.signer,
+  length: EntityStorage.AddressLength,
+}
+
 export function createEventDAL(path: string): EventStorage {
   return new EntityStorage<BrickEvent>({
     name: 'event',
@@ -49,9 +55,13 @@ export function createEventDAL(path: string): EventStorage {
         key: [accountKey, timestampKey],
       },
       {
+        name: EventDALIndex.UserTimestamp,
+        key: [signer, timestampKey],
+      },
+      {
         name: EventDALIndex.AccountTypeTimestamp,
         key: [accountKey, typeKey, timestampKey],
-      },
+      }
     ],
     mapFn: async function (entry) {
       const { key, value } = entry

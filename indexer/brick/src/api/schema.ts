@@ -14,7 +14,7 @@ import {
   GlobalStatsFilters,
   APIResolvers,
   AccountsFilters,
-  SalesFilters,
+  UserTranasctionFilters,
 } from './resolvers.js'
 import MainDomain from '../domain/main.js'
 
@@ -65,17 +65,17 @@ export default class APISchema extends IndexerAPISchema {
             resolve: (_, ctx) => this.resolver.getEvents(ctx as EventsFilters),
           },
 
-          sales: {
+          transactions: {
             type: Types.Events,
             args: {
-              seller: { type: new GraphQLNonNull(GraphQLString) },
+              user: { type: new GraphQLNonNull(GraphQLString) },
               startDate: { type: GraphQLFloat },
               endDate: { type: GraphQLFloat },
               limit: { type: GraphQLInt },
               skip: { type: GraphQLInt },
               reverse: { type: GraphQLBoolean },
             },
-            resolve: (_, ctx) => this.resolver.getSales(ctx as SalesFilters),
+            resolve: (_, ctx) => this.resolver.getTransactions(ctx as UserTranasctionFilters),
           },
 
           globalStats: {
