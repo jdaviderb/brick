@@ -1,4 +1,4 @@
-import { BrickAccountInfo, AccountType } from '../types';
+import { AccountType, BrickAccountInfo } from '../types';
 
 export type AccountsFilters = {
     types?: AccountType[]

@@ -1,7 +1,7 @@
 import { BrickEvent } from "../types"
 
-export type SalesFilters = {
-    seller: string
+export type UserTranasctionFilters = {
+    user: string
     startDate?: number
     endDate?: number
     limit?: number
@@ -9,8 +9,8 @@ export type SalesFilters = {
     reverse?: boolean
 }
 
-export async function querySales(url: string, filters: SalesFilters): Promise<BrickEvent[]> {
-    let queryArgs = `seller: "${filters.seller}", `;
+export async function queryTransactions(url: string, filters: UserTranasctionFilters): Promise<BrickEvent[]> {
+    let queryArgs = `user: "${filters.user}", `;
     if (filters.startDate) queryArgs += `startDate: ${filters.startDate}, `;
     if (filters.endDate) queryArgs += `endDate: ${filters.endDate}, `;
     if (filters.limit) queryArgs += `limit: ${filters.limit}, `;
@@ -19,7 +19,7 @@ export async function querySales(url: string, filters: SalesFilters): Promise<Br
 
     const query = `
         query {
-            sales(${queryArgs}) {
+            transactions(${queryArgs}) {
                 id
                 timestamp
                 type

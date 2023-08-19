@@ -11,7 +11,7 @@ export type EventsFilters = {
     reverse?: boolean
 }
 
-export async function queryEvents(url: string, filters: EventsFilters): Promise<BrickEvent[]> {
+async function queryEvents(url: string, filters: EventsFilters): Promise<BrickEvent[]> {
     let queryArgs = `account: "${filters.account}", `;
     if (filters.types) queryArgs += `types: [${filters.types.map(type => `"${type}"`).join(',')}], `;
     if (filters.signer) queryArgs += `signer: "${filters.signer}", `;
@@ -363,3 +363,5 @@ export async function queryEvents(url: string, filters: EventsFilters): Promise<
     const responseBody = await response.json();
     return responseBody.data.events;
 }
+
+export default queryEvents;

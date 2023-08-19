@@ -1,7 +1,8 @@
-import { InitProductTreeInstructionAccounts, InitProductTreeInstructionArgs, createInitProductTreeInstruction, getConcurrentMerkleTreeAccountSize, splitId } from "../utils";
+import { InitProductTreeInstructionAccounts, createInitProductTreeInstruction, getConcurrentMerkleTreeAccountSize, splitId } from "../utils";
 import { Connection, Keypair, PublicKey, SYSVAR_RENT_PUBKEY, SystemProgram, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { BRICK_PROGRAM_ID_PK, BUBBLEGUM_PROGRAM_ID_PK, COMPRESSION_PROGRAM_ID_PK, METADATA_PROGRAM_ID_PK, NOOP_PROGRAM_ID_PK } from "../constants";
+import { InitProductTreeInstructionArgs } from "../types";
 import BN from "bn.js";
 
 type InitProductTreeAccounts = {

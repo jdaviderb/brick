@@ -1,7 +1,8 @@
-import { InitProductInstructionAccounts, createInitProductInstruction, InitProductInstructionArgs as InitProductParamsIx, splitId } from "../utils";
+import { InitProductInstructionAccounts, createInitProductInstruction, splitId } from "../utils";
 import { Connection, PublicKey, SYSVAR_RENT_PUBKEY, SystemProgram, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import { TOKEN_2022_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { BRICK_PROGRAM_ID_PK } from "../constants";
+import { InitProductInstructionArgs } from "../types";
 import BN from "bn.js";
 
 type InitProductAccounts = {
@@ -54,7 +55,7 @@ export async function createInitProductTransaction(
         accessMint,
         accessVault: getAssociatedTokenAddressSync(accessMint, accounts.signer, false, TOKEN_2022_PROGRAM_ID),
     };
-    const args: InitProductParamsIx = {
+    const args: InitProductInstructionArgs = {
         params: {
             firstId: [...firstId],
             secondId: [...secondId],

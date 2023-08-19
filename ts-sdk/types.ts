@@ -1,11 +1,47 @@
-import { TokenConfig, PermissionConfig, FeesConfig, RewardsConfig, MarketplaceBumps, SellerConfig, ProductBumps, RewardBumps } from "./utils"
-export { TokenConfig, PermissionConfig, FeesConfig, RewardsConfig, MarketplaceBumps, SellerConfig, ProductBumps, RewardBumps }  from "./utils"
-import * as solita from './utils'
+import BN from 'bn.js'
 
 export type Access = {
   authority: string
   marketplace: string
   bump: number
+}
+
+export type TokenConfig = {
+    useCnfts: boolean
+    deliverToken: boolean
+    transferable: boolean
+    chainCounter: boolean
+}
+
+export type PermissionConfig = {
+    accessMint: string
+    permissionless: boolean
+}
+
+export enum PaymentFeePayer {
+  Buyer,
+  Seller,
+}
+
+export type FeesConfig = {
+    discountMint: string
+    fee: number
+    feeReduction: number
+    feePayer: PaymentFeePayer
+}
+
+export type RewardsConfig = {
+    rewardMint: string
+    bountyVaults: string
+    sellerReward: number
+    buyerReward: number
+    rewardsEnabled: boolean
+}
+
+export type MarketplaceBumps = {
+    bump: number
+    vaultBumps: Uint8Array
+    accessMintBump: number
 }
 
 export type Marketplace = {
@@ -17,6 +53,16 @@ export type Marketplace = {
   bumps: MarketplaceBumps
 }
 
+export type SellerConfig = {
+    paymentMint: string;
+    productPrice: BN;
+}
+
+export type ProductBumps = {
+    paymentMint: string;
+    productPrice: string;
+}
+
 export type Product = {
   authority: string
   firstId: number[]
@@ -26,6 +72,11 @@ export type Product = {
   merkleTree: string
   sellerConfig: SellerConfig
   bumps: ProductBumps
+}
+
+export type RewardBumps = {
+    bump: number
+    vaultBumps: Uint8Array
 }
 
 export type Reward = {
@@ -115,7 +166,11 @@ export type EditProductAccountsInstruction = {
   paymentMint: string
 }
 
-export type EditProductInfo = solita.EditProductInstructionArgs &
+export type EditProductInstructionArgs = {
+    productPrice: BN
+}
+
+export type EditProductInfo = EditProductInstructionArgs &
   EditProductAccountsInstruction
 
 export type EditMarketplaceAccountsInstruction = {
@@ -125,7 +180,23 @@ export type EditMarketplaceAccountsInstruction = {
   discountMint: string
 }
 
-export type EditMarketplaceInfo = solita.EditMarketplaceInstructionArgs &
+export type EditMarketplaceInstructionArgs = {
+  params: {
+    fee: number
+    feeReduction: number
+    sellerReward: number
+    buyerReward: number
+    useCnfts: boolean
+    deliverToken: boolean
+    transferable: boolean
+    chainCounter: boolean
+    permissionless: boolean
+    rewardsEnabled: boolean
+    feePayer: PaymentFeePayer
+  }
+}
+
+export type EditMarketplaceInfo = EditMarketplaceInstructionArgs &
   EditMarketplaceAccountsInstruction
 
 export type InitBountyInfo = {
@@ -152,7 +223,24 @@ export type InitMarketplaceAccountsInstruction = {
   bountyVault: string
 }
 
-export type InitMarketplaceInfo = solita.InitMarketplaceInstructionArgs &
+export type InitMarketplaceInstructionArgs = {
+  params: {
+    fee: number
+    feeReduction: number
+    sellerReward: number
+    buyerReward: number
+    useCnfts: boolean
+    deliverToken: boolean
+    transferable: boolean
+    chainCounter: boolean
+    permissionless: boolean
+    rewardsEnabled: boolean
+    accessMintBump: number
+    feePayer: PaymentFeePayer
+  }
+}
+
+export type InitMarketplaceInfo = InitMarketplaceInstructionArgs &
   InitMarketplaceAccountsInstruction
 
 export type InitProductTreeAccountsInstruction = {
@@ -178,7 +266,20 @@ export type InitProductTreeAccountsInstruction = {
   treeAuthority: string
 }
 
-export type InitProductTreeInfo = solita.InitProductTreeInstructionArgs &
+export type InitProductTreeInstructionArgs = {
+  params: {
+      firstId: number[] /* size: 32 */
+      secondId: number[] /* size: 32 */
+      productPrice: BN
+      maxDepth: number
+      maxBufferSize: number
+      name: string
+      metadataUrl: string
+      feeBasisPoints: number
+  }
+}
+
+export type InitProductTreeInfo = InitProductTreeInstructionArgs &
   InitProductTreeAccountsInstruction
 
 export type InitProductAccountsInstruction = {
@@ -194,7 +295,16 @@ export type InitProductAccountsInstruction = {
   accessVault: string
 }
 
-export type InitProductInfo = solita.InitProductInstructionArgs &
+export type InitProductInstructionArgs = {
+    params: {
+        firstId: number[] /* size: 32 */
+        secondId: number[] /* size: 32 */
+        productPrice: BN
+        productMintBump: number
+    }
+}
+
+export type InitProductInfo = InitProductInstructionArgs &
   InitProductAccountsInstruction
 
 export type InitRewardVaultInfo = {
@@ -250,7 +360,16 @@ export type RegisterBuyCnftAccountsInstruction = {
   merkleTree: string
 }
 
-export type RegisterBuyCnftInfo = solita.RegisterBuyCnftInstructionArgs &
+export type RegisterBuyCnftInstructionArgs = {
+  params: {
+    amount: number
+    name: string
+    symbol: string
+    uri: string
+  }
+}
+
+export type RegisterBuyCnftInfo = RegisterBuyCnftInstructionArgs &
   RegisterBuyCnftAccountsInstruction
 
 export type RegisterBuyCounterAccountsInstruction = {
@@ -274,7 +393,11 @@ export type RegisterBuyCounterAccountsInstruction = {
   buyerRewardVault: string
 }
 
-export type RegisterBuyCounterInfo = solita.RegisterBuyCounterInstructionArgs &
+export type RegisterBuyInstructionArgs = {
+  amount: number
+}
+
+export type RegisterBuyCounterInfo = RegisterBuyInstructionArgs &
   RegisterBuyCounterAccountsInstruction
 
 export type RegisterBuyTokenAccountsInstruction = {
@@ -299,7 +422,7 @@ export type RegisterBuyTokenAccountsInstruction = {
   buyerRewardVault: string
 }
 
-export type RegisterBuyTokenInfo = solita.RegisterBuyTokenInstructionArgs &
+export type RegisterBuyTokenInfo = RegisterBuyInstructionArgs &
   RegisterBuyTokenAccountsInstruction
 
 export type RegisterBuyAccountsInstruction = {
@@ -323,7 +446,7 @@ export type RegisterBuyAccountsInstruction = {
   buyerRewardVault: string
 }
 
-export type RegisterBuyInfo = solita.RegisterBuyInstructionArgs &
+export type RegisterBuyInfo = RegisterBuyInstructionArgs&
   RegisterBuyAccountsInstruction
 
 export type RequestAccessInfo = {
@@ -347,7 +470,14 @@ export type UpdateTreeAccountsInstruction = {
   compressionProgram: string
 }
 
-export type UpdateTreeInfo = solita.UpdateTreeInstructionArgs &
+export type UpdateTreeInstructionArgs = {
+  params: {
+    maxDepth: number
+    maxBufferSize: number
+  }
+}
+
+export type UpdateTreeInfo = UpdateTreeInstructionArgs &
   UpdateTreeAccountsInstruction
 
 export type WithdrawRewardInfo = {

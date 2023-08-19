@@ -2,7 +2,7 @@ import { InstructionType } from '../types';
 import { IX_DATA_LAYOUT } from '../utils/solita/instructions';
 import { Connection } from '@solana/web3.js';
 
-export async function getAccesses(url: string, owner: string, productMint: string): Promise<number> {
+export async function queryPurchases(url: string, owner: string, productMint: string): Promise<number> {
     const requestOwnerData = {
         jsonrpc: '2.0',
         id: 'brick',
@@ -54,7 +54,6 @@ export async function getAccesses(url: string, owner: string, productMint: strin
         const [context] = IX_DATA_LAYOUT[InstructionType.RegisterBuyCnft].deserialize(tx?.transaction.message.compiledInstructions[1].data);
         const { ...result } = context;
         unitsPurchased += result.params.amount; 
-
     }
     return unitsPurchased;
 }
