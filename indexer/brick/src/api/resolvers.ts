@@ -129,7 +129,14 @@ export class APIResolvers {
       events.push(...productEvents);
     }
 
-    const purchases = await this.getEvents({ account: user })
+    const purchases = await this.getEvents({ 
+      account: user,
+      types: this.registerBuyInstructions,
+      startDate,
+      endDate,
+      skip,
+      reverse,
+    })
     events.push(...purchases)
     events.sort((a, b) => b.timestamp - a.timestamp)
 
