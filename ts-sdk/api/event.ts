@@ -12,14 +12,14 @@ export type EventsFilters = {
 }
 
 async function queryEvents(url: string, filters: EventsFilters): Promise<BrickEvent[]> {
-    let queryArgs = `account: "${filters.account}", `;
-    if (filters.types) queryArgs += `types: [${filters.types.map(type => `"${type}"`).join(',')}], `;
-    if (filters.signer) queryArgs += `signer: "${filters.signer}", `;
-    if (filters.startDate) queryArgs += `startDate: ${filters.startDate}, `;
-    if (filters.endDate) queryArgs += `endDate: ${filters.endDate}, `;
-    if (filters.limit) queryArgs += `limit: ${filters.limit}, `;
-    if (filters.skip) queryArgs += `skip: ${filters.skip}, `;
-    if (filters.reverse) queryArgs += `reverse: ${filters.reverse}, `;
+    let queryArgs = `account: "${filters.account}" `;
+    if (filters.types) queryArgs += `, types: [${filters.types.map(type => `"${type}"`).join(',')}] `;
+    if (filters.signer) queryArgs += `, signer: "${filters.signer}" `;
+    if (filters.startDate) queryArgs += `, startDate: ${filters.startDate} `;
+    if (filters.endDate) queryArgs += `, endDate: ${filters.endDate} `;
+    if (filters.limit) queryArgs += `, limit: ${filters.limit} `;
+    if (filters.skip) queryArgs += `, skip: ${filters.skip} `;
+    if (filters.reverse) queryArgs += `, reverse: ${filters.reverse} `;
 
     const query = `
         query {

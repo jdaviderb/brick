@@ -2,17 +2,16 @@ import { AccountType, BrickAccountInfo } from '../types';
 
 export type AccountsFilters = {
     types?: AccountType[]
-    accounts?: string[]
+    accounts: string[]
     authorities?: string[]
     includeStats?: boolean
 }
 
 export async function queryAccounts(url: string, filters: AccountsFilters): Promise<BrickAccountInfo[]> {
-    let queryArgs = '';
-    if (filters.types) queryArgs += `types: [${filters.types.map(type => `"${type}"`).join(',')}], `;
-    if (filters.accounts) queryArgs += `signer: "${filters.accounts}", `;
-    if (filters.authorities) queryArgs += `startDate: ${filters.authorities}, `;
-    if (filters.includeStats) queryArgs += `endDate: ${filters.includeStats}, `;
+    let queryArgs = `accounts: ["${filters.accounts.join('", "')}"]`;
+    if (filters.types) queryArgs += `, types: [${filters.types.map(type => `"${type}"`).join(',')}] `;
+    if (filters.authorities) queryArgs += `, startDate: ${filters.authorities} `;
+    if (filters.includeStats) queryArgs += `, endDate: ${filters.includeStats} `;
 
     const query = `
         query {

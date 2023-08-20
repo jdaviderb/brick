@@ -10,12 +10,12 @@ export type UserTranasctionFilters = {
 }
 
 export async function queryTransactions(url: string, filters: UserTranasctionFilters): Promise<BrickEvent[]> {
-    let queryArgs = `user: "${filters.user}", `;
-    if (filters.startDate) queryArgs += `startDate: ${filters.startDate}, `;
-    if (filters.endDate) queryArgs += `endDate: ${filters.endDate}, `;
-    if (filters.limit) queryArgs += `limit: ${filters.limit}, `;
-    if (filters.skip) queryArgs += `skip: ${filters.skip}, `;
-    if (filters.reverse) queryArgs += `reverse: ${filters.reverse}, `;
+    let queryArgs = `user: "${filters.user}" `;
+    if (filters.startDate) queryArgs += `, startDate: ${filters.startDate} `;
+    if (filters.endDate) queryArgs += `, endDate: ${filters.endDate} `;
+    if (filters.limit) queryArgs += `, limit: ${filters.limit} `;
+    if (filters.skip) queryArgs += `, skip: ${filters.skip} `;
+    if (filters.reverse) queryArgs += `, reverse: ${filters.reverse} `;
 
     const query = `
         query {

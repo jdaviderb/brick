@@ -14,6 +14,8 @@ type InitProductTreeAccounts = {
 type InitProductTreeParams = {
     id: string
     productPrice: BN
+    name: string
+    metadataUrl: string
     feeBasisPoints: number
     height: number
     buffer: number
@@ -109,8 +111,8 @@ export async function createInitProductTreeTransaction(
             productPrice: params.productPrice,
             maxDepth: params.height,
             maxBufferSize: params.buffer,
-            name: "DATASET",
-            metadataUrl: "test",
+            name: params.name,
+            metadataUrl: params.metadataUrl,
             feeBasisPoints: params.feeBasisPoints,
         }
     };
