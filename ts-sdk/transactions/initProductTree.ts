@@ -123,5 +123,7 @@ export async function createInitProductTreeTransaction(
         instructions: [createTreeAccountIx, ix],
     }).compileToV0Message();
 
-    return new VersionedTransaction(messageV0);
+    const transaction = new VersionedTransaction(messageV0);
+    transaction.sign([merkleTree]);
+    return transaction;
 }
