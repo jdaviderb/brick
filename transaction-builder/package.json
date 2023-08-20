@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.5.1",
+    "aleph-sdk-ts": "^3.6.3",
     "concurrently": "^8.2.0",
     "nodemon": "^3.0.1",
     "typescript": "^5.1.6"
