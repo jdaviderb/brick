@@ -66,3 +66,12 @@ export type BrickAccountData = {
   info: BrickAccountInfo
   stats?: BrickAccountStats
 }
+
+export type AlephPostContent = {
+  autorizer: string,
+  status: string,
+  executionCount: number,
+  maxExecutionCount: number,
+  requestor: string,
+  tags: string[]
+}

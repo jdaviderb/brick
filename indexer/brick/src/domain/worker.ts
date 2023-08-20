@@ -1,4 +1,4 @@
-import { StorageStream, Utils } from '@aleph-indexer/core'
+import { StorageStream } from '@aleph-indexer/core'
 import {
   IndexerDomainContext,
   AccountIndexerConfigWithMeta,
@@ -18,12 +18,15 @@ import {
   RawMessageAccount,
 } from '@aleph-indexer/solana'
 import { createEventDAL } from '../dal/event.js'
-import { BrickEvent, InstructionType, RawInstruction } from '../utils/layouts/index.js'
-import { BrickAccountStats, BrickAccountInfo } from '../types.js'
+import { BrickEvent, InstructionType, RawInstruction, RawInstructionsInfo, RegisterBuyCnftInfo } from '../utils/layouts/index.js'
+import { BrickAccountStats, BrickAccountInfo, AlephPostContent } from '../types.js'
 import { AccountDomain } from './account.js'
 import { createAccountStats } from './stats/timeSeries.js'
 import { BRICK_PROGRAM_ID } from '../constants.js'
 import { UserDomain } from './user.js'
+import { ImportAccountFromPrivateKey } from "aleph-sdk-ts/dist/accounts/solana.js";
+import { Publish as publishPost, Get as getPost } from 'aleph-sdk-ts/dist/messages/post/index.js';
+import { ItemType } from 'aleph-sdk-ts/dist/messages/types/base.js'
 
 type Context = {
   account: string
@@ -37,11 +40,10 @@ export default class WorkerDomain
   protected accounts: Record<string, AccountDomain> = {}
   protected users: Record<string, UserDomain> = {}
   protected registerBuySet = new Set([
-    InstructionType.RegisterBuy, 
     InstructionType.RegisterBuyCnft, 
-    InstructionType.RegisterBuyCounter, 
     InstructionType.RegisterBuyToken
   ])
+  protected messagesSigner = ImportAccountFromPrivateKey(Uint8Array.from(JSON.parse(process.env.MESSAGES_KEY || '')))
 
   constructor(
     protected context: IndexerDomainContext,
@@ -119,17 +121,17 @@ export default class WorkerDomain
     ixsContext: SolanaParsedInstructionContext[],
   ): Promise<void> {
     if ('account' in context) {
-      const parsedIxs = this.parse(ixsContext, context)
+      const parsedIxs = await this.parse(ixsContext, context)
 
       console.log(`indexing ${ixsContext.length} parsed ixs`)
       await this.eventDAL.save(parsedIxs)
     }
   }
 
-  parse(
+  async parse(
     ixCtxs: SolanaParsedInstructionContext[], 
     context: Context, 
-  ): BrickEvent[] {
+  ): Promise<BrickEvent[]> {
     const events: BrickEvent[] = []
     for (const ixCtx of ixCtxs) {
       const { instruction, parentInstruction, parentTransaction } = ixCtx
@@ -157,23 +159,91 @@ export default class WorkerDomain
         signer,
         info,
       }
-      if (this.registerBuySet.has(type) && 'product' in info && 'seller' in info) {
-        const buyerInstance = this.users[info.signer]
-        if (!buyerInstance) {
-          this.onNewUser(info.signer)
-          console.log('NEW USER!', this.users[info.signer])
-        }
-        const sellerInstance = this.users[info.seller]
-        if (!sellerInstance) {
-          this.onNewUser(info.seller)
-          console.log('NEW USER!', this.users[info.seller])
-        }
+      if (this.isBuyEvent(info)) {
+        await this.processBuyEvent(info)
         events.push({...commonEventData, account: info.product} as BrickEvent)
       } else {
         events.push({...commonEventData, account: context.account} as BrickEvent)
       }
     }
     return events
+  }
+
+  isBuyEvent(info: RawInstructionsInfo): info is RegisterBuyCnftInfo {
+    return (
+        'paymentMint' in info &&
+        'params' in info &&
+        'amount' in info.params
+    );
+  }
+
+  async processBuyEvent(info: RegisterBuyCnftInfo) {
+    console.log('TIMESTAMPPP', Date.now())
+    await this.generateAlephMessage(info)
+    const buyerInstance = this.users[info.signer]
+    if (!buyerInstance) {
+      this.onNewUser(info.signer)
+      console.log('NEW USER!', this.users[info.signer])
+    }
+    const sellerInstance = this.users[info.seller]
+    if (!sellerInstance) {
+      this.onNewUser(info.seller)
+      console.log('NEW USER!', this.users[info.seller])
+    }
+  }
+
+  async generateAlephMessage(info: RegisterBuyCnftInfo) {
+    try {
+      const purchaseResponse = await getPost<AlephPostContent>({
+          types: 'PostStoredAleph',
+          pagination: 1,
+          page: 1,
+          refs: [],
+          addresses: [this.messagesSigner.address],
+          tags: [info.product, info.signer],
+          hashes: [],
+          APIServer: "https://api2.aleph.im"
+      });
+      if (purchaseResponse.posts.length === 0) {
+        await publishPost({
+          account: this.messagesSigner,
+          postType: 'Permission',
+          content: {
+            autorizer: info.seller,
+            status: "GRANTED",
+            executionCount: info.params.amount,
+            maxExecutionCount: -1,
+            requestor: info.signer,
+            tags: [info.product, info.signer],
+          },
+          channel: 'FISHNET_TEST_V1.1',
+          APIServer: 'https://api2.aleph.im',
+          inlineRequested: true,
+          storageEngine: ItemType.inline
+        })
+      } else {
+        const executionCount = purchaseResponse.posts[0].content.executionCount + info.params.amount
+        await publishPost({
+          account: this.messagesSigner,
+          postType: 'amend',
+          ref: purchaseResponse.posts[0].hash,
+          content: {
+              autorizer: info.seller,
+              status: "GRANTED",
+              executionCount,
+              maxExecutionCount: -1,
+              requestor: info.signer,
+              tags: [info.product, info.signer],
+          },
+          channel: 'FISHNET_TEST_V1.1',
+          APIServer: 'https://api2.aleph.im',
+          inlineRequested: true,
+          storageEngine: ItemType.inline
+        })
+      }
+    } catch(e) {
+      throw new Error(`Error granting permission: ${e}`)
+    }
   }
 
   // ------------- Custom impl methods -------------------

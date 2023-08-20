@@ -458,6 +458,10 @@ export type RawInstructionsInfo =
   | UpdateTreeInfo
   | WithdrawRewardInfo
 
+export type RegisterBuysInfo =
+  | RegisterBuyCnftInfo
+  | RegisterBuyTokenInfo
+
 export type RawInstruction =
   | RawAcceptAccess
   | RawAirdropAccess
