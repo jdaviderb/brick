@@ -4,6 +4,7 @@ import { TOKEN_2022_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/sp
 import { BRICK_PROGRAM_ID_PK } from "../constants";
 import { InitProductInstructionArgs } from "../types";
 import BN from "bn.js";
+import { normalizePrice } from "../utils/normalizePrice";
 
 type InitProductAccounts = {
     signer: PublicKey
@@ -13,7 +14,7 @@ type InitProductAccounts = {
 
  type InitProductParams = {
     id: string
-    productPrice: BN
+    productPrice: number
 }
 
 export async function createInitProductTransaction(
@@ -59,7 +60,7 @@ export async function createInitProductTransaction(
         params: {
             firstId: [...firstId],
             secondId: [...secondId],
-            productPrice: params.productPrice,
+            productPrice: normalizePrice(params.productPrice, accounts.paymentMint.toString()),
             productMintBump,
         }
     };
