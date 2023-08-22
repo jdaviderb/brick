@@ -1,6 +1,13 @@
-To run the indexer locally you have to set the RPC url in indexer/brick/.env.defaults
+# Brick Indexer
 
-Full events query
+To run the indexer locally, follow these steps:
+
+1. Open `indexer/brick/.env.defaults` and set the SOLANA RPC.
+2. From root you can run the indexer with: `npm run start:indexer`
+
+## Events Query
+
+```graphql
 {
   events(account: "5WnQLqDpc35PodFDBH6ZAWzDonvt4SF9R9wHq7mhMBG") {
     id
@@ -328,8 +335,11 @@ Full events query
     }
   }
 }
+```
 
-Full accounts query: 
+## Accounts Query
+
+```graphql
 {
   accounts {
     address
@@ -398,20 +408,11 @@ Full accounts query:
     }
   }
 }
+```
 
-{
-  accountTimeSeriesStats(timeFrame:Month, account: "78uGjiznTqYG93bzHSjnLUn4gD31SKoFFTe4wos2fPTY", type: "access", blockchain: solana) {
-    series {
-      date
-      value {
-        ...on AccessTimeStats {
-          accessesByProgramId
-        }
-      }
-    }
-  }
-}
+## Accounts Stats Query
 
+```graphql
 {
   accountStats(account: "78uGjiznTqYG93bzHSjnLUn4gD31SKoFFTe4wos2fPTY", blockchain: solana) {
     stats {
@@ -430,7 +431,11 @@ Full accounts query:
     }
   }
 }
+```
 
+## Accounts State Query
+
+```graphql
 {
   accountState(account: "78uGjiznTqYG93bzHSjnLUn4gD31SKoFFTe4wos2fPTY", blockchain: solana, type: transaction) {
     accurate
@@ -439,7 +444,11 @@ Full accounts query:
     processed
   }
 }
+```
 
+## Global Stats Query
+
+```graphql
 {
     globalStats {
         totalAccounts {
@@ -453,4 +462,4 @@ Full accounts query:
         totalAccessesByProgramId
     }
 }
-
+```
