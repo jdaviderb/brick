@@ -3,6 +3,7 @@ import { Publish as publishPost } from 'aleph-sdk-ts/dist/messages/post/index.js
 import { ItemType } from 'aleph-sdk-ts/dist/messages/types/base.js';
 
 type MessageContent = {
+    product: string;
     seller: string;
     signer: string;
     units: number;
@@ -24,6 +25,6 @@ export async function generateAlephMessage(content: MessageContent, messagesSign
 
         return resp.item_hash;
     } catch(e) {
-      throw new Error(`Error posting aleph message: ${e}`)
+      console.log(`Error posting aleph message: ${e}`)
     }
 }
