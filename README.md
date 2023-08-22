@@ -2,11 +2,16 @@
 
 Note: Brick **is subject to change**, is in active development. This code is unaudited. Use at your own risk.
 
+[Introduction and demo](https://youtu.be/68g5d9NQb_8)
+[Gitbook](https://brick-protocol.gitbook.io/docs/)
+
+
 ## Overview
 
 Brick is a payment gateway built on the Solana blockchain, facilitating the seamless creation and management of marketplaces to effectively monetize a wide array of products and services.
 
 ## Marketplace customization
+
 Marketplace creators have the freedom to customize their platforms based on their specific requirements. 
 
 The following customizable features are available:
@@ -21,5 +26,9 @@ The following customizable features are available:
 
 - **Metadata Support**: Tokens within the marketplace can be enriched with multimedia representations such as images and videos. This feature is particularly useful for video game marketplaces where tokens can represent in-game items like skins, covers, etc.
 
-To run the indexer locally you have to set the RPC url in indexer/brick/.env.defaults
-Shout out to Stefan, he built the amazing brick frontend: https://twitter.com/evalucratie
+## Components of this monorepo:
+- **Indexer**: Based on the [Aleph Indexer Framework](https://github.com/aleph-im/aleph-indexer-framework), [Readme](https://github.com/ricardocr987/brick/blob/master/indexer/brick/README.md)
+- **Solana program**: Core piece of the protocol, [Readme](https://brick-protocol.gitbook.io/docs/fundamentals/solana-program)
+- **Transaction builder server**: It allows you to serve to the client prepared serialized transactions
+- **Typescript sdk**: Helps you to build the transactions and also to query from the indexer
+- **App**: The brick app built by [Stefan](https://twitter.com/evalucratie)

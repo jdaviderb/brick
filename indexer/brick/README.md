@@ -1,3 +1,5 @@
+To run the indexer locally you have to set the RPC url in indexer/brick/.env.defaults
+
 Full events query
 {
   events(account: "5WnQLqDpc35PodFDBH6ZAWzDonvt4SF9R9wHq7mhMBG") {
