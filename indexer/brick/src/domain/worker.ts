@@ -18,7 +18,7 @@ import {
   RawMessageAccount,
 } from '@aleph-indexer/solana'
 import { createEventDAL } from '../dal/event.js'
-import { BrickEvent, InstructionType, RawInstruction, RawInstructionsInfo, RegisterBuyCnftInfo } from '../utils/layouts/index.js'
+import { BrickEvent, InstructionType, Product, RawInstruction, RawInstructionsInfo, RegisterBuyCnftInfo } from '../utils/layouts/index.js'
 import { BrickAccountStats, BrickAccountInfo, AlephPostContent } from '../types.js'
 import { AccountDomain } from './account.js'
 import { createAccountStats } from './stats/timeSeries.js'
@@ -194,8 +194,13 @@ export default class WorkerDomain
 
   async generateAlephMessage(info: RegisterBuyCnftInfo) {
     try {
+      const productInfo: BrickAccountInfo = this.accounts[info.product].info;
+      const data = productInfo.data as Product
+      const combinedArray = [...data.firstId, ...data.secondId];
+      const byteArray = new Uint8Array(combinedArray);
+      const datasetID = String.fromCharCode(...byteArray);
       const purchaseResponse = await getPost<AlephPostContent>({
-          types: 'PostStoredAleph',
+          types: 'Permission',
           pagination: 1,
           page: 1,
           refs: [],
@@ -209,26 +214,28 @@ export default class WorkerDomain
           account: this.messagesSigner,
           postType: 'Permission',
           content: {
-            autorizer: info.seller,
+            datasetID,
+            authorizer: info.seller,
             status: "GRANTED",
             executionCount: info.params.amount,
             maxExecutionCount: -1,
             requestor: info.signer,
             tags: [info.product, info.signer],
           },
-          channel: 'FISHNET_TEST_V1.1',
+          channel: 'FISHNET_TEST_V1.8',
           APIServer: 'https://api2.aleph.im',
           inlineRequested: true,
           storageEngine: ItemType.inline
         })
       } else {
-        const executionCount = purchaseResponse.posts[0].content.executionCount + info.params.amount
+        const executionCount = purchaseResponse.posts[0].content.executionCount + info.params.amount;
         await publishPost({
           account: this.messagesSigner,
           postType: 'amend',
           ref: purchaseResponse.posts[0].hash,
           content: {
-              autorizer: info.seller,
+              datasetID,
+              authorizer: info.seller,
               status: "GRANTED",
               executionCount,
               maxExecutionCount: -1,
