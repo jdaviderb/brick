@@ -18,12 +18,6 @@ const dataFooter = {
       width: 28,
       height: 28,
     },
-    {
-      name: "discord",
-      href: "https://twitter.com/BrickProtocol",
-      width: 28,
-      height: 28,
-    },
   ],
   items: [
     {
@@ -31,24 +25,11 @@ const dataFooter = {
       column: [
         {
           link: "Documentation",
-          url: "",
+          url: "https://brick-protocol.gitbook.io/docs/",
         },
         {
           link: "Github",
-          url: "",
-        },
-        {
-          link: "Notion",
-          url: "",
-        },
-      ],
-    },
-    {
-      title: "Community",
-      column: [
-        {
-          link: "Discord",
-          url: "",
+          url: "https://github.com/ricardocr987/brick",
         },
       ],
     },
