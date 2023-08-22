@@ -3,7 +3,7 @@ import { Connection, Keypair, PublicKey, SYSVAR_RENT_PUBKEY, SystemProgram, Tran
 import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { BRICK_PROGRAM_ID_PK, BUBBLEGUM_PROGRAM_ID_PK, COMPRESSION_PROGRAM_ID_PK, METADATA_PROGRAM_ID_PK, NOOP_PROGRAM_ID_PK } from "../constants";
 import { InitProductTreeInstructionArgs } from "../types";
-import BN from "bn.js";
+import { normalizePrice } from "../utils/normalizePrice";
 
 type InitProductTreeAccounts = {
     signer: PublicKey
@@ -13,7 +13,7 @@ type InitProductTreeAccounts = {
 
 type InitProductTreeParams = {
     id: string
-    productPrice: BN
+    productPrice: number
     name: string
     metadataUrl: string
     feeBasisPoints: number
@@ -103,12 +103,12 @@ export async function createInitProductTreeTransaction(
         merkleTree: merkleTree.publicKey,
         treeAuthority: treeAuthority,
     };
-
+    
     const args: InitProductTreeInstructionArgs = {
         params: {
             firstId: [...firstId],
             secondId: [...secondId],
-            productPrice: params.productPrice,
+            productPrice: normalizePrice(params.productPrice, accounts.paymentMint.toString()),
             maxDepth: params.height,
             maxBufferSize: params.buffer,
             name: params.name,
